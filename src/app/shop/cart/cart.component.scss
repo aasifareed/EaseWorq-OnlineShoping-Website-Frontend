@@ -1,0 +1,104 @@
+// Card wrapper
+.cart-item {
+    background: #303030;
+    //   border: 1px solid #3a3a52;
+    border-radius: 8px;
+}
+
+// Product image
+.cart-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    //   background: #303030;
+    //   border-radius: 6px;
+    //   padding: 8px;
+}
+
+// Title link
+.cart-title {
+    color: #e8e8f0;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 6px;
+
+    //   &:hover { color: #f5b800; }
+}
+
+// Price box on right
+.cart-price-box {
+    //   border: 1px solid #3a3a52;
+    width: 24%;
+    border-radius: 6px;
+    min-width: 180px;
+}
+
+.cell-thumbnail {
+    width: 100% !important;
+    //   height: 150px;
+    //   object-fit: contain;
+    //   background: #303030;
+    border-radius: 6px;
+    padding: 22px;
+    background: #fff;
+}
+
+// Only the summary box needs custom styling
+// Your existing styles — untouched
+.cart-summary-box {
+  background: #303030;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  min-width: 420px;
+  position: relative;
+  padding: 12px 8px;
+
+  @media (max-width: 576px) {
+    min-width: 100%;
+    width: 100%;
+  }
+}
+
+// ── New: smooth collapse transition ──
+.coupon-collapse {
+  transition: height 0.35s ease !important;
+}
+
+// ── New: chevron rotates when open ──
+.coupon-arrow {
+  font-size: 10px;
+  transition: transform 0.35s ease;
+}
+.coupon-toggle[aria-expanded="false"] .coupon-arrow {
+  transform: rotate(-90deg);   // points up when open
+}
+.coupon-toggle[aria-expanded="true"] .coupon-arrow {
+  transform: rotate(0deg);   // points up when open
+}
+@media screen and (min-width: 767px) {
+    .cell-thumbnail {
+        width: 200px !important;
+        //   height: 150px;
+        //   object-fit: contain;
+        //   background: #303030;
+        border-radius: 6px;
+        padding: 22px;
+        background: #fff;
+        height: 150px;
+        align-self: center;
+        margin-right: 14px;
+        margin-left: 14px;
+
+    }
+
+    .cart-price-box {
+        //   border: 1px solid #3a3a52;
+        width: 24%;
+        border-radius: 6px;
+        min-width: 180px;
+        align-self: center;
+    }
+
+}

@@ -1,0 +1,195 @@
+<app-breadcrumb [title]="'Cart'" [breadcrumb]="'Cart'"></app-breadcrumb>
+<!-- section start -->
+<!-- <section class="cart-section section-b-space">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">Your
+                    shopping cart</h2>
+            </div>
+            <div class="col-sm-12">
+                <table class="table cart-table table-responsive-xs">
+                    <thead>
+                        <tr class="table-head">
+                            <th scope="col">image</th>
+                            <th scope="col">product name</th>
+                            <th scope="col">price</th>
+                            <th scope="col">quantity</th>
+                            <th scope="col">action</th>
+                            <th scope="col">total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <a [routerLink]="['/shop/product/left/sidebar/trim-dress']">
+                                    <img src="assets/images/product/fashion/1.jpg" alt="">
+                                </a>
+                            </td>
+                            <td><a [routerLink]="['/shop/product/left/sidebar/trim-dress']">cotton shirt</a>
+                                <div class="mobile-cart-content row">
+                                    <div class="col">
+                                        <div class="qty-box">
+                                            <div class="input-group">
+                                                <input type="text" name="quantity" class="form-control input-number"
+                                                    value="1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <h2 class="td-color">$63.00</h2>
+                                    </div>
+                                    <div class="col">
+                                        <h2 class="td-color">
+                                            <a [routerLink]="['/shop/product/left/sidebar/trim-dress']" class="icon">
+                                                <i class="ti-close"></i>
+                                            </a>
+                                        </h2>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <h2>$63.00</h2>
+                            </td>
+                            <td>
+                                <div class="qty-box">
+                                    <div class="input-group">
+                                        <span class="input-group-prepend">
+                                            <button type="button" class="btn quantity-left-minus" data-type="minus">
+                                                <i class="ti-angle-left"></i>
+                                            </button>
+                                        </span>
+                                        <input type="text" name="quantity" class="form-control input-number" disabled
+                                            value="1">
+                                        <span class="input-group-prepend">
+                                            <button type="button" class="btn quantity-right-plus" data-type="plus">
+                                                <i class="ti-angle-right"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a [routerLink]="['/shop/product/left/sidebar/trim-dress']" class="icon">
+                                    <i class="ti-close"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <h2 class="td-color">$4539.00</h2>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table cart-table table-responsive-md">
+                    <tfoot>
+                        <tr>
+                            <td>total price :</td>
+                            <td>
+                                <h2> $6935.00 </h2>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="row cart-buttons">
+            <div class="col-6">
+                <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid">continue shopping</a>
+            </div>
+            <div class="col-6">
+                <a [routerLink]="['/shop/checkout']" class="btn btn-solid">check out</a>
+            </div>
+        </div>
+    </div>
+</section> -->
+
+<section class="cart-section section-b-space">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="cart-item p-3 mb-3">
+                    <div class="row g-3 align-items-start">
+
+                        <!-- Image -->
+                        <div class="col-auto">
+                            <a href="#">
+                                <img src="https://microless.com/cdn/products/b5b2caeb989e1f8d7fd401cc29f082a9-md.jpg"
+                                    alt="Product" class="cart-img" />
+                            </a>
+                        </div>
+
+                        <!-- Middle Content -->
+                        <div class="col">
+
+                            <!-- Title -->
+                            <a href="#" class="cart-title d-block mb-2">
+                                ASUS Dual GeForce RTX 5060 OC Edition Graphics Card, DUAL-RTX5060-O8G,
+                                8GB GDDR7 128-Bit Memory, 2565 MHz Boost Clock, 28 Gbps Memory Speed,
+                                3840 CUDA Cores, PCI Express 5.0 | 90YV0N12-M0NA00
+                            </a>
+
+                            <!-- Sold by -->
+                            <p class="mb-1 small text-secondary">
+                                Sold by: <a href="#" class="text-secondary">Microless</a>
+                            </p>
+
+                            <!-- Delivery -->
+                            <p class="mb-1 small text-secondary">
+                                <strong class="text-white">Free</strong> delivery by
+                                <span class="text-success fw-semibold">Tomorrow, May 01</span>
+                            </p>
+                            <p class="mb-1 small text-secondary">If you order within 1 Hour, 19 Minutes</p>
+
+                            <!-- Warranty -->
+                            <p class="mb-2 small text-secondary">
+                                <i class="fa fa-shield me-1"></i>
+                                <strong class="text-white">1 Year Warranty</strong>
+                            </p>
+
+                            <!-- Divider -->
+                            <hr class="border-secondary my-2" />
+
+                            <!-- Actions -->
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="#" class="small text-secondary text-decoration-none">
+                                    <i class="fa fa-heart-o me-1"></i> Add To Wishlist
+                                </a>
+                                <span class="text-secondary">|</span>
+                                <a href="#" class="small text-danger text-decoration-none">
+                                    <i class="fa fa-trash-o me-1"></i> Remove
+                                </a>
+                            </div>
+
+                        </div>
+
+                        <!-- Price + Quantity -->
+                        <div class="col-auto text-end cart-price-box p-3">
+
+                            <!-- Prices -->
+                            <div class="mb-3">
+                                <div class="text-white fw-bold" style="font-size:18px;">US $ 383.29</div>
+                                <div class="text-secondary text-decoration-line-through small">US $ 454.23</div>
+                            </div>
+
+                            <!-- Quantity -->
+                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                <span class="small text-secondary">Quantity</span>
+                                <select class="form-select form-select-sm bg-dark text-white border-secondary"
+                                    style="width:70px;">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--section end-->

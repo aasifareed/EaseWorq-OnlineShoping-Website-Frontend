@@ -1,0 +1,34 @@
+// Card wrapper
+.cart-item {
+  background: #2a2a3a;
+  border: 1px solid #3a3a52;
+  border-radius: 8px;
+}
+
+// Product image
+.cart-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  background: #1e1e2e;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+// Title link
+.cart-title {
+  color: #e8e8f0;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+
+  &:hover { color: #f5b800; }
+}
+
+// Price box on right
+.cart-price-box {
+  border: 1px solid #3a3a52;
+  border-radius: 6px;
+  min-width: 180px;
+}

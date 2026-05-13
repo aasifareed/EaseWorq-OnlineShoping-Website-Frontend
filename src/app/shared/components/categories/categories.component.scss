@@ -1,0 +1,51 @@
+
+
+li { display: block !important; }
+
+// Count badge
+.category-list span {
+  color: #888;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+// Level 1
+.category-list > li > a {
+  font-weight: 600;
+  font-size: 13px;
+
+  &::before {
+    content: '\f105';
+    font-family: 'FontAwesome';
+    margin-right: 6px;
+    font-size: 11px;
+    color: #888;
+  }
+
+  &.active { color: #fff; font-weight: 700; }
+}
+
+// Level 2
+.category-list ul {
+  list-style: none;
+  padding-left: 14px;
+  margin: 2px 0;
+
+  li > a {
+    font-weight: 500;
+    font-size: 12px;
+    &.active { color: #fff; }
+  }
+}
+
+// Level 3
+.category-list ul ul {
+  padding-left: 12px;
+
+  li > a {
+    font-weight: 400;
+    font-size: 11px;
+    color: #999;
+    &.active { color: #fff; }
+  }
+}

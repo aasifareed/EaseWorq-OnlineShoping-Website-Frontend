@@ -1,0 +1,303 @@
+<!-- <header class="sticky" [ngClass]="class" [class.fixed]="stick && sticky">
+  <div class="mobile-fix-option"></div>
+  <div class="top-header" *ngIf="topbar">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-6">
+          <div class="header-contact">
+            <ul>
+              <li>Welcome to Our store Multikart</li>
+              <li><i class="fa fa-phone" aria-hidden="true"></i>Call Us: 123 - 456 - 7890</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-6 text-end">
+          <ul class="header-dropdown">
+            <li class="compare">
+              <a [routerLink]="['/shop/compare']"><i class="fa fa-random" aria-hidden="true"></i>Compare</a>
+            </li>
+            <li class="mobile-wishlist">
+              <a [routerLink]="['/shop/wishlist']"><i class="fa fa-heart" aria-hidden="true"></i>Wishlist</a>
+            </li>
+            <li class="onhover-dropdown mobile-account">
+              <i class="fa fa-user" aria-hidden="true"></i> My Account
+              <ul class="onhover-show-div">
+                <li>
+                  <a data-lng="en" [routerLink]="['/pages/login']">
+                    Login
+                  </a>
+                </li>
+                <li>
+                  <a data-lng="es">
+                    Logout
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="main-menu">
+          <div class="menu-left">
+            <app-left-menu></app-left-menu>
+            <div class="brand-logo">
+              <a routerLink="/home/fashion" id="headerlogo">
+                <img [src]="themeLogo" class="img-fluid" alt="logo">
+              </a>
+            </div>
+          </div>
+          <div class="menu-right pull-right">
+            <div>
+              <app-menu></app-menu>
+            </div>
+            <div>
+              <app-settings></app-settings>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header> -->
+<header [ngClass]="class" [class.fixed]="stick && sticky" class="sticky microless-header">
+
+  <!-- <div class="ml-top-header" *ngIf="topbar">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center">
+        
+        <div class="ml-top-header-left d-flex align-items-center">
+          <div class="ml-header-features deliver-to pe-3">
+             <span class="deliver-label">Deliver to</span>
+             <img src="https://flagcdn.com/w20/it.png" width="16" class="mx-1"> 
+             <span class="city-label">Rome</span>
+          </div>
+          
+          <div class="ml-header-features border-start px-3">
+            <i class="fa fa-truck fa-flip-horizontal"></i>
+            <a href="#">Express Delivery</a>
+          </div>
+          
+          <div class="ml-header-features border-start px-3 d-none d-md-inline">
+            <i class="fa fa-repeat"></i>
+            <a href="#">Free Returns</a>
+          </div>
+          
+          <div class="ml-header-features border-start px-3 d-none d-lg-inline">
+             <i class="fa fa-map-marker"></i>
+             <a href="#">Our Location</a>
+          </div>
+        </div>
+
+        <div class="ml-top-header-right d-flex align-items-center">
+           <div class="ml-header-features border-end pe-3">
+              <label class="theme-switch">
+                <input type="checkbox" id="darkCheck">
+                <span class="theme-slider">
+                  <i class="fa fa-sun-o"></i>
+                  <i class="fa fa-moon-o"></i>
+                </span>
+              </label>
+           </div>
+
+           <div class="dropdown border-end px-2">
+              <button class="btn-top-select dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                USD
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+                <li><a class="dropdown-item active">USD - USA Dollars</a></li>
+                <li><a class="dropdown-item">EUR - Eurozone Euro</a></li>
+              </ul>
+           </div>
+
+           <div class="dropdown ps-2">
+              <button class="btn-top-select dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fa fa-globe"></i> English
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+                <li><a class="dropdown-item">English</a></li>
+                <li><a class="dropdown-item">العربية</a></li>
+              </ul>
+           </div>
+        </div>
+      </div>
+    </div>
+  </div> -->
+  <div class="ml-top-header" *ngIf="topbar">
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center h-100">
+
+        <div class="top-left-content d-flex align-items-center h-100">
+          <div class="top-item-box">
+            <span class="label-light">Deliver to</span>
+            <img src="https://flagcdn.com/w20/it.png" class="country-flag">
+            <span class="label-bold">Rome</span>
+          </div>
+
+          <div class="top-item-box ">
+            <a href="#" class="border-sep">
+              <i class="fa fa-truck fa-flip-horizontal"></i>
+
+              Express Delivery</a>
+          </div>
+
+          <div class="top-item-box d-none d-md-flex">
+            <a href="#" class="border-sep">
+              <i class="fa fa-repeat"></i>
+
+              Free Returns</a>
+          </div>
+
+          <div class="top-item-box d-none d-lg-flex">
+            <a href="#" class="border-sep">
+              <i class="fa fa-map-marker"></i>
+              Our Location</a>
+          </div>
+        </div>
+
+        <div class="top-right-content d-flex align-items-center h-100">
+          <div class="top-item-box  pe-3">
+            <div class="mode-switch">
+              <input type="checkbox" id="darkCheck">
+              <label for="darkCheck" class="switch-label">
+                <i class="fa fa-sun-o"></i>
+                <i class="fa fa-moon-o"></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="dropdown h-100 p-1  ">
+            <div class="border-sep dropdown">
+              <button class=" btn-small top-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false" type="button" data-bs-toggle="dropdown">
+                USD
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark shadow-lg">
+                <li><a class="dropdown-item active">USD - USA Dollars</a></li>
+                <li><a class="dropdown-item">EUR - Eurozone Euro</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="dropdown h-100 p-1  ">
+            <div class="border-sep dropdown">
+              <button class=" btn-small  top-dropdown-btn  dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fa fa-globe"></i> English
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark shadow-lg">
+                <li><a class="dropdown-item">English</a></li>
+                <li><a class="dropdown-item">Arabic</a></li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="main-header-microless bg-black">
+    <div class="container-fluid">
+      <div class="row align-items-center gx-0">
+        <div class="col-auto">
+          <div class="brand-logo py-2">
+            <a [routerLink]="['/home/fashion']" class="text-decoration-none">
+              <span class="logo-main">MICRO<span class="text-warning">L</span>ESS</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="col px-lg-5">
+          <div class="search-wrapper d-flex">
+            <input type="text" class="form-control" placeholder="What are you looking for?">
+            <button class="btn btn-warning">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="col-auto">
+          <div class="d-flex align-items-center action-icons">
+            <div class="dropdown px-3 text-center border-end border-secondary-subtle">
+              <a class="text-white text-decoration-none dropdown-toggle no-caret" data-bs-toggle="dropdown">
+                <i class="fa fa-user-o fs-5"></i>
+                <span class="d-block label">YOUR ACCOUNT</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+                <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
+                <li><a class="dropdown-item">Sign Up</a></li>
+              </ul>
+            </div>
+
+            <div class="px-3 text-center border-end border-secondary-subtle pointer">
+              <i class="fa fa-heart-o fs-5 text-white"></i>
+              <span class="d-block label text-white">WISHLIST</span>
+            </div>
+
+            <div class="px-3 text-center pointer" [routerLink]="['/shop/cart']">
+              <i class="fa fa-shopping-cart fs-5 text-white"></i>
+              <span class="d-block label text-white">YOUR CART</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-warning navigation-bar">
+    <div class="container-fluid d-flex align-items-center h-100" >
+      <div class="all-cat-wrapper" (mouseenter)="openMenu()" (mouseleave)="closeMenu()">
+        <div class="all-cat-btn px-4 h-100 d-flex align-items-center border-end border-dark">
+        <i class="fa fa-bars me-2"></i> ALL CATEGORIES
+      </div>
+
+      <!-- paanel code  -->
+      <!-- paanel code  -->
+
+      <!-- Dropdown Panel -->
+      <div class="all-cat-dropdown" [class.open]="isOpen">
+
+        <!-- Left: Main category list -->
+        <ul class="cat-main-list">
+          <li *ngFor="let cat of categories" (mouseenter)="setActive(cat)" [class.active]="activeCat?.id === cat.id">
+            <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: cat.id }"
+              class="cat-main-link">
+              {{ cat.title }}
+              <i class="fa fa-angle-right ms-auto" *ngIf="cat.children?.length"></i>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Right: Sub-categories panel -->
+        <div class="cat-sub-panel" *ngIf="activeCat?.children?.length">
+          <ul class="cat-sub-list">
+            <li *ngFor="let child of activeCat.children">
+              <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: child.id }"
+                class="cat-sub-link">
+                {{ child.title }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- paanel code  -->
+      <!-- paanel code  -->
+      </div>
+      
+      <div class="flex-grow-1 ps-2">
+        <app-menu></app-menu>
+      </div>
+      <div class="d-flex h-100 promo-sections">
+        <a class="bg-danger px-3 d-flex align-items-center">NEW RELEASES</a>
+        <a class="bg-danger px-3 d-flex align-items-center border-start border-white-50">CLEARANCE SALE</a>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,89 @@
+/* Parent wrapper to control scaling */
+footer {
+  /* Using theme variables for colors so light/dark mode works */
+  
+  .footer-title h4 {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    /* This ensures color stays visible in both modes */
+    color: var(--theme-deft); 
+  }
+
+  .footer-contant {
+    p {
+      font-size: 13px;
+      line-height: 22px;
+      color: #777;
+    }
+    ul li a {
+      font-size: 13px;
+      color: #777;
+      transition: 0.3s;
+      text-decoration: none;
+      &:hover {
+        color: var(--theme-color); // Uses Multikart's primary color
+        padding-left: 5px;
+      }
+    }
+  }
+
+  .popular-tags .badge {
+    background: #303030;
+    color: #a1a1a1;
+    font-weight: 700;
+    padding: 5px 10px;
+    border: 1px solid #404040;
+    font-size: 12px;
+    &:hover {
+      // background: #404040;
+      color: #fff;
+    }
+  }
+
+  /* --- Social Circles Fix --- */
+  .social-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background-color: #ffcc00; /* Microless Yellow */
+    border-radius: 50%;
+    color: #000 !important; /* Always black icon */
+    text-decoration: none;
+    
+    i { font-size: 16px; }
+    
+    &:hover {
+      background-color: #333;
+      color: #fff !important;
+    }
+  }
+
+  .sub-footer {
+    border-top: 4px solid #ffcc00 !important;
+    p, a { color: #888; font-size: 12px; }
+  }
+}
+
+/* Fix for White Mode losing visibility */
+.light-layout {
+  border-color: rgba(0,0,0,0.05) !important;
+}
+.cta-footer {
+  background: #000000 !important;
+    border-color: rgba(0,0,0,0.05) !important;
+
+}
+section.section-b-space.light-layout{
+  padding-bottom: 0px !important;
+}
+.cta-row i.fa{
+    width: 50px;
+    height: 50px;
+    background: #282828;
+    line-height: 50px;
+    border-radius: 50%;
+}

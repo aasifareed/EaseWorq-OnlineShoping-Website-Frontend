@@ -1,0 +1,81 @@
+<!-- side-bar single product slider start -->
+<!-- <div class="theme-card">
+    <h5 class="title-border">{{ title }}</h5>
+    <owl-carousel-o [options]="NewProductSliderConfig" class="offer-slider">
+        <ng-container *ngFor="let product of products | slice:0:3 ">  
+            <ng-template carouselSlide>
+                <div>
+                  <div class="d-flex align-items-center" *ngFor="let product of products | slice:0:3 ">
+                    <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+                      <img class="img-fluid w-auto"
+                           [defaultImage]="'assets/images/product/placeholder.jpg'" 
+                           [lazyLoad]="product.images[0].src" alt="">
+                    </a>
+                    <div class="media-body align-self-center">
+                      <!-- <bar-rating [rate]="5" [readOnly]="true"></bar-rating> --
+                      <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+                      <h6>{{ product.title | titlecase }}</h6></a>
+                      <h4>
+                        {{ product?.price * productService.Currency?.price | discount:product | currency:productService.Currency?.currency:'symbol' }}
+                        <del *ngIf="product?.discount">
+                          <span class="money"> 
+                            {{ product?.price * productService.Currency?.price | currency:productService.Currency?.currency:'symbol' }}
+                          </span>
+                        </del>
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+            </ng-template>
+            <ng-template carouselSlide>
+                <div>
+                  <div class="d-flex align-items-center" *ngFor="let product of products | slice:3:6 ">
+                    <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+                      <img class="img-fluid w-auto" 
+                           [defaultImage]="'assets/images/product/placeholder.jpg'" 
+                           [lazyLoad]="product.images[0].src" alt="">
+                    </a>
+                    <div class="media-body align-self-center">
+                      <!-- <bar-rating [rate]="5" [readOnly]="true"></bar-rating> --
+                      <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+                      <h6>{{ product.title | titlecase }}</h6></a>
+                      <h4>
+                        {{ product?.price * productService.Currency?.price | discount:product | currency:productService.Currency?.currency:'symbol' }}
+                        <del *ngIf="product?.discount">
+                          <span class="money"> 
+                            {{ product?.price * productService.Currency?.price | currency:productService.Currency?.currency:'symbol' }}
+                          </span>
+                        </del>
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+            </ng-template>
+        </ng-container>
+    </owl-carousel-o>
+</div> -->
+
+
+<!-- side-bar single product slider end -->
+  <!-- <div class="mt-3 mb-3">
+     <h2 class="title-border">{{ title }}</h2>
+    
+  </div> -->
+<div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+  <h2 class="title-border">{{ title }}</h2>
+  <a href="/see-more" class="see-more-link">See more</a>
+</div>
+   <owl-carousel-o class="product-m no-arrow" [options]="ProductSliderConfig">
+          <ng-container *ngFor="let product of products | slice:0:16">
+            <ng-template carouselSlide>
+              <div class="product-box">
+                <app-product-box-one 
+                  [product]="product" 
+                  [currency]="productService?.Currency"
+                  [thumbnail]="true"
+                  [cartModal]="true">
+                </app-product-box-one>
+              </div>
+            </ng-template>
+          </ng-container>
+        </owl-carousel-o>

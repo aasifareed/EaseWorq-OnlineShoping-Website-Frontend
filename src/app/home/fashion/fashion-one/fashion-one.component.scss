@@ -1,0 +1,22 @@
+@media (min-width: 1200px) {
+   .container {
+        max-width: 94% !important;
+    }
+}
+
+.cat-item {
+  display: block;
+  overflow: hidden;
+//   border-radius: 6px;
+  text-decoration: none;
+
+  img {
+    width: 100%;
+    transition: .2s cubic-bezier(.4, 0, .2, 1);
+    transition-property: filter;
+
+    &:hover {
+      filter: brightness(.75);
+    }
+  }
+}

@@ -1,0 +1,94 @@
+<div class="mc-card mb-2" *ngIf="!loader">
+  <div class="mc-card__img-box">
+    <span class="mc-chip">Powered By AMD</span>
+
+    <div class="mc-ribbon">New</div>
+    <div class="mc-card__img-clip">
+      <!-- <img src="https://microless.com/cdn/products/1b9d818ba63822db4b40d2efdce1282a-md.jpg" class="mc-card__img"
+        alt="MSI Titan Gaming Laptop" /> -->
+             <img [defaultImage]="ImageSrc ? ImageSrc : 'assets/images/product/placeholder.jpg'"
+          [lazyLoad]="ImageSrc ? ImageSrc : product.images[0].src" class="mc-card__img"
+          alt="{{ product.images[0].alt }}" />
+    </div>
+  </div>
+  <div class="mc-card__info">
+    <span class="mc-discount" *ngIf="product.discount">  {{ product.discount }}% OFF</span>
+    <!-- [routerLink]="['/shop/product/left/sidebar/', product?.title.replace(' ', '-')]" -->
+    <a  class="mc-card__name" >{{product?.title}}</a>
+    <span class="mc-fulfilled">Fulfilled by Microless</span>
+    <div class="mc-card__prices">
+      <!-- <span class="mc-card__sale"><em>US $</em>6,438.08</span>
+      <span class="mc-card__old">US $ 8,218.90</span> -->
+        <span class="mc-card__sale">
+        <!-- <em>US $</em> -->
+        {{ product?.price * currency?.price | discount:product | currency:currency?.currency:'symbol' }}
+      </span>
+      <span class="mc-card__old" *ngIf="product?.discount">
+        US $ {{ product?.price * currency?.price | currency:currency?.currency:'symbol' }}
+      </span>
+        <a href="javascript:void(0)" class="btn btn-primary " title="Quick View" (click)="QuickView.openModal()">
+              <!-- <i class="ti-search" aria-hidden="true"></i> -->
+               Add To Cart
+            </a>
+    </div>
+    <div class="mc-compare">
+      <input type="checkbox" id="cmp-1" />
+      <label for="cmp-1">Compare</label>
+    </div>
+  </div>
+</div>
+
+<!-- <div *ngIf="!loader" class="mc-card">
+
+  <div class="mc-card__img-box">
+
+    <span class="mc-chip" *ngIf="product.sale && !product.new">ON SALE</span>
+
+    <div class="mc-ribbon" *ngIf="product.new">
+      <span>New</span>
+    </div>
+
+    <div class="mc-card__img-clip">
+      <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+        <img [defaultImage]="ImageSrc ? ImageSrc : 'assets/images/product/placeholder.jpg'"
+          [lazyLoad]="ImageSrc ? ImageSrc : product.images[0].src" class="mc-card__img"
+          alt="{{ product.images[0].alt }}" />
+      </a>
+    </div>
+
+  </div>
+
+  <div class="mc-card__info">
+
+    <span class="mc-discount" *ngIf="product.discount">
+      {{ product.discount }}% OFF
+    </span>
+
+    <a [routerLink]="['/shop/product/left/sidebar/', product?.title.replace(' ', '-')]">
+      <p class="mc-card__name">{{ product?.title | titlecase }}</p>
+    </a>
+
+    <span class="mc-fulfilled">Fulfilled by Microless</span>
+
+    <div class="mc-card__prices">
+      <span class="mc-card__sale">
+        <em>US $</em>{{ product?.price * currency?.price | discount:product | currency:currency?.currency:'symbol' }}
+      </span>
+      <span class="mc-card__old" *ngIf="product?.discount">
+        US $ {{ product?.price * currency?.price | currency:currency?.currency:'symbol' }}
+      </span>
+    </div>
+
+    <!-- <div class="mc-compare">
+      <input type="checkbox" [id]="'cmp-' + product?.id">
+      <label [for]="'cmp-' + product?.id">Compare</label>
+    </div> --
+
+  </div>
+
+</div> -->
+
+
+<app-skeleton-product-box *ngIf="loader"></app-skeleton-product-box>
+<app-quick-view #quickView [product]="product" [currency]="currency"></app-quick-view>
+<app-cart-modal #cartModal [product]="product" [currency]="currency" *ngIf="cartModal"></app-cart-modal>
