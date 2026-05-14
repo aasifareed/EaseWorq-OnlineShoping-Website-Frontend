@@ -1,12 +1,11 @@
-<app-breadcrumb [title]="'Collection'" [breadcrumb]="'Collection'"></app-breadcrumb>
 <!-- section start -->
-<section class="section-b-space">
+<section class="section-b-space shop-layout-microless">
     <div class="collection-wrapper">
         <div class="container-fluid">
         <!-- <div class="container"> -->
             <div class="row">
                 <div class="col-lg-3">
-                    <div class="collection-filter" [class.openFilterbar]="mobileSidebar">
+                    <div class="collection-filter shop-sidebar-microless" [class.openFilterbar]="mobileSidebar">
                         <!-- side-bar colleps block stat -->
                         <div class="collection-filter-block">
                             <div class="collection-mobile-back" (click)="toggleMobileSidebar()">
@@ -17,21 +16,46 @@
                             <!-- Category filter start -->
                             <app-categories></app-categories>
                         </div>
+                        <div class="collection-filter-block microless-filter-section">
+                            <div class="collection-collapse-block" [class.open]="deliveryOpen">
+                                <h3 class="collapse-block-title" (click)="deliveryOpen = !deliveryOpen">Delivery Day</h3>
+                                <div class="collection-collapse-block-content">
+                                    <div class="collection-brand-filter microless-checkbox-list">
+                                        <div class="custom-control custom-checkbox collection-filter-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="ml-dd-today"
+                                                [(ngModel)]="deliveryToday" disabled>
+                                            <label class="custom-control-label" for="ml-dd-today">Today <span class="microless-filter-count">(0)</span></label>
+                                        </div>
+                                        <div class="custom-control custom-checkbox collection-filter-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="ml-dd-tomorrow"
+                                                [(ngModel)]="deliveryTomorrow" disabled>
+                                            <label class="custom-control-label" for="ml-dd-tomorrow">Tomorrow <span class="microless-filter-count">(0)</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <!-- silde-bar colleps block end here -->
                         <!-- side-bar colleps block stat -->
-                        <div class="collection-filter-block">
+                        <div class="collection-filter-block microless-filter-section">
                             <!-- brand filter start -->
                             <app-brands [products]="products" [brands]="brands" (brandsFilter)="updateFilter($event)">
                             </app-brands>
-                            <!-- color filter start here -->
-                            <app-colors [products]="products" [colors]="colors" (colorsFilter)="updateFilter($event)">
-                            </app-colors>
-                            <!-- size filter start here -->
-                            <app-size [products]="products" [size]="size" (sizeFilter)="updateFilter($event)">
-                            </app-size>
                             <!-- price filter start here -->
                             <app-price [min]="minPrice" [max]="maxPrice" (priceFilter)="updateFilter($event)">
                             </app-price>
+                            <div class="microless-inline-filters">
+                                <div class="custom-control custom-checkbox collection-filter-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="ml-out-stock"
+                                        [(ngModel)]="includeOutOfStock">
+                                    <label class="custom-control-label" for="ml-out-stock">Include Out of Stock</label>
+                                </div>
+                                <div class="custom-control custom-checkbox collection-filter-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="ml-fulfilled"
+                                        [(ngModel)]="fulfilledByShop">
+                                    <label class="custom-control-label" for="ml-fulfilled">Fulfilled by Microless</label>
+                                </div>
+                            </div>
                         </div>
                         <!-- silde-bar colleps block end here -->
                         <!-- side-bar single product slider start -->
@@ -55,8 +79,8 @@
                                     <!-- <a [routerLink]="['/shop/collection/left/sidebar']">
                                         <img src="assets/images/collection-banner.jpg" class="img-fluid " alt="">
                                     </a> -->
-                                    <div class="top-banner-content small-section">
-                                        <h4>fashion</h4>
+                                    <div class="top-banner-content microless-page-heading">
+                                        <h1 class="collection-page-title">{{ pageTitle }}</h1>
                                         <!-- <h5>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                                         </h5>
                                         <p>
@@ -64,7 +88,6 @@
                                             survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
                                             and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
                                         </p> -->
-                                        <app-top-categories-slider [gridMode]="true" [title]="'Shop by category'"></app-top-categories-slider>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -88,8 +111,8 @@
                                         </a>
                                     </li>
                                 </ul>
-                                <div class="collection-product-wrapper" id="products" *ngIf="products.length > 0&& !loader">
-                                    <app-grid [products]="products"[paginate]="paginate" [pageSize]="pageSize" [TotalCount]="TotalCount" [layoutView]="layoutView" [sortBy]="sortBy" (setGrid)="updateGridLayout($event)" (setLayout)="updateLayoutView($event)" (sortedBy)="sortByFilter($event)">
+                                <div class="collection-product-wrapper collection--microless" id="products" *ngIf="products.length > 0&& !loader">
+                                    <app-grid [products]="products" [paginate]="paginate" [pageSize]="pageSize" [TotalCount]="TotalCount" [layoutView]="layoutView" [sortBy]="sortBy" [breadcrumbTrail]="breadcrumbTrail" (setGrid)="updateGridLayout($event)" (setLayout)="updateLayoutView($event)" (sortedBy)="sortByFilter($event)">
                                     </app-grid>
                                     <div class="product-wrapper-grid" [ngClass]="layoutView">
                                         <div class="row">

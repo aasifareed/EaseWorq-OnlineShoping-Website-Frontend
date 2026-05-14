@@ -289,6 +289,72 @@ private apiRoot(): string {
     } 
   }
 
+  /**
+   * Path from tree root to the node whose id matches targetId (inclusive), or null.
+   */
+  public findCategoryPath(
+    nodes: any[] | null | undefined,
+    targetId: string | null | undefined
+  ): any[] | null {
+    if (!nodes?.length || targetId === undefined || targetId === null || targetId === '') {
+      return null;
+    }
+    const tid = String(targetId);
+    for (const n of nodes) {
+      if (String(n.id) === tid) {
+        return [n];
+      }
+      if (n.children?.length) {
+        const sub = this.findCategoryPath(n.children, targetId);
+        if (sub) {
+          return [n, ...sub];
+        }
+      }
+    }
+    return null;
+  }
+
+  /** Lowercase slug for matching query ?category= values to tree titles or ids. */
+  public normalizeCategoryKey(value: string | null | undefined): string {
+    return String(value ?? '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/_/g, '-');
+  }
+
+  /**
+   * Like {@link findCategoryPath} but also matches slugified `title` or `id` string
+   * (e.g. `?category=fashion` vs title "Fashion").
+   */
+  public findCategoryPathFlexible(
+    nodes: any[] | null | undefined,
+    target: string | null | undefined
+  ): any[] | null {
+    const byId = this.findCategoryPath(nodes, target);
+    if (byId) {
+      return byId;
+    }
+    if (!nodes?.length || target === undefined || target === null || target === '') {
+      return null;
+    }
+    const want = this.normalizeCategoryKey(String(target));
+    for (const n of nodes) {
+      if (n.children?.length) {
+        const sub = this.findCategoryPathFlexible(n.children, target);
+        if (sub) {
+          return [n, ...sub];
+        }
+      }
+      const idKey = this.normalizeCategoryKey(String(n.id));
+      const titleKey = this.normalizeCategoryKey(String(n.title ?? ''));
+      if (want && (idKey === want || titleKey === want)) {
+        return [n];
+      }
+    }
+    return null;
+  }
+
   /*
     ---------------------------------------------
     ------------- Product Pagination  -----------

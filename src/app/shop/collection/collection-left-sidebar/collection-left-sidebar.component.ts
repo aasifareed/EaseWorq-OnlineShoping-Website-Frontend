@@ -4,6 +4,7 @@ import { ViewportScroller } from '@angular/common';
 import { ProductService } from "../../../shared/services/product.service";
 import { Product } from '../../../shared/classes/product';
 import { environment } from 'src/environments/environment';
+import { CollectionToolbarBreadcrumb } from '../widgets/grid/grid.component';
 
 @Component({
   selector: 'app-collection-left-sidebar',
@@ -21,7 +22,7 @@ export class CollectionLeftSidebarComponent implements OnInit {
   public minPrice: number = 0;
   public maxPrice: number = 1200;
   public tags: any[] = [];
-  public category: string="";
+  public category: string | null = null;
   public pageNo: number = 1;
   public paginate: any = {}; // Pagination use only
   public pageSize: any =20; // Pagination use only
@@ -31,11 +32,31 @@ export class CollectionLeftSidebarComponent implements OnInit {
   public mobileSidebar: boolean = false;
   public loader: boolean = true;
 
+  /** Microless-style sidebar extras (delivery counts are placeholders until API exists). */
+  public deliveryOpen = true;
+  public deliveryToday = false;
+  public deliveryTomorrow = false;
+  public includeOutOfStock = false;
+  public fulfilledByShop = false;
+
+  /** Category hierarchy for breadcrumbs / page title. */
+  public categoryTree: any[] = [];
+  public breadcrumbTrail: CollectionToolbarBreadcrumb[] = [];
+  public pageTitle = 'Shop';
 
   filter: any = {};
 
   constructor(private route: ActivatedRoute, private router: Router,
     private viewScroller: ViewportScroller, public productService: ProductService) {   
+      this.productService.getCategories().subscribe({
+        next: (resp) => {
+          this.categoryTree = resp.result || [];
+          this.rebuildToolbarContext();
+          if (this.category) {
+            this.getProducts();
+          }
+        }
+      });
       // Get Query params..
       this.route.queryParams.subscribe(params => {
 
@@ -48,8 +69,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
         
         this.category = params.category ? params.category : null;
         this.sortBy = params.sortBy ? params.sortBy : 'ascending';
-        this.pageNo = params.page ? params.page : this.pageNo;
-this.getProducts();
+        this.pageNo = params.page != null && String(params.page) !== '' ? +params.page : 1;
+        this.rebuildToolbarContext();
+        this.getProducts();
         // Get Filtered Products..
         // this.productService.filterProducts(this.tags).subscribe(response => {         
         //   // Sorting Filter
@@ -69,22 +91,82 @@ this.getProducts();
   ngOnInit(): void {
     this.getProducts();
   }
-    getProducts() {
+
+  private queryWithoutCategoryPage(): Record<string, string> {
+    const raw = this.route.snapshot.queryParams as Record<string, string | undefined>;
+    const q: Record<string, string> = {};
+    Object.keys(raw || {}).forEach((k) => {
+      if (k === 'category' || k === 'page') {
+        return;
+      }
+      const v = raw[k];
+      if (v != null && v !== '') {
+        q[k] = v;
+      }
+    });
+    return q;
+  }
+
+  private queryForCategoryNode(categoryId: string): Record<string, string> {
+    const q = this.queryWithoutCategoryPage();
+    q.category = categoryId;
+    return q;
+  }
+
+  /** Human-readable title when ?category= is a slug not present in the tree. */
+  private formatFallbackCategoryTitle(raw: string): string {
+    const s = raw.replace(/[-_]+/g, ' ').trim();
+    return s.replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  rebuildToolbarContext(): void {
+    const pathRoute = ['/shop/collection/left/sidebar'];
+    const catPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
+    const trail: CollectionToolbarBreadcrumb[] = [];
+    trail.push({
+      label: 'Home',
+      routerLink: pathRoute,
+      queryParams: this.queryWithoutCategoryPage()
+    });
+    if (catPath?.length) {
+      this.pageTitle = catPath[catPath.length - 1].title;
+      catPath.forEach((node, i) => {
+        const last = i === catPath.length - 1;
+        trail.push({
+          label: node.title,
+          routerLink: last ? undefined : pathRoute,
+          queryParams: last ? undefined : this.queryForCategoryNode(String(node.id)),
+          current: last
+        });
+      });
+    } else {
+      this.pageTitle = this.category ? this.formatFallbackCategoryTitle(String(this.category)) : 'Shop';
+      if (this.category) {
+        trail.push({ label: this.pageTitle, current: true });
+      } else {
+        trail.push({ label: 'All products', current: true });
+      }
+    }
+    this.breadcrumbTrail = trail;
+  }
+
+  getProducts() {
       this.loader = true;
           let url = environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop;
     this.filter["maxResultCount"] = this.pageSize;
     this.filter["skipCount"] = (this.pageNo - 1) * this.pageSize;
     this.filter["skipCount"] = (this.pageNo - 1) * this.pageSize;
     this.filter["TenantId"] = "1";
-    this.filter["CategoryId"] = this.category;
+    const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
+    const apiCategoryId = resolvedPath?.length
+      ? resolvedPath[resolvedPath.length - 1].id
+      : this.category;
+    this.filter["CategoryId"] = apiCategoryId;
     this.filter["StoreId"] = "d4d292f5-de72-4742-b728-ea34a1706191";
     url = url + this.setFilterURL();
   this.productService.getProductsFromAPI(url).subscribe({
     next: (resp) => {
-      // API se 'items' array nikal kar interface ke mutabiq map karna
-            debugger;
-this.TotalCount = resp.result.totalCount; 
-            //     // Paginate Products
+      this.TotalCount = resp.result.totalCount; 
           this.paginate = this.productService.getPager(resp.result.totalCount,+this.pageNo ,this.pageSize);     // get paginate object from service
 
       this.products = resp.result.items.map((item: any): Product => {

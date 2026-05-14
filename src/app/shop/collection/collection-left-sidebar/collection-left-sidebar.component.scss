@@ -1,0 +1,103 @@
+/* Theme: global `section { padding-top: 70px }` + `.small-section` padding — remove gap under header (Microless-tight). */
+section.shop-layout-microless {
+  padding-top: 0 !important;
+}
+
+.shop-layout-microless {
+  .microless-page-heading {
+    padding-top: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0;
+  }
+
+  .collection-page-title {
+    margin: 0 0 10px;
+    font-size: 1.65rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-transform: none;
+    line-height: 1.2;
+  }
+
+  .collection--microless {
+    margin-top: 0;
+  }
+
+  .collection-filter.shop-sidebar-microless {
+    background: #1c1c20;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 10px 12px 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+
+    .collection-filter-block {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 0;
+      padding-bottom: 6px;
+
+      &:last-of-type {
+        border-bottom: 0;
+      }
+    }
+  }
+
+  .microless-filter-section {
+    padding-top: 4px;
+  }
+
+  .microless-inline-filters {
+    padding: 10px 0 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 8px;
+
+    .collection-filter-checkbox {
+      margin-bottom: 10px;
+    }
+  }
+
+  .microless-checkbox-list .collection-filter-checkbox {
+    margin-bottom: 8px;
+  }
+
+  .microless-filter-count {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 12px;
+  }
+}
+
+.shop-sidebar-microless ::ng-deep {
+  .collapse-block-title {
+    text-transform: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.92);
+    margin-top: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    &::after {
+      content: "+";
+      font-family: inherit;
+      font-weight: 400;
+      font-size: 18px;
+      right: 0;
+      color: rgba(255, 255, 255, 0.55);
+    }
+  }
+
+  .collection-collapse-block.open .collapse-block-title::after {
+    content: "\2212";
+  }
+
+  .collection-collapse-block {
+    border-bottom: 0;
+    padding-bottom: 4px;
+  }
+
+  .collection-collapse-block-content {
+    padding-top: 4px;
+  }
+}

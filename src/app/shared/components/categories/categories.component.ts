@@ -33,16 +33,60 @@ setActiveSlug(slug: string) {
 }
  
 // Used in template — opens a node if it or any descendant is active
-isOpen(cat: any): boolean {
-  if (this.activeSlug === cat.id) return true;
-  if (cat.children?.length) {
-    return cat.children.some((c: any) =>
-      this.activeSlug === c.id ||
-      c.children?.some((g: any) => this.activeSlug === g.id)
+  get categoryPathResolved(): any[] | null {
+    if (!this.activeSlug || !this.category?.length) {
+      return null;
+    }
+    return this.productService.findCategoryPathFlexible(this.category, this.activeSlug);
+  }
+
+  isOpen(cat: any): boolean {
+    const path = this.categoryPathResolved;
+    if (path?.length) {
+      return path.some((p) => String(p.id) === String(cat.id));
+    }
+    return String(this.activeSlug) === String(cat.id);
+  }
+
+  isCategoryActive(node: any): boolean {
+    if (!node || !this.activeSlug) {
+      return false;
+    }
+    if (String(node.id) === String(this.activeSlug)) {
+      return true;
+    }
+    const cur = this.navCurrent;
+    if (cur && String(cur.id) === String(node.id)) {
+      return true;
+    }
+    const slug = this.productService.normalizeCategoryKey(this.activeSlug);
+    return (
+      this.productService.normalizeCategoryKey(String(node.title)) === slug ||
+      this.productService.normalizeCategoryKey(String(node.id)) === slug
     );
   }
-  return false;
-}
+
+  get navCurrent(): any | null {
+    if (!this.activeSlug || !this.category?.length) {
+      return null;
+    }
+    const path = this.categoryPathResolved;
+    return path?.length ? path[path.length - 1] : null;
+  }
+
+  get navParent(): any | null {
+    if (!this.activeSlug || !this.category?.length) {
+      return null;
+    }
+    const path = this.categoryPathResolved;
+    return path && path.length > 1 ? path[path.length - 2] : null;
+  }
+
+  get navChildren(): any[] {
+    const cur = this.navCurrent;
+    return cur?.children || [];
+  }
+
   filterbyCategory() {
   // get filterbyCategory() {
     // const category = CATEGORIES;

@@ -1,6 +1,13 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Product } from '../../../../shared/classes/product';
 
+export interface CollectionToolbarBreadcrumb {
+  label: string;
+  routerLink?: any[];
+  queryParams?: Record<string, unknown>;
+  current?: boolean;
+}
+
 @Component({
   selector: 'app-grid',
   templateUrl: './grid.component.html',
@@ -14,6 +21,8 @@ export class GridComponent implements OnInit {
   @Input() TotalCount: number = 0;
   @Input() layoutView: string = 'grid-view';
   @Input() sortBy: string;
+  /** Inline trail: Home > … > current (Microless-style toolbar). */
+  @Input() breadcrumbTrail: CollectionToolbarBreadcrumb[] = [];
 
   @Output() setGrid: EventEmitter<any> = new EventEmitter<any>();
   @Output() setLayout: EventEmitter<any> = new EventEmitter<any>();
@@ -22,6 +31,24 @@ export class GridComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+  }
+
+  get rangeStart(): number {
+    if (!this.TotalCount) {
+      return 0;
+    }
+    const page = +(this.paginate?.currentPage || 1);
+    const ps = +(this.pageSize || 20);
+    return (page - 1) * ps + 1;
+  }
+
+  get rangeEnd(): number {
+    if (!this.TotalCount) {
+      return 0;
+    }
+    const page = +(this.paginate?.currentPage || 1);
+    const ps = +(this.pageSize || 20);
+    return Math.min(page * ps, +this.TotalCount);
   }
 
   setGridLayout(value: string) {
