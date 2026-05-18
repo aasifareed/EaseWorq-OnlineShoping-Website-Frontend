@@ -1,0 +1,32 @@
+.cms-page__title {
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.cms-page__content {
+  line-height: 1.7;
+  color: #333;
+
+  ::ng-deep h1,
+  ::ng-deep h2,
+  ::ng-deep h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+
+  ::ng-deep p {
+    margin-bottom: 1rem;
+  }
+
+  ::ng-deep ul,
+  ::ng-deep ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+  }
+
+  ::ng-deep a {
+    color: #ff4c3b;
+    text-decoration: underline;
+  }
+}

@@ -20,6 +20,11 @@ const routes: Routes = [
     component: ShopComponent,
     loadChildren: () => import('./shop/shop.module').then(m => m.ShopModule)
   },
+  {
+    path: 'page',
+    component: ShopComponent,
+    loadChildren: () => import('./shop/cms-page/cms-page.module').then(m => m.CmsPageModule)
+  },
   { 
     path: 'pages',
     component: PagesComponent,

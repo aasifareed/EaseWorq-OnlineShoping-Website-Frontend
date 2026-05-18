@@ -7,11 +7,19 @@ export const environment = {
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
   baseUrl: 'https://localhost:44374',
+  /** Tenant for public storefront APIs (pages, products, settings). */
+  tenantId: 1,
+  /** Optional online store id (CustomStore). Uses tenant online store when omitted. */
+  storeId: null as string | null,
   // baseUrl: 'https://q1dcwl9z-44374.inc1.devtunnels.ms',
 
-   urls: {
-OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:"OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop"
-   }
+  urls: {
+    OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:
+      'OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop',
+    Page_GetBySlug: 'OnlineShopPage/GetBySlug',
+    Page_GetActivePages: 'OnlineShopPage/GetActivePages',
+    Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
+  },
 };
 
 /*

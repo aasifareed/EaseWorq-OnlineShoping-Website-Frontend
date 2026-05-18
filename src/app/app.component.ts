@@ -1,15 +1,16 @@
-import { Component, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, PLATFORM_ID, Inject, OnInit } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LoadingBarService } from '@ngx-loading-bar/core';
 import { map, delay, withLatestFrom } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
+import { OnlineShopSettingsService } from './shared/services/online-shop-settings.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   
   // For Progressbar
   loaders = this.loader.progress$.pipe(
@@ -18,12 +19,21 @@ export class AppComponent {
     map(v => v[1]),
   );
   
-  constructor(@Inject(PLATFORM_ID) private platformId: Object,
-    private loader: LoadingBarService, translate: TranslateService) {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private loader: LoadingBarService,
+    translate: TranslateService,
+    private storefrontSettings: OnlineShopSettingsService,
+  ) {
     if (isPlatformBrowser(this.platformId)) {
       translate.setDefaultLang('en');
       translate.addLangs(['en', 'fr']);
     }
   }
 
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.storefrontSettings.loadStorefront().subscribe();
+    }
+  }
 }
