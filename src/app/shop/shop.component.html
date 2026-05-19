@@ -1,3 +1,16 @@
-<app-header-one [sticky]="true"></app-header-one>
-<router-outlet></router-outlet>
-<app-footer-one></app-footer-one>
+<ng-container *ngIf="!storefrontLoading && storefront && !storefront.isOnlineShopEnabled; else shopOpen">
+  <section class="storefront-disabled py-5">
+    <div class="container text-center">
+      <h2>{{ storefront.storeName || 'Online Shop' }}</h2>
+      <p class="text-muted mt-3 mb-0">
+        This online shop is currently unavailable. Please check back later.
+      </p>
+    </div>
+  </section>
+</ng-container>
+
+<ng-template #shopOpen>
+  <app-header-one [sticky]="true" [themeLogo]="themeLogo"></app-header-one>
+  <router-outlet></router-outlet>
+  <app-footer-one [themeLogo]="themeLogo"></app-footer-one>
+</ng-template>

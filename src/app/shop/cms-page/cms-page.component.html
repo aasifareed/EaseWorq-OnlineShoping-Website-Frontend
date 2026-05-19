@@ -1,0 +1,26 @@
+<app-breadcrumb *ngIf="!loading && !notFound" [title]="pageTitle" [breadcrumb]="pageTitle"></app-breadcrumb>
+
+<section class="cms-page section-b-space">
+  <div class="container" *ngIf="loading">
+    <div class="text-center py-5">
+      <p class="text-muted mb-0">Loading...</p>
+    </div>
+  </div>
+
+  <div class="container" *ngIf="!loading && notFound">
+    <div class="text-center py-5">
+      <h2>Page not found</h2>
+      <p class="text-muted">This page is not available or has not been published yet.</p>
+      <a routerLink="/home/fashion" class="btn btn-solid mt-3">Back to home</a>
+    </div>
+  </div>
+
+  <div class="container" *ngIf="!loading && !notFound">
+    <div class="row">
+      <div class="col-sm-12">
+        <h1 class="cms-page__title">{{ pageTitle }}</h1>
+        <div class="cms-page__content" [innerHTML]="safeContent"></div>
+      </div>
+    </div>
+  </div>
+</section>

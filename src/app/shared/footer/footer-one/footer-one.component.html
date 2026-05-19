@@ -220,22 +220,17 @@
               <h4>QUICK LINKS</h4>
             </div>
             <div class="footer-contant">
-              <div class="row g-0">
-                <div class="col-6">
-                  <ul class="list-unstyled">
-                    <li><a href="javascript:void(0)">Contact Us</a></li>
-                    <li><a href="javascript:void(0)">About Us</a></li>
-                    <li><a href="javascript:void(0)">Deliveries</a></li>
-                  </ul>
-                </div>
-                <div class="col-6">
-                  <ul class="list-unstyled">
-                    <li><a href="javascript:void(0)">Blog</a></li>
-                    <li><a href="javascript:void(0)">Privacy Policy</a></li>
-                    <li><a href="javascript:void(0)">Terms</a></li>
-                  </ul>
-                </div>
-              </div>
+              <ul class="list-unstyled" *ngIf="footerPages.length; else staticQuickLinks">
+                <li *ngFor="let page of footerPages">
+                  <a [routerLink]="pageLink(page.slug)">{{ page.title }}</a>
+                </li>
+              </ul>
+              <ng-template #staticQuickLinks>
+                <ul class="list-unstyled">
+                  <li><a href="javascript:void(0)">Contact Us</a></li>
+                  <li><a href="javascript:void(0)">About Us</a></li>
+                </ul>
+              </ng-template>
             </div>
           </div>
         </div>
@@ -298,11 +293,21 @@
           <p class="mb-0 small">© 2011 - {{ today | date:'y' }} microless.com, All Rights Reserved.</p>
         </div>
         <div class="col-md-6 text-end">
-          <ul class="list-inline mb-0 small">
-            <li class="list-inline-item"><a href="javascript:void(0)">Privacy Policy</a></li>
-            <li class="list-inline-item">|</li>
-            <li class="list-inline-item"><a href="javascript:void(0)">Terms & Conditions</a></li>
+          <ul class="list-inline mb-0 small" *ngIf="footerPages.length; else staticSubFooter">
+            <ng-container *ngFor="let page of footerPages; let last = last">
+              <li class="list-inline-item">
+                <a [routerLink]="pageLink(page.slug)">{{ page.title }}</a>
+              </li>
+              <li class="list-inline-item" *ngIf="!last">|</li>
+            </ng-container>
           </ul>
+          <ng-template #staticSubFooter>
+            <ul class="list-inline mb-0 small">
+              <li class="list-inline-item"><a href="javascript:void(0)">Privacy Policy</a></li>
+              <li class="list-inline-item">|</li>
+              <li class="list-inline-item"><a href="javascript:void(0)">Terms & Conditions</a></li>
+            </ul>
+          </ng-template>
         </div>
       </div>
     </div>
