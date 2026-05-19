@@ -72,8 +72,9 @@ const routes: Routes = [
     component: CheckoutComponent 
   },
   { 
-    path: 'aboutus', 
-    component: AboutUsComponent 
+    path: 'aboutus',
+    redirectTo: '/page/about-us',
+    pathMatch: 'full'
   },
   { 
     path: 'search', 

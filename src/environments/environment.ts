@@ -10,7 +10,7 @@ export const environment = {
   /** Tenant for public storefront APIs (pages, products, settings). */
   tenantId: 1,
   /** Optional online store id (CustomStore). Uses tenant online store when omitted. */
-  storeId: null as string | null,
+  storeId: 'd4d292f5-de72-4742-b728-ea34a1706191' as string | null,
   // baseUrl: 'https://q1dcwl9z-44374.inc1.devtunnels.ms',
 
 //   urls: {
@@ -34,6 +34,8 @@ OnlinseShopUsers_ResetPasswordRequestForOnlineShop: "OnlinseShopUsers/ResetPassw
 Page_GetBySlug: 'OnlineShopPage/GetBySlug',
 Page_GetActivePages: 'OnlineShopPage/GetActivePages',
 Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
+HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
+OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
 
    },
    shop: {

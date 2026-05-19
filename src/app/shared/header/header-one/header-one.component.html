@@ -64,7 +64,7 @@
     </div>
   </div>
 </header> -->
-<header [ngClass]="class" [class.fixed]="stick && sticky" class="sticky microless-header">
+<header [ngClass]="class" [class.fixed]="sticky" class="sticky microless-header">
 
   <!-- <div class="ml-top-header" *ngIf="topbar">
     <div class="container-fluid">
@@ -207,7 +207,7 @@
         <div class="col-auto">
           <div class="brand-logo py-2">
             <a [routerLink]="['/home/fashion']" class="text-decoration-none">
-              <span class="logo-main">MICRO<span class="text-warning">L</span>ESS</span>
+              <span class="logo-main">{{ storeName }}</span>
             </a>
           </div>
         </div>
@@ -294,10 +294,7 @@
       <div class="flex-grow-1 ps-2">
         <app-menu></app-menu>
       </div>
-      <div class="d-flex h-100 promo-sections">
-        <a class="bg-danger px-3 d-flex align-items-center">NEW RELEASES</a>
-        <a class="bg-danger px-3 d-flex align-items-center border-start border-white-50">CLEARANCE SALE</a>
-      </div>
     </div>
   </div>
 </header>
+<div class="microless-header-spacer" *ngIf="sticky" aria-hidden="true"></div>

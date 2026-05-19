@@ -127,6 +127,33 @@
 //   }
 // }
 
+:host {
+  display: block;
+}
+
+.microless-header.sticky.fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 999;
+  background: #000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  overflow: visible;
+}
+
+.microless-header-spacer {
+  height: 130px;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .microless-header-spacer {
+    height: 115px;
+  }
+}
+
 .microless-header {
   font-family: 'Inter', 'Segoe UI', sans-serif;
 
@@ -234,6 +261,7 @@
       font-weight: 800;
       letter-spacing: -0.5px;
       color: #fff;
+      text-transform: uppercase;
     }
 
     .search-wrapper {
@@ -268,17 +296,19 @@
   .navigation-bar {
     height: 40px;
     background-color: #ffcc00;
+    overflow: visible;
 
-    .promo-sections a {
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-      text-decoration: none;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      &:hover { filter: brightness(1.1); }
+    .flex-grow-1 {
+      position: relative;
+      overflow: visible;
+      min-width: 0;
+    }
+
+    app-menu,
+    .store-nav,
+    .store-nav #mainnav,
+    .store-nav .nav-menu {
+      overflow: visible;
     }
   }
 }

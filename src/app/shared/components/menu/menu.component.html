@@ -1,4 +1,4 @@
-<div class="main-navbar">
+<div class="main-navbar store-nav">
   <div id="mainnav">
     <div class="toggle-nav" (click)="mainMenuToggle()">
       <i class="fa fa-bars sidebar-bar"></i>
@@ -12,137 +12,146 @@
         </div>
       </li>
 
-      <li *ngFor="let menuItem of menuItems" [class.mega-menu]="menuItem.megaMenu">
-        <!-- Sub -->
-        <a href="javascript:void(0)" class="nav-link" *ngIf="menuItem.type === 'sub'" 
-            (click)="toggletNavActive(menuItem)">
-          {{ menuItem.title | translate }}
-          <!-- <div class="lable-nav" *ngIf="menuItem.badge">{{ menuItem.badgeText | translate }}</div> -->
-          <span class="sub-arrow" *ngIf="menuItem.children"></span>
-        </a>
-        <!-- Link -->
-        <a [routerLink]="menuItem.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link"
-          *ngIf="menuItem.type === 'link'">
-          {{ menuItem.title }}
-          <!-- <div class="lable-nav" *ngIf="menuItem.badge">{{ menuItem.badgeText | translate }}</div> -->
-          <span class="sub-arrow" *ngIf="menuItem.children"></span>
-        </a>
-        <!-- External Link -->
-        <a href="{{ menuItem.path }}" class="nav-link" *ngIf="menuItem.type === 'extLink'">
-          {{ menuItem.title }}
-          <!-- <div class="lable-nav" *ngIf="menuItem.badge">{{ menuItem.badgeText | translate }}</div> -->
-          <span class="sub-arrow" *ngIf="menuItem.children"></span>
-        </a>
-        <!-- External Tab Link -->
-        <a href="{{ menuItem.path }}" class="nav-link" *ngIf="menuItem.type === 'extTabLink'">
-          {{ menuItem.title }}
-          <!-- <div class="lable-nav" *ngIf="menuItem.badge">{{ menuItem.badgeText | translate }}</div> -->
-          <span class="sub-arrow" *ngIf="menuItem.children"></span>
-        </a>
+      <li
+        *ngFor="let menuItem of menuItems"
+        [class.mega-menu]="menuItem.megaMenu"
+        [class.mega-menu-open]="menuItem.megaMenu && isMegaOpen(menuItem)"
+        (mouseenter)="menuItem.megaMenu && openMegaMenu(menuItem)"
+        (mouseleave)="menuItem.megaMenu && onMegaHoverZoneLeave($event)"
+      >
+        <!-- Home, Shop, etc. -->
+        <ng-container *ngIf="!menuItem.megaMenu">
+          <a
+            href="javascript:void(0)"
+            class="nav-link"
+            *ngIf="menuItem.type === 'sub'"
+            (click)="toggletNavActive(menuItem)"
+          >
+            <ng-container *ngIf="useTranslate(menuItem); else rawTopTitle">{{ menuItem.title | translate }}</ng-container>
+            <ng-template #rawTopTitle>{{ menuLabel(menuItem) }}</ng-template>
+            <span class="sub-arrow" *ngIf="menuItem.children"></span>
+          </a>
+          <a
+            [routerLink]="menuItem.path"
+            [queryParams]="menuItem.queryParams || null"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="nav-link"
+            *ngIf="menuItem.type === 'link'"
+          >
+            <ng-container *ngIf="useTranslate(menuItem); else rawLinkTitle">{{ menuItem.title | translate }}</ng-container>
+            <ng-template #rawLinkTitle>{{ menuLabel(menuItem) }}</ng-template>
+          </a>
+        </ng-container>
 
-        <!-- 2nd Level Menu -->
-        <ul class="nav-submenu" [class.opensubmenu]="menuItem.active" *ngIf="menuItem.children">
-          <li *ngFor="let childrenItem of menuItem.children">
-            <!-- Sub -->
-            <a href="javascript:void(0)" *ngIf="childrenItem.type === 'sub'" 
-                (click)="toggletNavActive(childrenItem)">
-              {{ childrenItem.title | translate }}
-              <span class="new-tag" *ngIf="childrenItem.badge">{{ childrenItem.badgeText | translate }}</span>
-              <span class="sub-arrow" *ngIf="childrenItem.children"></span>
-            </a>
-            <!-- Link -->
-            <a [routerLink]="childrenItem.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" 
-              *ngIf="childrenItem.type === 'link' ">
-              {{ childrenItem.title | translate }}
-              <span class="new-tag" *ngIf="childrenItem.badge">{{ childrenItem.badgeText | translate }}</span>
-              <span class="sub-arrow" *ngIf="childrenItem.children"></span>
-            </a>
-            <!-- External Link -->
-            <a href="{{ childrenItem.path }}"
-              *ngIf="childrenItem.type === 'extLink' ">
-              {{ childrenItem.title | translate }}
-              <span class="new-tag" *ngIf="childrenItem.badge">{{ childrenItem.badgeText | translate }}</span>
-              <span class="sub-arrow" *ngIf="childrenItem.children"></span>
-            </a>
-            <!-- External Tab Link -->
-            <a href="{{ childrenItem.path }}" target="_blank"
-              *ngIf="childrenItem.type === 'extTabLink' ">
-              {{ childrenItem.title | translate }}
-              <span class="new-tag" *ngIf="childrenItem.badge">{{ childrenItem.badgeText | translate }}</span>
-              <span class="sub-arrow" *ngIf="childrenItem.children"></span>
-            </a>
+        <!-- Mega menu categories -->
+        <div *ngIf="menuItem.megaMenu" class="mega-menu-hover-zone">
+          <a href="javascript:void(0)" class="nav-link nav-link--has-dropdown" (click)="toggletNavActive(menuItem)">
+            <span class="nav-link__text">{{ menuLabel(menuItem) }}</span>
+            <i class="fa fa-angle-down nav-caret" *ngIf="menuItem.children?.length" aria-hidden="true"></i>
+          </a>
 
-            <!-- 3rd Level Menu -->
-            <ul *ngIf="childrenItem.children" [class.opensubchild]="childrenItem.active" class="nav-sub-childmenu">
-              <li *ngFor="let childrenSubItem of childrenItem.children">
-                <!-- Link -->
-                <a [routerLink]="childrenSubItem.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" 
-                  *ngIf="childrenSubItem.type === 'link' ">
-                  {{ childrenSubItem.title | translate }}
-                  <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                </a>
-                <!-- External Link -->
-                <a href="{{ childrenSubItem.path }}"
-                  *ngIf="childrenSubItem.type === 'extLink' ">
-                  {{ childrenSubItem.title | translate }}
-                  <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                </a>
-                <!-- External Tab Link -->
-                <a href="{{ childrenSubItem.path }}" target="_blank"
-                  *ngIf="childrenSubItem.type === 'extTabLink' ">
-                  {{ childrenSubItem.title | translate }}
-                  <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
+          <div
+            class="mega-menu-bridge"
+            *ngIf="isMegaOpen(menuItem)"
+            (mouseenter)="openMegaMenu(menuItem)"
+            aria-hidden="true"
+          ></div>
 
-        <div class="mega-menu-container" *ngIf="menuItem.megaMenu && menuItem.children">
-          <div class="container">
-            <div class="row">
-              <div class="col mega-box" *ngFor="let childrenItem of menuItem.children">
-                <div class="link-section">
-                  <div class="menu-title">
-                    <h5>
-                        {{ childrenItem.title | translate }}
-                        <span class="sub-arrow" *ngIf="childrenItem.children"></span>
-                    </h5>
-                  </div>
-                  <div class="menu-content opensubmegamenu">
-                    <ul *ngIf="childrenItem.children">
-                      <li *ngFor="let childrenSubItem of childrenItem.children">
-                        <!-- Sub -->
-                          <a href="javascript:void(0)" *ngIf="childrenSubItem.type === 'sub'">
-                            {{ childrenSubItem.title | translate }}
-                            <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                          </a>
-                          <!-- Link -->
-                          <a [routerLink]="childrenSubItem.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" 
-                            *ngIf="childrenSubItem.type === 'link' ">
-                            {{ childrenSubItem.title | translate }}
-                            <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                          </a>
-                          <!-- External Link -->
-                          <a href="{{ childrenSubItem.path }}"
-                            *ngIf="childrenSubItem.type === 'extLink' ">
-                            {{ childrenSubItem.title | translate }}
-                            <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                          </a>
-                          <!-- External Tab Link -->
-                          <a href="{{ childrenSubItem.path }}" target="_blank"
-                            *ngIf="childrenSubItem.type === 'extTabLink' ">
-                            {{ childrenSubItem.title | translate }}
-                            <span class="new-tag" *ngIf="childrenSubItem.badge">{{ childrenSubItem.badgeText | translate }}</span>
-                          </a>
-                      </li>
-                    </ul>
-                  </div>
+          <div
+            class="store-mega-panel"
+            *ngIf="menuItem.children?.length"
+            [class.is-open]="isMegaOpen(menuItem)"
+            (mouseenter)="openMegaMenu(menuItem)"
+            role="region"
+            [attr.aria-label]="menuLabel(menuItem) + ' menu'"
+          >
+            <div class="store-mega-panel__inner">
+              <div class="store-mega-panel__grid">
+                <div
+                  *ngFor="let column of menuItem.children"
+                  class="store-mega-panel__col"
+                  [class.store-mega-panel__col--shop-all]="column.megaColumnType === 'shop-all'"
+                  [class.store-mega-panel__col--categories]="column.megaColumnType === 'categories'"
+                  [class.store-mega-panel__col--popular]="column.megaColumnType === 'popular'"
+                >
+                  <h6 class="store-mega-panel__heading">
+                    {{ menuLabel(column) }}
+                    <span class="store-mega-panel__loading" *ngIf="column.megaColumnType === 'popular' && popularProductsLoading">...</span>
+                  </h6>
+                  <ul
+                    class="store-mega-panel__links"
+                    *ngIf="column.children?.length"
+                    [class.store-mega-panel__links--grid]="column.megaColumnType === 'popular'"
+                    (mouseleave)="column.megaColumnType === 'categories' && onSubcategoriesColumnLeave(menuItem, $event)"
+                  >
+                    <li *ngFor="let link of column.children">
+                      <a
+                        [routerLink]="link.path"
+                        [queryParams]="link.queryParams || null"
+                        routerLinkActive="active"
+                        class="store-mega-panel__link"
+                        [class.store-mega-panel__link--primary]="column.megaColumnType === 'shop-all'"
+                        [class.store-mega-panel__link--product]="column.megaColumnType === 'popular'"
+                        [class.store-mega-panel__link--sub-active]="column.megaColumnType === 'categories' && isSubcategoryHovered(link)"
+                        (mouseenter)="column.megaColumnType === 'shop-all' && onShopAllHover(menuItem); column.megaColumnType === 'categories' && onSubcategoryHover(link, menuItem)"
+                        (click)="onMegaLinkClick()"
+                      >
+                        <span class="store-mega-panel__link-text">{{ menuLabel(link) }}</span>
+                        <i
+                          class="fa fa-angle-right store-mega-panel__chevron"
+                          *ngIf="column.megaColumnType !== 'popular'"
+                          aria-hidden="true"
+                        ></i>
+                      </a>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Mobile accordion (mega menus only) -->
+        <ul
+          class="nav-submenu nav-submenu--accordion"
+          [class.opensubmenu]="menuItem.active"
+          *ngIf="menuItem.megaMenu && menuItem.children"
+        >
+          <li *ngFor="let column of menuItem.children" class="nav-submenu__group">
+            <a
+              href="javascript:void(0)"
+              class="nav-submenu__heading"
+              *ngIf="column.type === 'sub'"
+              (click)="toggletNavActive(column)"
+            >
+              {{ menuLabel(column) }}
+              <span class="sub-arrow" *ngIf="column.children?.length"></span>
+            </a>
+
+            <ul
+              class="nav-sub-childmenu"
+              [class.opensubchild]="column.active"
+              [class.nav-sub-childmenu--grid]="column.megaColumnType === 'popular'"
+              *ngIf="column.children?.length"
+            >
+              <li *ngFor="let link of column.children">
+                <a
+                  [routerLink]="link.path"
+                  [queryParams]="link.queryParams || null"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  *ngIf="link.type === 'link'"
+                  (click)="onMegaLinkClick()"
+                  class="nav-submenu__link"
+                  [class.nav-submenu__link--featured]="column.megaColumnType === 'shop-all'"
+                >
+                  {{ menuLabel(link) }}
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
       </li>
     </ul>
   </div>

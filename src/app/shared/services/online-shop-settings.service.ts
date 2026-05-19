@@ -107,8 +107,9 @@ export class OnlineShopSettingsService {
       params.push(`tenantId=${environment.tenantId}`);
     }
 
-    if (environment.storeId) {
-      params.push(`customStoreId=${environment.storeId}`);
+    const storeId = environment.storeId ?? environment.shop?.storeId;
+    if (storeId) {
+      params.push(`customStoreId=${storeId}`);
     }
 
     const query = params.length ? `?${params.join('&')}` : '';

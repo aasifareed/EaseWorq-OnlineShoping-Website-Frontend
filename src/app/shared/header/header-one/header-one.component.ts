@@ -1,36 +1,56 @@
-import { Component, OnInit, Input, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
+import { OnlineShopSettingsService } from '../../services/online-shop-settings.service';
+import { OnlineShopStorefront } from '../../models/online-shop-storefront.model';
 
 @Component({
   selector: 'app-header-one',
   templateUrl: './header-one.component.html',
   styleUrls: ['./header-one.component.scss']
 })
-export class HeaderOneComponent implements OnInit {
+export class HeaderOneComponent implements OnInit, OnDestroy {
   
   @Input() class: string='';
   // @Input() class: string;
   @Input() themeLogo: string = 'assets/images/icon/logo.png'; // Default Logo
   @Input() topbar: boolean = true; // Default True
-  @Input() sticky: boolean = false; // Default false
-  
-  public stick: boolean = false;
+  /** When true, header is fixed at the top for the entire page (no scroll delay). */
+  @Input() sticky: boolean = false;
 
-  constructor(public productService: ProductService,) { }
+  public storefront: OnlineShopStorefront | null = null;
+
+  private readonly destroy$ = new Subject<void>();
+
+  constructor(
+    public productService: ProductService,
+    private storefrontSettings: OnlineShopSettingsService,
+  ) { }
 
   ngOnInit(): void {
     this.filterbyCategory();
+
+    this.storefrontSettings.storefront$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((storefront) => {
+        this.storefront = storefront;
+      });
+
+    if (this.storefrontSettings.snapshot) {
+      this.storefront = this.storefrontSettings.snapshot;
+    } else {
+      this.storefrontSettings.loadStorefront().subscribe();
+    }
   }
 
-  // @HostListener Decorator
-  @HostListener("window:scroll", [])
-  onWindowScroll() {
-    let number = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-  	if (number >= 150 && window.innerWidth > 400) { 
-  	  this.stick = true;
-  	} else {
-  	  this.stick = false;
-  	}
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  get storeName(): string {
+    return this.storefront?.storeName?.trim() || 'EaseWorq';
   }
 
 

@@ -29,36 +29,107 @@ footer {
     }
   }
 
-  .popular-tags .badge {
-    background: #303030;
-    color: #a1a1a1;
-    font-weight: 700;
-    padding: 5px 10px;
-    border: 1px solid #404040;
-    font-size: 12px;
+  .footer-contact-link {
+    color: inherit;
+    text-decoration: none;
     &:hover {
-      // background: #404040;
-      color: #fff;
+      color: var(--theme-color);
     }
   }
 
-  /* --- Social Circles Fix --- */
-  .social-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    background-color: #ffcc00; /* Microless Yellow */
-    border-radius: 50%;
-    color: #000 !important; /* Always black icon */
+  .footer-quick-links li + li {
+    margin-top: 4px;
+  }
+
+  .footer-contact-list {
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      > i.fa {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        background: #282828;
+        border-radius: 50%;
+        line-height: 36px;
+        text-align: center;
+        font-size: 15px;
+        color: #ffcc00;
+      }
+
+      > span {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+    }
+  }
+
+  .footer-contact-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+  }
+
+  .footer-contact-value {
+    font-size: 13px;
+    color: #ccc;
     text-decoration: none;
-    
-    i { font-size: 16px; }
-    
+    word-break: break-word;
+
     &:hover {
-      background-color: #333;
-      color: #fff !important;
+      color: var(--theme-color);
+    }
+  }
+
+  .footer-contact-empty {
+    font-size: 13px;
+    color: #777;
+  }
+
+  .footer-payment-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .footer-payment-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 0.5px;
+  }
+
+  .payment-method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #111;
+    background-color: #ffcc00;
+    border-radius: 4px;
+
+    i {
+      font-size: 14px;
+    }
+
+    &--gopay {
+      background-color: #1e3a5f;
+      color: #fff;
     }
   }
 
