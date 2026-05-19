@@ -6,8 +6,11 @@
                 <h2>Related Products</h2>
             </div>
         </div>
-        <div class="row search-product">
-            <div class="col-xl-2 col-md-4 col-sm-6" *ngFor="let product of products | slice:0:6">
+        <div class="row search-product" *ngIf="loading">
+            <div class="col-12 text-center py-4">Loading related products…</div>
+        </div>
+        <div class="row search-product" *ngIf="!loading && displayProducts.length">
+            <div class="col-xl-3 col-md-6 col-sm-6" *ngFor="let product of displayProducts">
                 <div class="product-box">
                    <app-product-box-one 
 	                  [product]="product" 
@@ -16,6 +19,9 @@
 	                </app-product-box-one>
                 </div>
             </div>
+        </div>
+        <div class="row" *ngIf="!loading && !displayProducts.length">
+            <div class="col-12 text-center py-3 text-muted">No related products found.</div>
         </div>
     </div>
 </section>

@@ -1,3 +1,29 @@
-.close.float-end{
-    background: unset !important;
+.close.float-end {
+  background: unset !important;
+}
+
+/* Modal is rendered on document body (windowClass: Quickview). */
+::ng-deep .Quickview .quick-view-modal .quick-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  a.btn {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 44px;
+    margin: 0 !important;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.25;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  a.btn:last-child {
+    flex: 1 1 100%;
+  }
 }

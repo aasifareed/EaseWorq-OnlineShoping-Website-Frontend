@@ -10,7 +10,9 @@ export interface PayFastCheckoutResponse {
 }
 
 export interface CreatePayFastCheckoutRequest {
+  /** Online shop sale order id (Guid string) from CreateOnlineShopSaleOrder. */
   orderId?: string;
+  /** PayFast basket / transaction reference from order creation. */
   basketId?: string;
   amount: number;
   customerName?: string;

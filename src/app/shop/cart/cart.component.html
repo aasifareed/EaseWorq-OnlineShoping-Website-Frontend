@@ -124,9 +124,10 @@
 
                         <!-- Image -->
                         <div class="col-auto cell-thumbnail">
-                            <a href="#">
-                                <img src="https://microless.com/cdn/products/b5b2caeb989e1f8d7fd401cc29f082a9-md.jpg"
-                                    alt="Product" class="cart-img" />
+                            <a [routerLink]="['/shop/product/left/sidebar', product.id]" [state]="{ product }">
+                                <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.jpg'"
+                                    [alt]="product?.images?.[0]?.alt || product?.title"
+                                    class="cart-img" />
                             </a>
                         </div>
 
@@ -134,10 +135,10 @@
                         <div class="col">
 
                             <!-- Title -->
-                            <a href="javascript:void(0)" [routerLink]="['/shop/product/left/sidebar/', product?.title.replace(' ', '-')]" class="cart-title d-block mb-2">
-                                ASUS Dual GeForce RTX 5060 OC Edition Graphics Card, DUAL-RTX5060-O8G,
-                                8GB GDDR7 128-Bit Memory, 2565 MHz Boost Clock, 28 Gbps Memory Speed,
-                                3840 CUDA Cores, PCI Express 5.0 | 90YV0N12-M0NA00
+                            <a [routerLink]="['/shop/product/left/sidebar', product.id]"
+                               [state]="{ product }"
+                               class="cart-title d-block mb-2">
+                                {{ product?.title }}
                             </a>
                             <br>
                             <!-- Sold by -->
@@ -163,7 +164,7 @@
 
                             <!-- Actions -->
                             <div class="d-flex align-items-center gap-3">
-                                <a href="#" class="  text-decoration-none">
+                                <a href="javascript:void(0)" class="text-decoration-none" (click)="addToWishlist(product)">
                                     <i class="fa fa-heart-o me-1"></i> Add To Wishlist
                                 </a>
                                 <span class="text-secondary">|</span>
@@ -180,11 +181,10 @@
 
                             <!-- Prices -->
                             <div class="mb-3">
-                                <div class="text-white fw-bold" style="font-size:18px;"> {{ (product.price -
-                                    (product.price * product.discount / 100))|
-                                    currency:productService?.Currency.currency:'symbol' }}</div>
+                                <div class="text-white fw-bold" style="font-size:18px;">
+                                  {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | currency:productService?.Currency.currency:'symbol' }}</div>
                                 <div class="text-secondary text-decoration-line-through small"
-                                    *ngIf="product?.discount >0"> {{ product.price |
+                                    *ngIf="product?.discount > 0"> {{ product.price * (productService?.Currency?.price ?? 1) |
                                     currency:productService?.Currency.currency:'symbol' }}</div>
                             </div>
 
@@ -252,7 +252,7 @@
                 <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid">continue shopping</a>
             </div>
             <div class="col-6">
-                <a [routerLink]="['/shop/checkout']" class="btn btn-solid"><i class="fa fa-lock me-1"></i> check out</a>
+                <a href="javascript:void(0)" class="btn btn-solid" (click)="goToCheckout()"><i class="fa fa-lock me-1"></i> check out</a>
             </div>
         </div>
 

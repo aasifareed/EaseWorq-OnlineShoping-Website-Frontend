@@ -4,7 +4,7 @@
         <div class="checkout-page">
             <div class="checkout-form">
                 <!-- [formGroup]="checkoutForm " -->
-                <form>
+                <form [formGroup]="checkoutForm">
                     <div class="row">
                         <div class="col-lg-6 col-sm-12 col-xs-12">
                             <div class="checkout-title">
@@ -204,12 +204,15 @@
                                         Shipping
                                         <div class="shipping">
                                             <div class="shopping-option">
-                                                <input type="radio" name="shipping" checked="checked"
-                                                    id="free-shipping">
+                                                <input type="radio" name="shipping" id="free-shipping"
+                                                    value="shipping" [(ngModel)]="shippingMethod"
+                                                    [ngModelOptions]="{standalone: true}">
                                                 <label for="free-shipping">Shipping</label>
                                             </div>
                                             <div class="shopping-option">
-                                                <input type="radio" name="shipping" id="local-pickup">
+                                                <input type="radio" name="shipping" id="local-pickup"
+                                                    value="pickup" [(ngModel)]="shippingMethod"
+                                                    [ngModelOptions]="{standalone: true}">
                                                 <label for="local-pickup">Local Pickup</label>
                                             </div>
                                         </div>
@@ -250,9 +253,10 @@
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <button type="submit" class="btn-solid btn" [disabled]="!checkoutForm.valid"
-                                        (click)="GoPayFastCHeckout()" *ngIf="payment == 'PayFast'">
-                                        Place Order
+                                    <button type="button" class="btn-solid btn"
+                                        [disabled]="!checkoutForm.valid || loading || !products.length"
+                                        (click)="placeOrderPayFast()" *ngIf="payment == 'PayFast'">
+                                        {{ loading ? 'Processing…' : 'Place Order' }}
                                     </button>
                                     <!-- <button type="submit" class="btn-solid btn" [disabled]="!checkoutForm.valid" (click)="stripeCheckout()" *ngIf="payment == 'Stripe'">
                                            Place Order

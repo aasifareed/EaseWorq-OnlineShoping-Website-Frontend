@@ -230,11 +230,11 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-dark custom-drop">
                 <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
-                <li><a class="dropdown-item">Sign Up</a></li>
+                <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
               </ul>
             </div>
 
-            <div class="px-3 text-center border-end border-secondary-subtle pointer">
+            <div  [routerLink]="['/shop/wishlist']" class="px-3 text-center border-end border-secondary-subtle pointer">
               <i class="fa fa-heart-o fs-5 text-white"></i>
               <span class="d-block label text-white">WISHLIST</span>
             </div>

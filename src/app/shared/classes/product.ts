@@ -1,6 +1,6 @@
-// Products
+// Products (legacy JSON used numeric id; POS / API shop uses string Guid for inventory line id)
 export interface Product {
-    id?: number;
+    id?: number | string;
     title?: string;
     description?: string;
     type?: string;
@@ -16,6 +16,12 @@ export interface Product {
     tags?: any[];
     variants?: Variants[];
     images?: Images[];
+    /** POS catalog product id when available (separate from inventory row id). */
+    productId?: string;
+    /** POS product color (flat field from API; use with or without `variants`). */
+    color?: string | null;
+    /** POS product size from API (decimal); shown in size filter. */
+    productSize?: number | string | null;
 }
 
 export interface Variants {

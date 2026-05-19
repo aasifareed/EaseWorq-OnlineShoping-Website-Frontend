@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-// import { IPayPalConfig, ICreateOrderRequest } from 'ngx-paypal';
+import { switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from "../../shared/classes/product";
 import { ProductService } from "../../shared/services/product.service";
@@ -9,6 +9,11 @@ import { OrderService } from "../../shared/services/order.service";
 import { CreatePayFastCheckoutRequest, PayFastPaymentService } from './pay-fast-payment.service';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
+import {
+  OnlineShopOrderService,
+  OnlineShopPaymentMethod,
+  CreateOnlineShopSaleOrderResponse
+} from '../../shared/services/online-shop-order.service';
 
 @Component({
   selector: 'app-checkout',
@@ -17,61 +22,91 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class CheckoutComponent implements OnInit {
 
-  public checkoutForm:  UntypedFormGroup;
+  public checkoutForm: UntypedFormGroup;
   public products: Product[] = [];
-  // public payPalConfig ? : IPayPalConfig;
   public payment: string = 'PayFast';
-  // public payment: string = 'Stripe';
-  public amount:  any;
-  loading: boolean= false;
+  public amount: any;
+  public loading = false;
+  /** shipping | pickup — maps to backend OnlineShopShippingMethodEnum */
+  public shippingMethod: 'shipping' | 'pickup' = 'shipping';
 
-  constructor(private fb: UntypedFormBuilder,
+  constructor(
+    private fb: UntypedFormBuilder,
     public productService: ProductService,
     private orderService: OrderService,
-        private payFast: PayFastPaymentService,
-  private toastr: ToastrService,
+    private onlineShopOrder: OnlineShopOrderService,
+    private payFast: PayFastPaymentService,
+    private toastr: ToastrService,
     private translate: TranslateService,
-  ) { 
+  ) {
     this.checkoutForm = this.fb.group({
-      // firstname: ['', [Validators.required, Validators.pattern('[a-zA-Z][a-zA-Z ]+[a-zA-Z]$')]],
       customerName: ['', [Validators.required, Validators.pattern('[a-zA-Z][a-zA-Z ]+[a-zA-Z]$')]],
       customerMobileNo: ['', [Validators.required, Validators.pattern('[0-9]+')]],
       customerEmail: ['', [Validators.required, Validators.email]],
       description: [''],
       address: ['', [Validators.required, Validators.maxLength(50)]],
-      // country: ['', Validators.required],
       town: ['', Validators.required],
       state: ['', Validators.required],
       postalcode: ['', Validators.required]
-    })
+    });
   }
 
   ngOnInit(): void {
     this.productService.cartItems.subscribe(response => this.products = response);
     this.getTotal.subscribe(amount => this.amount = amount);
-    this.initConfig();
   }
 
   public get getTotal(): Observable<number> {
     return this.productService.cartTotalAmount();
   }
-GoPayFastCHeckout(){
- this.loading = true;
-    let payload: CreatePayFastCheckoutRequest ;
-    payload =  this.checkoutForm.value as CreatePayFastCheckoutRequest; 
-  payload  = {
-    ...payload,
-      amount: Number(this.amount),
-  
-      // description: this.description || 'PayFast test',
-      basketId: this.products.map(p => p.id).join(',')
-    };
-    const oid = this.products.map(p => p.id).join(',');
-    if (oid) {
-      payload.orderId = oid;
+
+  /** Create DB order, then start PayFast hosted checkout with real order id/amount. */
+  placeOrderPayFast(): void {
+    if (this.checkoutForm.invalid) {
+      this.checkoutForm.markAllAsTouched();
+      return;
+    }
+    if (!this.products?.length) {
+      this.toastr.warning('Your cart is empty.');
+      return;
     }
 
-    this.payFast.createCheckout(payload).subscribe({
+    this.loading = true;
+    const formValue = {
+      ...this.checkoutForm.value,
+      shippingMethod: this.shippingMethod
+    };
+
+    const orderRequest = this.onlineShopOrder.buildCreateOrderRequest(
+      formValue,
+      this.products,
+      OnlineShopPaymentMethod.GoPayFast
+    );
+
+    this.onlineShopOrder.createOrder(orderRequest).pipe(
+      switchMap((created: CreateOnlineShopSaleOrderResponse) => {
+        if (!created?.onlineShopSaleOrderId) {
+          throw new Error(created?.message || 'Order could not be created.');
+        }
+        this.onlineShopOrder.rememberPendingOrder(created);
+
+        const payfastPayload: CreatePayFastCheckoutRequest = {
+          orderId: created.onlineShopSaleOrderId,
+          basketId: created.transactionReference
+            || created.onlineOrderNumber
+            || created.onlineShopSaleOrderId.replace(/-/g, ''),
+          amount: created.totalAmount,
+          customerName: formValue.customerName,
+          customerEmail: formValue.customerEmail,
+          customerMobileNo: formValue.customerMobileNo,
+          description: created.onlineOrderNumber
+            ? `Order ${created.onlineOrderNumber}`
+            : (formValue.description || 'Online shop order')
+        };
+
+        return this.payFast.createCheckout(payfastPayload);
+      })
+    ).subscribe({
       next: (res) => {
         this.loading = false;
         this.payFast.redirectToPayFast(res);
@@ -81,19 +116,18 @@ GoPayFastCHeckout(){
         const msg =
           err?.error?.error?.message ||
           err?.error?.message ||
-          'Could not start PayFast checkout. Check API URL, SecuredKey, and backend logs.';
+          err?.message ||
+          'Could not complete checkout. Please try again.';
         this.toastr.error(msg, this.translate.instant('toaster_Heading_Error'), { progressBar: true });
       }
     });
-}
-  // Stripe Payment Gateway
+  }
+
   stripeCheckout() {
     var handler = (<any>window).StripeCheckout.configure({
-      key: environment.stripe_token, // publishble key
+      key: environment.stripe_token,
       locale: 'auto',
       token: (token: any) => {
-        // You can access the token ID with `token.id`.
-        // Get the token ID to your server-side code for use.
         this.orderService.createOrder(this.products, this.checkoutForm.value, token.id, this.amount);
       }
     });
@@ -101,57 +135,6 @@ GoPayFastCHeckout(){
       name: 'Multikart',
       description: 'Online Fashion Store',
       amount: this.amount * 100
-    }) 
+    });
   }
-
-  // Paypal Payment Gateway
-  private initConfig(): void {
-    // this.payPalConfig = {
-    //     currency: this.productService.Currency.currency,
-    //     clientId: environment.paypal_token,
-    //     createOrderOnClient: (data) => < ICreateOrderRequest > {
-    //       intent: 'CAPTURE',
-    //       purchase_units: [{
-    //           amount: {
-    //             currency_code: this.productService.Currency.currency,
-    //             value: this.amount,
-    //             breakdown: {
-    //                 item_total: {
-    //                     currency_code: this.productService.Currency.currency,
-    //                     value: this.amount
-    //                 }
-    //             }
-    //           }
-    //       }]
-    //   },
-    //     advanced: {
-    //         commit: 'true'
-    //     },
-    //     style: {
-    //         label: 'paypal',
-    //         size:  'small', // small | medium | large | responsive
-    //         shape: 'rect', // pill | rect
-    //     },
-    //     onApprove: (data, actions) => {
-    //         this.orderService.createOrder(this.products, this.checkoutForm.value, data.orderID, this.getTotal);
-    //         console.log('onApprove - transaction was approved, but not authorized', data, actions);
-    //         actions.order.get().then(details => {
-    //             console.log('onApprove - you can get full order details inside onApprove: ', details);
-    //         });
-    //     },
-    //     onClientAuthorization: (data) => {
-    //         console.log('onClientAuthorization - you should probably inform your server about completed transaction at this point', data);
-    //     },
-    //     onCancel: (data, actions) => {
-    //         console.log('OnCancel', data, actions);
-    //     },
-    //     onError: err => {
-    //         console.log('OnError', err);
-    //     },
-    //     onClick: (data, actions) => {
-    //         console.log('onClick', data, actions);
-    //     }
-    // };
-  }
-
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, Input, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Output, Input, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Options } from 'ngx-slider-v2';
 
@@ -7,39 +7,55 @@ import { Options } from 'ngx-slider-v2';
   templateUrl: './price.component.html',
   styleUrls: ['./price.component.scss']
 })
-export class PriceComponent implements OnInit {
+export class PriceComponent implements OnInit, OnChanges {
   
-  // Using Output EventEmitter
   @Output() priceFilter : EventEmitter<any> = new EventEmitter<any>();
 	
-  // define min, max and range
-  @Input() min?: number ;
-  @Input() max?: number;
+  @Input() min: number | null = null;
+  @Input() max: number | null = null;
+
+  /** Local inputs so typing is not overwritten by parent change detection before navigation completes. */
+  public localMin: number | null = null;
+  public localMax: number | null = null;
 
   public collapse: boolean = true;
   public isBrowser: boolean = false;
 
-  public price: any;
-
   options: Options = {
     floor: 0,
-    ceil: 1000
+    ceil: 10000000
   };
   
   constructor(@Inject(PLATFORM_ID) private platformId: Object) { 
     if (isPlatformBrowser(this.platformId)) {
-      this.isBrowser = true; // for ssr
+      this.isBrowser = true;
     }
   }
   
-  ngOnInit(): void {  }
+  ngOnInit(): void {
+    this.localMin = this.min;
+    this.localMax = this.max;
+  }
 
-  // Range Changed
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['min'] || changes['max']) {
+      this.localMin = this.min;
+      this.localMax = this.max;
+    }
+  }
+
   appliedFilter() {
-  // appliedFilter(event: any) {
-    this.price = { minPrice: this.min, maxPrice:this.max };
-    // this.price = { minPrice: event.value, maxPrice: event.highValue };
-    this.priceFilter.emit(this.price);
+    const minPrice = this.parseNum(this.localMin);
+    const maxPrice = this.parseNum(this.localMax);
+    this.priceFilter.emit({ minPrice, maxPrice });
+  }
+
+  private parseNum(v: unknown): number | null {
+    if (v === null || v === undefined || v === '') {
+      return null;
+    }
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : null;
   }
 
 }

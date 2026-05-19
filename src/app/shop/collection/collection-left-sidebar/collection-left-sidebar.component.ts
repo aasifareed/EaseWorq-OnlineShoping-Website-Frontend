@@ -5,6 +5,7 @@ import { ProductService } from "../../../shared/services/product.service";
 import { Product } from '../../../shared/classes/product';
 import { environment } from 'src/environments/environment';
 import { CollectionToolbarBreadcrumb } from '../widgets/grid/grid.component';
+import { ShopBrandOption } from '../widgets/brands/brands.component';
 
 @Component({
   selector: 'app-collection-left-sidebar',
@@ -16,11 +17,15 @@ export class CollectionLeftSidebarComponent implements OnInit {
   public grid: string = 'col-xl-3 col-md-6';
   public layoutView: string = 'grid-view';
   public products: Product[] = [];
+  /** Same as API page result; used for color/size facet lists + cache (filters applied on server). */
+  public rawProducts: Product[] = [];
   public brands: any[] = [];
   public colors: any[] = [];
   public size: any[] = [];
-  public minPrice: number = 0;
-  public maxPrice: number = 1200;
+  /** When set, sent as MinSellPrice / MaxSellPrice to the products API. */
+  public minPrice: number | null = null;
+  public maxPrice: number | null = null;
+  public brandOptions: ShopBrandOption[] = [];
   public tags: any[] = [];
   public category: string | null = null;
   public pageNo: number = 1;
@@ -52,6 +57,7 @@ export class CollectionLeftSidebarComponent implements OnInit {
         next: (resp) => {
           this.categoryTree = resp.result || [];
           this.rebuildToolbarContext();
+          this.loadBrandOptions();
           if (this.category) {
             this.getProducts();
           }
@@ -63,14 +69,17 @@ export class CollectionLeftSidebarComponent implements OnInit {
         this.brands = params.brand ? params.brand.split(",") : [];
         this.colors = params.color ? params.color.split(",") : [];
         this.size  = params.size ? params.size.split(",")  : [];
-        this.minPrice = params.minPrice ? params.minPrice : this.minPrice;
-        this.maxPrice = params.maxPrice ? params.maxPrice : this.maxPrice;
+        const rawMin = params['minPrice'];
+        const rawMax = params['maxPrice'];
+        this.minPrice = rawMin !== undefined && rawMin !== null && rawMin !== '' ? +rawMin : null;
+        this.maxPrice = rawMax !== undefined && rawMax !== null && rawMax !== '' ? +rawMax : null;
         this.tags = [...this.brands, ...this.colors, ...this.size]; // All Tags Array
         
         this.category = params.category ? params.category : null;
         this.sortBy = params.sortBy ? params.sortBy : 'ascending';
         this.pageNo = params.page != null && String(params.page) !== '' ? +params.page : 1;
         this.rebuildToolbarContext();
+        this.loadBrandOptions();
         this.getProducts();
         // Get Filtered Products..
         // this.productService.filterProducts(this.tags).subscribe(response => {         
@@ -150,26 +159,85 @@ export class CollectionLeftSidebarComponent implements OnInit {
     this.breadcrumbTrail = trail;
   }
 
+  private loadBrandOptions(): void {
+    const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
+    const categoryId =
+      resolvedPath?.length ? String(resolvedPath[resolvedPath.length - 1].id) : undefined;
+    this.productService.getBrandsForOnlineShop(categoryId || null).subscribe({
+      next: (resp) => {
+        const raw = resp?.result ?? resp?.items ?? [];
+        this.brandOptions = (raw as any[]).map((x) => ({
+          id: String(x.id ?? x.Id ?? ''),
+          name: String(x.brandName ?? x.BrandName ?? ''),
+          productCount: Number(x.productCount ?? x.ProductCount ?? 0)
+        })).filter((x) => x.id.length > 0);
+      },
+      error: () => {
+        this.brandOptions = [];
+      }
+    });
+  }
+
+  /** Friendly chip label (brand query values are brand ids). */
+  tagLabel(tag: string): string {
+    const b = this.brandOptions.find((x) => x.id === tag);
+    if (b) {
+      return `${b.name} (${b.productCount})`;
+    }
+    return tag;
+  }
+
   getProducts() {
       this.loader = true;
-          let url = environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop;
-    this.filter["maxResultCount"] = this.pageSize;
-    this.filter["skipCount"] = (this.pageNo - 1) * this.pageSize;
-    this.filter["skipCount"] = (this.pageNo - 1) * this.pageSize;
-    this.filter["TenantId"] = "1";
-    const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
-    const apiCategoryId = resolvedPath?.length
-      ? resolvedPath[resolvedPath.length - 1].id
-      : this.category;
-    this.filter["CategoryId"] = apiCategoryId;
-    this.filter["StoreId"] = "d4d292f5-de72-4742-b728-ea34a1706191";
-    url = url + this.setFilterURL();
+      let url = environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop;
+
+      const filter: Record<string, any> = {};
+      filter['maxResultCount'] = this.pageSize;
+      filter['skipCount'] = (this.pageNo - 1) * this.pageSize;
+      filter['TenantId'] = '1';
+      filter['StoreId'] = 'd4d292f5-de72-4742-b728-ea34a1706191';
+
+      const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
+      const apiCategoryId = resolvedPath?.length
+        ? resolvedPath[resolvedPath.length - 1].id
+        : this.category;
+      if (apiCategoryId) {
+        filter['CategoryId'] = apiCategoryId;
+      }
+
+      if (this.brands?.length) {
+        filter['BrandIds'] = this.brands;
+      }
+
+      if (this.minPrice != null && !Number.isNaN(+this.minPrice)) {
+        filter['MinSellPrice'] = this.minPrice;
+      }
+      if (this.maxPrice != null && !Number.isNaN(+this.maxPrice)) {
+        filter['MaxSellPrice'] = this.maxPrice;
+      }
+
+      if (this.colors?.length) {
+        filter['ProductColors'] = this.colors;
+      }
+      if (this.size?.length) {
+        const sizes = this.size
+          .map((s) => parseFloat(String(s).replace(',', '.')))
+          .filter((n) => Number.isFinite(n));
+        if (sizes.length) {
+          filter['ProductSizes'] = sizes;
+        }
+      }
+
+      filter['ShopSortBy'] = this.sortBy && String(this.sortBy).trim() !== '' ? this.sortBy : 'ascending';
+
+      this.filter = filter;
+      url = url + this.setFilterURL();
   this.productService.getProductsFromAPI(url).subscribe({
     next: (resp) => {
       this.TotalCount = resp.result.totalCount; 
           this.paginate = this.productService.getPager(resp.result.totalCount,+this.pageNo ,this.pageSize);     // get paginate object from service
 
-      this.products = resp.result.items.map((item: any): Product => {
+      this.rawProducts = resp.result.items.map((item: any): Product => {
         return {
           id: item.id, // String ID ko interface accept karega
           title: item.productName, // A1K (ZNF)
@@ -177,6 +245,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
           type: item.categoryName, // Mobile Parts/Units
           brand: item.brandName, // Oppo
           category: item.categoryName,
+          productId: item.productId != null ? String(item.productId) : undefined,
+          color: item.productColor != null && String(item.productColor).trim() !== '' ? String(item.productColor).trim() : undefined,
+          productSize: item.productSize != null && item.productSize !== '' ? Number(item.productSize) : undefined,
           price: item.actualSellPrice, // 1800
           sale: item.discountOnProduct > 0, // Agar discount hai to sale true
           discount: item.discountOnProduct, // 0
@@ -192,9 +263,14 @@ export class CollectionLeftSidebarComponent implements OnInit {
           tags: [item.productIdTag] // WebP_1000
         };
       });
+      this.productService.cacheShopProducts(this.rawProducts);
+      this.rawProducts.forEach((p) => this.productService.persistShopProduct(p));
+      this.products = this.rawProducts;
     },
     error: (err) => {
       console.error("API Error:", err);
+      this.rawProducts = [];
+      this.products = [];
       // this.loader = false;
     },
     complete: () => {
@@ -205,12 +281,33 @@ export class CollectionLeftSidebarComponent implements OnInit {
   setFilterURL() {
     let path = '';
     Object.keys(this.filter).forEach((key) => {
-      if (this.filter[key]) {
-        path = path ? path + '&' : '?';
-        path += Array.isArray(this.filter[key])
-          ? `${key}=${this.filter[key].toLocaleString()}`
-          : `${key}=${this.filter[key]}`;
+      const val = this.filter[key];
+      if (val === null || val === undefined || val === '') {
+        return;
       }
+      if (key === 'BrandIds' && Array.isArray(val)) {
+        val.forEach((id: string) => {
+          path = path ? path + '&' : '?';
+          path += `BrandIds=${encodeURIComponent(id)}`;
+        });
+        return;
+      }
+      if (key === 'ProductColors' && Array.isArray(val)) {
+        val.forEach((c: string) => {
+          path = path ? path + '&' : '?';
+          path += `ProductColors=${encodeURIComponent(c)}`;
+        });
+        return;
+      }
+      if (key === 'ProductSizes' && Array.isArray(val)) {
+        val.forEach((n: number) => {
+          path = path ? path + '&' : '?';
+          path += `ProductSizes=${encodeURIComponent(String(n))}`;
+        });
+        return;
+      }
+      path = path ? path + '&' : '?';
+      path += `${key}=${val}`;
     });
     return path;
   }
@@ -232,7 +329,7 @@ export class CollectionLeftSidebarComponent implements OnInit {
   sortByFilter(value:any) {
     this.router.navigate([], { 
       relativeTo: this.route,
-      queryParams: { sortBy: value ? value : null},
+      queryParams: { sortBy: value ? value : null, page: 1 },
       queryParamsHandling: 'merge', // preserve the existing query params in the route
       skipLocationChange: false  // do trigger navigation
     }).finally(() => {

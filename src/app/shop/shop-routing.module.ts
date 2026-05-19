@@ -21,6 +21,7 @@ import { CheckoutComponent } from './checkout/checkout.component';
 import { SuccessComponent } from './checkout/success/success.component';
 
 import { Resolver } from '../shared/services/resolver.service';
+import { authGuard } from '../shared/guards/auth.guard';
 
 const routes: Routes = [
   {
@@ -102,7 +103,8 @@ const routes: Routes = [
   },
   {
     path: 'checkout',
-    component: CheckoutComponent
+    component: CheckoutComponent,
+    canActivate: [authGuard]
   },
   {
     path: 'checkout/success/:id',

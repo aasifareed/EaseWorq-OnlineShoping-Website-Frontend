@@ -13,29 +13,117 @@ import { SizeModalComponent } from "../../../../shared/components/modal/size-mod
 export class ProductLeftSidebarComponent implements OnInit {
 
   public product: Product = {};
+  public relatedProducts: Product[] = [];
+  public detailLoading = false;
+  public relatedLoading = false;
   public counter: number = 1;
   public activeSlide: any = 0;
   public selectedSize: any;
-  public mobileSidebar: boolean = false;
   public active = 1;
+
+  readonly placeholderImage = 'assets/images/product/placeholder.jpg';
 
   @ViewChild("sizeChart") SizeChart: SizeModalComponent;
 
-  public ProductDetailsMainSliderConfig: any = ProductDetailsMainSlider;
+  public mainSliderOptions: any = { ...ProductDetailsMainSlider };
   public ProductDetailsThumbConfig: any = ProductDetailsThumbSlider;
+
+  get displayImages(): { src: string; alt: string }[] {
+    const raw = this.product?.images ?? [];
+    const mapped = raw
+      .filter((img) => img?.src)
+      .map((img) => ({
+        src: String(img.src),
+        alt: img.alt || this.product?.title || 'Product'
+      }));
+    if (mapped.length) {
+      return mapped;
+    }
+    return [{ src: this.placeholderImage, alt: this.product?.title || 'Product' }];
+  }
+
+  get hasMultipleImages(): boolean {
+    return this.displayImages.length > 1;
+  }
 
   constructor(private route: ActivatedRoute, private router: Router,
     public productService: ProductService) {
-    this.route.data.subscribe(response => this.product = response.data);
   }
 
   ngOnInit(): void {
-    console.log("dddd", this.product)
+    this.route.data.subscribe((d) => {
+      const initial = (d['data'] as Product) || {};
+      this.product = { ...initial };
+      this.updateMainSliderOptions();
+    });
+
+    this.route.paramMap.subscribe((params) => {
+      const inventoryId = params.get('slug');
+      if (inventoryId) {
+        this.loadProductDetail(inventoryId);
+      }
+    });
+
+    this.updateMainSliderOptions();
   }
 
-  // Get Product Color
-  Color(variants) {
-    const uniqColor = []
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img && img.src !== this.placeholderImage) {
+      img.src = this.placeholderImage;
+    }
+  }
+
+  private updateMainSliderOptions(): void {
+    this.mainSliderOptions = {
+      ...ProductDetailsMainSlider,
+      loop: this.hasMultipleImages
+    };
+  }
+
+  private loadProductDetail(inventoryId: string): void {
+    this.detailLoading = true;
+    this.productService.getProductDetailForOnlineShop(inventoryId).subscribe({
+      next: (resp) => {
+        const item = resp?.result;
+        if (item) {
+          const mapped = this.productService.mapInventoryItemToProduct(item);
+          this.product = { ...this.product, ...mapped };
+          this.updateMainSliderOptions();
+          this.productService.persistShopProduct(this.product);
+          this.productService.cacheShopProducts([this.product]);
+          this.loadRelatedProducts(inventoryId);
+        }
+        this.detailLoading = false;
+      },
+      error: () => {
+        this.detailLoading = false;
+      }
+    });
+  }
+
+  private loadRelatedProducts(inventoryId: string): void {
+    this.relatedLoading = true;
+    this.productService.getRelatedProductsForOnlineShop(inventoryId, 4).subscribe({
+      next: (resp) => {
+        const items = resp?.result ?? [];
+        this.relatedProducts = items.map((item: any) => this.productService.mapInventoryItemToProduct(item));
+        this.productService.cacheShopProducts(this.relatedProducts);
+        this.relatedProducts.forEach((p) => this.productService.persistShopProduct(p));
+        this.relatedLoading = false;
+      },
+      error: () => {
+        this.relatedProducts = [];
+        this.relatedLoading = false;
+      }
+    });
+  }
+
+  Color(variants: any) {
+    const uniqColor = [];
+    if (!variants?.length) {
+      return uniqColor;
+    }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqColor.indexOf(variants[i].color) === -1 && variants[i].color) {
         uniqColor.push(variants[i].color)
@@ -44,9 +132,11 @@ export class ProductLeftSidebarComponent implements OnInit {
     return uniqColor
   }
 
-  // Get Product Size
-  Size(variants) {
-    const uniqSize = []
+  Size(variants: any) {
+    const uniqSize = [];
+    if (!variants?.length) {
+      return uniqSize;
+    }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqSize.indexOf(variants[i].size) === -1 && variants[i].size) {
         uniqSize.push(variants[i].size)
@@ -59,40 +149,29 @@ export class ProductLeftSidebarComponent implements OnInit {
     this.selectedSize = size;
   }
 
-  // Increament
   increment() {
     this.counter++;
   }
 
-  // Decrement
   decrement() {
     if (this.counter > 1) this.counter--;
   }
 
-  // Add to cart
   async addToCart(product: any) {
     product.quantity = this.counter || 1;
-    const status = await this.productService.addToCart(product);
-    if (status)
-      this.router.navigate(['/shop/cart']);
+    await this.productService.addToCart(product);
   }
 
-  // Buy Now
   async buyNow(product: any) {
     product.quantity = this.counter || 1;
     const status = await this.productService.addToCart(product);
-    if (status)
+    if (status) {
       this.router.navigate(['/shop/checkout']);
+    }
   }
 
-  // Add to Wishlist
   addToWishlist(product: any) {
-    this.productService.addToWishlist(product);
-  }
-
-  // Toggle Mobile Sidebar
-  toggleMobileSidebar() {
-    this.mobileSidebar = !this.mobileSidebar;
+    this.productService.addToWishlist(product).subscribe();
   }
 
 }

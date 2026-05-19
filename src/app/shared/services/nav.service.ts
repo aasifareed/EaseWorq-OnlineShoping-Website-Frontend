@@ -35,27 +35,29 @@ export class NavService {
 
 	MENUITEMS: Menu[] = [
 		{
-			title: 'home', type: 'sub', active: false, children: [
-				{
-					title: 'clothing', type: 'sub', active: false, children: [
-						{ path: '/home/fashion', title: 'fashion-01', type: 'link' },
-						{ path: '/home/fashion-2', title: 'fashion-02', type: 'link' },
-						{ path: '/home/fashion-3', title: 'fashion-03', type: 'link' }
-					]
-				},
-				{ path: '/home/vegetable', title: 'vegetable', type: 'link' },
-				{ path: '/home/watch', title: 'watch', type: 'link' },
-				{ path: '/home/furniture', title: 'furniture', type: 'link' },
-				{ path: '/home/flower', title: 'flower', type: 'link' },
-				{ path: '/home/beauty', title: 'beauty', type: 'link' },
-				{ path: '/home/electronics', title: 'electronics', type: 'link' },
-				{ path: '/home/pets', title: 'pets', type: 'link' },
-				{ path: '/home/gym', title: 'gym', type: 'link' },
-				{ path: '/home/tools', title: 'tools', type: 'link' },
-				{ path: '/home/shoes', title: 'shoes', type: 'link' },
-				{ path: '/home/bags', title: 'bags', type: 'link' },
-				{ path: '/home/marijuana', title: 'marijuana', type: 'link' }
-			]
+			path: '/home/fashion', title: 'home', type: 'link' 
+
+			// title: 'home', type: 'sub', active: false, children: [
+			// 	{
+			// 		title: 'clothing', type: 'sub', active: false, children: [
+			// 			{ path: '/home/fashion', title: 'fashion-01', type: 'link' },
+			// 			{ path: '/home/fashion-2', title: 'fashion-02', type: 'link' },
+			// 			{ path: '/home/fashion-3', title: 'fashion-03', type: 'link' }
+			// 		]
+			// 	},
+			// 	{ path: '/home/vegetable', title: 'vegetable', type: 'link' },
+			// 	{ path: '/home/watch', title: 'watch', type: 'link' },
+			// 	{ path: '/home/furniture', title: 'furniture', type: 'link' },
+			// 	{ path: '/home/flower', title: 'flower', type: 'link' },
+			// 	{ path: '/home/beauty', title: 'beauty', type: 'link' },
+			// 	{ path: '/home/electronics', title: 'electronics', type: 'link' },
+			// 	{ path: '/home/pets', title: 'pets', type: 'link' },
+			// 	{ path: '/home/gym', title: 'gym', type: 'link' },
+			// 	{ path: '/home/tools', title: 'tools', type: 'link' },
+			// 	{ path: '/home/shoes', title: 'shoes', type: 'link' },
+			// 	{ path: '/home/bags', title: 'bags', type: 'link' },
+			// 	{ path: '/home/marijuana', title: 'marijuana', type: 'link' }
+			// ]
 		},
 		{
 			 path: '/shop/collection/left/sidebar', title: 'Shop', type: 'link' 

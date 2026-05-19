@@ -23,9 +23,9 @@
 
       <!-- Min / Max inputs -->
       <div class="d-flex align-items-center gap-2 mt-2 mb-2">
-        <input type="number" class="price-input" [(ngModel)]="min" (change)="appliedFilter()" [min]="options.floor" [max]="max" />
+        <input type="number" class="price-input" [(ngModel)]="localMin" (change)="appliedFilter()" [min]="options.floor" [max]="localMax ?? options.ceil" />
         <span class="text-secondary small">TO</span>
-        <input type="number" class="price-input" [(ngModel)]="max" (change)="appliedFilter()" [min]="min" [max]="options.ceil" />
+        <input type="number" class="price-input" [(ngModel)]="localMax" (change)="appliedFilter()" [min]="localMin ?? options.floor" [max]="options.ceil" />
       </div>
 
       <!-- Slider -->

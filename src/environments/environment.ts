@@ -10,7 +10,28 @@ export const environment = {
   // baseUrl: 'https://q1dcwl9z-44374.inc1.devtunnels.ms',
 
    urls: {
-OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:"OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop"
+OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:"OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop",
+OnlineShopAvailableProduct_GetProductDetailForOnlineShop: "OnlineShopAvailableProduct/GetProductDetailForOnlineShop",
+OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop: "OnlineShopAvailableProduct/GetRelatedProductsForOnlineShop",
+OnlineShopBrand_GetBrandsListForOnline: "OnlineShopBrand/GetBrandsListForOnline",
+OnlineShopWishlist_GetWishlistForOnlineShop: "OnlineShopWishlist/GetWishlistForOnlineShop",
+OnlineShopWishlist_AddToWishlistForOnlineShop: "OnlineShopWishlist/AddToWishlistForOnlineShop",
+OnlineShopWishlist_RemoveFromWishlistForOnlineShop: "OnlineShopWishlist/RemoveFromWishlistForOnlineShop",
+OnlineShopSaleOrder_CreateOnlineShopSaleOrder: "OnlineShopSaleOrder/CreateOnlineShopSaleOrder",
+//OnlineShopUsersAppServcie
+OnlinseShopUsers_SignupForOnlineShop: "OnlinseShopUsers/SignupForOnlineShop",
+OnlinseShopUsers_ResetPasswordRequestForOnlineShop: "OnlinseShopUsers/ResetPasswordRequestForOnlineShop"
+
+   },
+   shop: {
+    tenantId: '1',
+    storeId: 'd4d292f5-de72-4742-b728-ea34a1706191',
+    tenancyName: 'AK Mobile Shop'
+   },
+   auth: {
+    login: 'TokenAuth/AuthenticateForOnlineShop',
+    signup: 'User/SignupForMobile',
+    resetPassword: 'User/ResetPasswordRequestForMobile'
    }
 };
 

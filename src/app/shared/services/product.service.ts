@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, startWith, delay } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, startWith, delay } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { Product } from '../classes/product';
 import { environment } from 'src/environments/environment';
@@ -22,6 +22,75 @@ export class ProductService {
   // public Currency = { name: 'Dollar', currency: 'USD', price: 1 } // Default Currency
   public OpenCart: boolean = false;
   public Products:any;
+
+  private readonly wishlistChanged = new BehaviorSubject<Product[]>(state.wishlist);
+
+  /** In-memory index of last shop grid (API) products by inventory id. */
+  private readonly shopProductById = new Map<string, Product>();
+  private static readonly SHOP_PRODUCT_SS_PREFIX = 'shop_prod_';
+
+  /** Same cart line id (JSON numeric vs API Guid string). */
+  sameLineId(a: unknown, b: unknown): boolean {
+    return String(a ?? '') === String(b ?? '');
+  }
+
+  /** Remember shop listing rows for detail / resolver when URL uses inventory id. */
+  cacheShopProducts(products: Product[]): void {
+    this.shopProductById.clear();
+    for (const p of products || []) {
+      if (p?.id !== undefined && p?.id !== null) {
+        this.shopProductById.set(String(p.id), p);
+      }
+    }
+  }
+
+  getCachedShopProduct(id: string | undefined | null): Product | undefined {
+    if (id === undefined || id === null) {
+      return undefined;
+    }
+    const row = this.shopProductById.get(String(id));
+    return row ? { ...row } : undefined;
+  }
+
+  /** Survives refresh on detail page for id-based products. */
+  persistShopProduct(product: Product): void {
+    if (product?.id === undefined || product?.id === null) {
+      return;
+    }
+    try {
+      sessionStorage.setItem(
+        ProductService.SHOP_PRODUCT_SS_PREFIX + String(product.id),
+        JSON.stringify(product)
+      );
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
+
+  getPersistedShopProduct(id: string | undefined | null): Product | undefined {
+    if (id === undefined || id === null) {
+      return undefined;
+    }
+    try {
+      const raw = sessionStorage.getItem(ProductService.SHOP_PRODUCT_SS_PREFIX + String(id));
+      return raw ? (JSON.parse(raw) as Product) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Resolver + detail: POS id, cached grid row, then legacy JSON slug/title. */
+  resolveProductForShop(routeKey: string): Observable<Product | undefined> {
+    const persisted = this.getPersistedShopProduct(routeKey);
+    if (persisted) {
+      return of({ ...persisted });
+    }
+    const cached = this.getCachedShopProduct(routeKey);
+    if (cached) {
+      return of({ ...cached });
+    }
+    return this.getProductBySlug(routeKey);
+  }
 
   constructor(private http: HttpClient,
     private toastrService: ToastrService) { }
@@ -48,12 +117,20 @@ private apiRoot(): string {
     return this.products;
   }
 
-  // Get Products By Slug
-  public getProductBySlug(slug: string): Observable<Product> {
-    return this.products.pipe(map(items => { 
-      return items.find((item: any) => { 
-        return item.title.replace(' ', '-') === slug; 
-      }); 
+  // Get Products By Slug or by id (shop API inventory id / JSON id) or title slug
+  public getProductBySlug(slug: string): Observable<Product | undefined> {
+    return this.products.pipe(map(items => {
+      if (!slug) {
+        return undefined;
+      }
+      const norm = String(slug).trim().toLowerCase();
+      return items.find((item: any) => {
+        if (item.id !== undefined && item.id !== null && String(item.id).toLowerCase() === norm) {
+          return true;
+        }
+        const titleSlug = String(item.title ?? '').replace(/\s+/g, '-').toLowerCase();
+        return titleSlug === norm;
+      });
     }));
   }
 
@@ -66,32 +143,90 @@ private apiRoot(): string {
 
   // Get Wishlist Items
   public get wishlistItems(): Observable<Product[]> {
-    const itemsStream = new Observable(observer => {
-      observer.next(state.wishlist);
-      observer.complete();
-    });
-    return <Observable<Product[]>>itemsStream;
+    return this.wishlistChanged.asObservable();
   }
 
-  // Add to Wishlist
-  public addToWishlist(product:any): any {
-    const wishlistItem = state.wishlist.find(item => item.id === product.id)
-    if (!wishlistItem) {
-      state.wishlist.push({
-        ...product
-      })
+  private syncWishlistLocal(products: Product[]): void {
+    state.wishlist = products;
+    localStorage.setItem('wishlistItems', JSON.stringify(state.wishlist));
+    this.wishlistChanged.next([...state.wishlist]);
+  }
+
+  private addToWishlistLocal(product: Product): void {
+    if (!state.wishlist.find((item) => this.sameLineId(item.id, product.id))) {
+      state.wishlist.push({ ...product });
     }
-    this.toastrService.success('Product has been added in wishlist.');
-    localStorage.setItem("wishlistItems", JSON.stringify(state.wishlist));
-    return true
+    this.syncWishlistLocal(state.wishlist);
   }
 
-  // Remove Wishlist items
-  public removeWishlistItem(product: Product): any {
-    const index = state.wishlist.indexOf(product);
-    state.wishlist.splice(index, 1);
-    localStorage.setItem("wishlistItems", JSON.stringify(state.wishlist));
-    return true
+  private wishlistMutationQuery(productInventoryId: string): string {
+    const tenantId = environment.shop?.tenantId ?? '1';
+    const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
+    return `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}&ProductInventoryId=${encodeURIComponent(productInventoryId)}`;
+  }
+
+  loadWishlistFromApi(): Observable<Product[]> {
+    const tenantId = environment.shop?.tenantId ?? '1';
+    const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
+    const path = `${environment.urls.OnlineShopWishlist_GetWishlistForOnlineShop}?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
+    return this.http.get(`${this.apiRoot()}api/services/app/${path}`).pipe(
+      map((resp: any) => {
+        const rows = resp?.result ?? [];
+        const products = rows
+          .map((row: any) => this.mapInventoryItemToProduct(row?.product ?? row?.Product))
+          .filter((p: Product) => p?.id != null);
+        this.syncWishlistLocal(products);
+        products.forEach((p) => this.persistShopProduct(p));
+        return products;
+      }),
+      catchError(() => {
+        this.syncWishlistLocal(state.wishlist);
+        return of(state.wishlist);
+      })
+    );
+  }
+
+  addToWishlist(product: any): Observable<boolean> {
+    const inventoryId = product?.id != null ? String(product.id) : '';
+    if (!inventoryId) {
+      this.toastrService.error('Product could not be added to wishlist.');
+      return of(false);
+    }
+
+    const path = `${environment.urls.OnlineShopWishlist_AddToWishlistForOnlineShop}${this.wishlistMutationQuery(inventoryId)}`;
+    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, {}).pipe(
+      map(() => {
+        this.addToWishlistLocal(product);
+        this.toastrService.success('Product has been added to wishlist.');
+        return true;
+      }),
+      catchError((err) => {
+        const msg = err?.error?.error?.message || err?.error?.error?.details || 'Could not add to wishlist. Please sign in and try again.';
+        this.toastrService.error(msg);
+        return of(false);
+      })
+    );
+  }
+
+  removeWishlistItem(product: Product): Observable<boolean> {
+    const inventoryId = product?.id != null ? String(product.id) : '';
+    if (!inventoryId) {
+      return of(false);
+    }
+
+    const path = `${environment.urls.OnlineShopWishlist_RemoveFromWishlistForOnlineShop}${this.wishlistMutationQuery(inventoryId)}`;
+    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, {}).pipe(
+      map(() => {
+        const next = state.wishlist.filter((item) => !this.sameLineId(item.id, product.id));
+        this.syncWishlistLocal(next);
+        return true;
+      }),
+      catchError(() => {
+        const next = state.wishlist.filter((item) => !this.sameLineId(item.id, product.id));
+        this.syncWishlistLocal(next);
+        return of(true);
+      })
+    );
   }
 
   /*
@@ -111,7 +246,7 @@ private apiRoot(): string {
 
   // Add to Compare
   public addToCompare(product:any): any {
-    const compareItem = state.compare.find(item => item.id === product.id)
+    const compareItem = state.compare.find(item => this.sameLineId(item.id, product.id))
     if (!compareItem) {
       state.compare.push({
         ...product
@@ -146,60 +281,74 @@ private apiRoot(): string {
   }
 
   // Add to Cart
-  public addToCart(product:any): any {
-    const cartItem = state.cart.find(item => item.id === product.id);
-    const qty = product.quantity ? product.quantity : 1;
-    const items = cartItem ? cartItem : product;
-    const stock = this.calculateStockCounts(items, qty);
-    
-    if(!stock) return false
-
-    if (cartItem) {
-        cartItem.quantity += qty    
-    } else {
-      state.cart.push({
-        ...product,
-        quantity: qty
-      })
+  public addToCart(product: any): any {
+    const qtyToAdd = product.quantity != null && product.quantity !== '' ? Number(product.quantity) : 1;
+    if (!Number.isFinite(qtyToAdd) || qtyToAdd < 1) {
+      return false;
     }
 
-    this.OpenCart = true; // If we use cart variation modal
-    localStorage.setItem("cartItems", JSON.stringify(state.cart));
+    const cartItem = state.cart.find((item: any) => this.sameLineId(item.id, product.id));
+    const stock = Number(product.stock);
+    const currentQty = cartItem ? Number(cartItem.quantity) || 0 : 0;
+    const newQty = currentQty + qtyToAdd;
+
+    if (!Number.isFinite(stock) || stock <= 0) {
+      this.toastrService.error('This product is out of stock.');
+      return false;
+    }
+    if (newQty > stock) {
+      this.toastrService.error('You can not add more items than available. In stock ' + stock + ' items.');
+      return false;
+    }
+
+    if (cartItem) {
+      cartItem.quantity = newQty;
+    } else {
+      const line = {
+        ...product,
+        quantity: qtyToAdd
+      };
+      state.cart.push(line);
+      this.persistShopProduct(line);
+    }
+
+    this.OpenCart = true;
+    localStorage.setItem('cartItems', JSON.stringify(state.cart));
     return true;
   }
 
   // Update Cart Quantity
   public updateCartQuantity(product: Product, quantity: number): Product | boolean {
-    return state.cart.find((items, index) => {
-      if (items.id === product.id) {
-        const qty = state.cart[index].quantity + quantity
-        const stock = this.calculateStockCounts(state.cart[index], quantity)
-        if (qty !== 0 && stock) {
-          state.cart[index].quantity = qty
-        }
-        localStorage.setItem("cartItems", JSON.stringify(state.cart));
-        return true
-      }
-    })
-  }
-
-    // Calculate Stock Counts
-  public calculateStockCounts(product:any, quantity:any) {
-    const qty = product.quantity + quantity
-    const stock = product.stock
-    if (stock < qty || stock == 0) {
-      this.toastrService.error('You can not add more items than available. In stock '+ stock +' items.');
-      return false
+    const idx = state.cart.findIndex((item: any) => this.sameLineId(item.id, product.id));
+    if (idx === -1) {
+      return false;
     }
-    return true
+    const line = state.cart[idx] as any;
+    const nextQty = (Number(line.quantity) || 0) + quantity;
+    const stock = Number(line.stock);
+
+    if (nextQty > stock) {
+      this.toastrService.error('You can not add more items than available. In stock ' + stock + ' items.');
+      return false;
+    }
+
+    if (nextQty < 1) {
+      state.cart.splice(idx, 1);
+    } else {
+      state.cart[idx].quantity = nextQty;
+    }
+    localStorage.setItem('cartItems', JSON.stringify(state.cart));
+    return true;
   }
 
   // Remove Cart items
   public removeCartItem(product: Product): any {
-    const index = state.cart.indexOf(product);
-    state.cart.splice(index, 1);
-    localStorage.setItem("cartItems", JSON.stringify(state.cart));
-    return true
+    const idx = state.cart.findIndex((item: any) => this.sameLineId(item.id, product.id));
+    if (idx !== -1) {
+      state.cart.splice(idx, 1);
+      localStorage.setItem('cartItems', JSON.stringify(state.cart));
+    }
+    return true;
   }
 
   // Total amount 
@@ -410,7 +559,72 @@ private apiRoot(): string {
   public getCategories(): Observable<any>{
         return this.http.get(`${this.apiRoot()}api/services/app/OnlineShopProductGroup/GetProductGroupHierarchyForOnline?TenantId=1&StoreId=d4d292f5-de72-4742-b728-ea34a1706191`);
   }
+
+  /** Brands (manufacturers) for the shop sidebar; optional category limits to products in that group. */
+  public getBrandsForOnlineShop(productGroupId?: string | null): Observable<any> {
+    let url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopBrand_GetBrandsListForOnline}?TenantId=1&StoreId=d4d292f5-de72-4742-b728-ea34a1706191`;
+    if (productGroupId) {
+      url += `&ProductGroupId=${encodeURIComponent(productGroupId)}`;
+    }
+    return this.http.get(url);
+  }
+
  public getProductsFromAPI(url:any): Observable<any>{
         return this.http.get(`${this.apiRoot()}api/services/app/${url}`);
+  }
+
+  /** Map POS online-shop inventory API row to shop `Product`. */
+  mapInventoryItemToProduct(item: any): Product {
+    const desc = item?.productDescription ?? '';
+    return {
+      id: item.id,
+      title: item.productName,
+      description: desc,
+      type: item.categoryName,
+      brand: item.brandName,
+      category: item.categoryName,
+      productId: item.productId != null ? String(item.productId) : undefined,
+      color: item.productColor != null && String(item.productColor).trim() !== ''
+        ? String(item.productColor).trim()
+        : undefined,
+      productSize: item.productSize != null && item.productSize !== ''
+        ? Number(item.productSize)
+        : undefined,
+      price: item.actualSellPrice,
+      sale: (item.discountOnProduct ?? 0) > 0,
+      discount: item.discountOnProduct ?? 0,
+      stock: item.productUnitStock,
+      quantity: item.productQuantityPerUnit ?? 1,
+      new: true,
+      images: [
+        {
+          src: item.pictureUrl || 'assets/images/product/placeholder.jpg',
+          alt: item.productName
+        }
+      ],
+      tags: item.productIdTag ? [item.productIdTag] : []
+    };
+  }
+
+  private shopApiQuery(inventoryId: string, extra?: Record<string, string | number>): string {
+    const tenantId = environment.shop?.tenantId ?? '1';
+    const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
+    let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}&ProductInventoryId=${encodeURIComponent(inventoryId)}`;
+    if (extra) {
+      Object.keys(extra).forEach((k) => {
+        q += `&${k}=${encodeURIComponent(String(extra[k]))}`;
+      });
+    }
+    return q;
+  }
+
+  getProductDetailForOnlineShop(productInventoryId: string): Observable<any> {
+    const path = `${environment.urls.OnlineShopAvailableProduct_GetProductDetailForOnlineShop}${this.shopApiQuery(productInventoryId)}`;
+    return this.getProductsFromAPI(path);
+  }
+
+  getRelatedProductsForOnlineShop(productInventoryId: string, maxCount = 4): Observable<any> {
+    const path = `${environment.urls.OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop}${this.shopApiQuery(productInventoryId, { MaxCount: maxCount })}`;
+    return this.getProductsFromAPI(path);
   }
 }

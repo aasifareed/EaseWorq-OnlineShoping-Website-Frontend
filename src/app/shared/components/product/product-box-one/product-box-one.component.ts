@@ -66,7 +66,7 @@ export class ProductBoxOneComponent implements OnInit {
   }
 
   addToWishlist(product: any) {
-    this.productService.addToWishlist(product);
+    this.productService.addToWishlist(product).subscribe();
   }
 
   addToCompare(product: any) {

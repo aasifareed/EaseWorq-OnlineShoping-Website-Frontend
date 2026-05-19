@@ -39,8 +39,12 @@
                         <!-- side-bar colleps block stat -->
                         <div class="collection-filter-block microless-filter-section">
                             <!-- brand filter start -->
-                            <app-brands [products]="products" [brands]="brands" (brandsFilter)="updateFilter($event)">
+                            <app-brands [products]="rawProducts" [brands]="brands" [brandOptions]="brandOptions" (brandsFilter)="updateFilter($event)">
                             </app-brands>
+                            <app-colors [products]="rawProducts" [colors]="colors" (colorsFilter)="updateFilter($event)">
+                            </app-colors>
+                            <app-size [products]="rawProducts" [size]="size" (sizeFilter)="updateFilter($event)">
+                            </app-size>
                             <!-- price filter start here -->
                             <app-price [min]="minPrice" [max]="maxPrice" (priceFilter)="updateFilter($event)">
                             </app-price>
@@ -102,7 +106,7 @@
                                 <ul class="product-filter-tags">
                                     <li class="me-1" *ngFor="let tag of tags">
                                         <a href="javascript:void(0)" class="filter_tag">
-                                            {{tag}} <i class="ti-close" (click)="removeTag(tag)"></i>
+                                            {{ tagLabel(tag) }} <i class="ti-close" (click)="removeTag(tag)"></i>
                                         </a>
                                     </li>
                                     <li class="clear_filter" *ngIf="tags.length > 0">

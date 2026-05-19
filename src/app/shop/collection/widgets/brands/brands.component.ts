@@ -1,6 +1,12 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Product } from '../../../../shared/classes/product';
 
+export interface ShopBrandOption {
+  id: string;
+  name: string;
+  productCount: number;
+}
+
 @Component({
   selector: 'app-brands',
   templateUrl: './brands.component.html',
@@ -10,6 +16,8 @@ export class BrandsComponent implements OnInit {
 
   @Input() products: Product[] = [];
   @Input() brands: any[] = [];
+  /** When set, checkboxes use brand ids (API); otherwise names are derived from the current product page. */
+  @Input() brandOptions: ShopBrandOption[] = [];
 
   @Output() brandsFilter: EventEmitter<any> = new EventEmitter<any>();
   
@@ -22,32 +30,48 @@ export class BrandsComponent implements OnInit {
   }
 
   get filterbyBrand() {
-    const uniqueBrands:any[] = [];
-    this.products.filter((product) => {
+    const uniqueBrands: string[] = [];
+    this.products.forEach((product) => {
       if (product.brand) {
-        const index = uniqueBrands.indexOf(product.brand)
-        if (index === -1) uniqueBrands.push(product.brand)
+        const index = uniqueBrands.indexOf(product.brand);
+        if (index === -1) {
+          uniqueBrands.push(product.brand);
+        }
       }
-    })
-    return uniqueBrands
+    });
+    return uniqueBrands;
   }
 
-  appliedFilter(event:any) {
-    let index = this.brands.indexOf(event.target.value);  // checked and unchecked value
-    if (event.target.checked)   
-      this.brands.push(event.target.value); // push in array cheked value
-    else 
-      this.brands.splice(index,1);  // removed in array unchecked value  
-    
-    let brands = this.brands.length ? { brand: this.brands.join(",") } : { brand: null };
+  get displayBrands(): { value: string; label: string }[] {
+    if (this.brandOptions?.length) {
+      return this.brandOptions.map((b) => ({
+        value: b.id,
+        label: `${b.name} (${b.productCount})`
+      }));
+    }
+    return this.filterbyBrand.map((name) => ({ value: name, label: name }));
+  }
+
+  appliedFilter(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (input.checked) {
+      if (this.brands.indexOf(value) === -1) {
+        this.brands.push(value);
+      }
+    } else {
+      const index = this.brands.indexOf(value);
+      if (index !== -1) {
+        this.brands.splice(index, 1);
+      }
+    }
+
+    const brands = this.brands.length ? { brand: this.brands.join(',') } : { brand: null };
     this.brandsFilter.emit(brands);
   }
 
-  // check if the item are selected
-  checked(item:any){
-    if(this.brands.indexOf(item) != -1){
-      return true;
-    }
+  checked(item: string): boolean {
+    return this.brands.indexOf(item) !== -1;
   }
 
 }

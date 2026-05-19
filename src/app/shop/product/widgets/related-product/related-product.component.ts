@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { Product } from '../../../../shared/classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
 
@@ -7,19 +7,30 @@ import { ProductService } from '../../../../shared/services/product.service';
   templateUrl: './related-product.component.html',
   styleUrls: ['./related-product.component.scss']
 })
-export class RelatedProductComponent implements OnInit {
-  
-  @Input() type: string
+export class RelatedProductComponent implements OnChanges {
 
-  public products: Product[] = [];
+  /** @deprecated Legacy JSON filter by category name; prefer [products] from API. */
+  @Input() type: string;
 
-  constructor(public productService: ProductService) { 
-    this.productService.getProducts.subscribe(response => 
-      this.products = response.filter(item => item.type == this.type)
-    );
-  }
+  @Input() products: Product[] = [];
+  @Input() loading = false;
 
-  ngOnInit(): void {
+  public displayProducts: Product[] = [];
+
+  constructor(public productService: ProductService) { }
+
+  ngOnChanges(): void {
+    if (this.products?.length) {
+      this.displayProducts = this.products;
+      return;
+    }
+    if (this.type) {
+      this.productService.getProducts.subscribe((response) => {
+        this.displayProducts = response.filter((item) => item.type === this.type).slice(0, 4);
+      });
+    } else {
+      this.displayProducts = [];
+    }
   }
 
 }

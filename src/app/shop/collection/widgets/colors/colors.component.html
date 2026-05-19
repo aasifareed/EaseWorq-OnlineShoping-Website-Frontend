@@ -1,18 +1,18 @@
-<div class="collection-collapse-block" [class.open]="collapse" *ngIf="filterbycolor.length">
-    <h3 class="collapse-block-title" (click)="collapse = !collapse">colors</h3>
+<div class="collection-collapse-block" [class.open]="collapse" *ngIf="displayColors.length">
+    <h3 class="collapse-block-title" (click)="collapse = !collapse">Colors</h3>
     <div class="collection-collapse-block-content">
       <div class="collection-brand-filter color-filter">
         <div class="custom-control custom-checkbox collection-filter-checkbox"
-          *ngFor="let color of filterbycolor">
-          <input 
-            type="checkbox" 
-            [value]="color"
-            [checked]="checked(color)"
-            [id]="color"
+          *ngFor="let c of displayColors; let i = index">
+          <input
+            type="checkbox"
+            [value]="c.value"
+            [checked]="checked(c.value)"
+            [id]="'shop-color-' + i"
             (change)="appliedFilter($event)"
             class="custom-control-input" />
-          <span [class]="color" [ngStyle]="{'background-color': color}"></span>
-          <label class="custom-control-label" for="{{ color }}">{{ color }}</label>
+          <span [class]="c.label" [ngStyle]="{'background-color': c.label}"></span>
+          <label class="custom-control-label" [attr.for]="'shop-color-' + i">{{ c.label }}</label>
         </div>
       </div>
     </div>

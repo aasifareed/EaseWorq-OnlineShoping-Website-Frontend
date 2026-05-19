@@ -14,7 +14,7 @@ import { ProductService } from '../../../../shared/services/product.service';
 export class QuickViewComponent implements OnInit, OnDestroy  {
 
   @Input() product: Product;
-  @Input() currency: any;  
+  @Input() currency: any;
   @ViewChild("quickView", { static: false }) QuickView: TemplateRef<any>;
 
   public closeResult: string;
@@ -27,20 +27,19 @@ export class QuickViewComponent implements OnInit, OnDestroy  {
     public productService: ProductService) { }
 
   ngOnInit(): void {
-
   }
 
   openModal() {
-        debugger;
+    this.counter = 1;
     this.modalOpen = true;
-    if (isPlatformBrowser(this.platformId)) { // For SSR 
-      this.modalService.open(this.QuickView, { 
+    if (isPlatformBrowser(this.platformId)) {
+      this.modalService.open(this.QuickView, {
         size: 'lg',
         ariaLabelledBy: 'modal-basic-title',
         centered: true,
-        windowClass: 'Quickview' 
+        windowClass: 'Quickview'
       }).result.then((result) => {
-        `Result ${result}`
+        `Result ${result}`;
       }, (reason) => {
         this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
       });
@@ -57,61 +56,85 @@ export class QuickViewComponent implements OnInit, OnDestroy  {
     }
   }
 
-  // Get Product Color
-  Color(variants:any) {
-    const uniqColor = []
+  Color(variants: any) {
+    const uniqColor = [];
+    if (!variants?.length) {
+      return uniqColor;
+    }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqColor.indexOf(variants[i].color) === -1 && variants[i].color) {
-        uniqColor.push(variants[i].color)
+        uniqColor.push(variants[i].color);
       }
     }
-    return uniqColor
+    return uniqColor;
   }
 
-  // Get Product Size
-  Size(variants:any) {
-    const uniqSize = []
+  Size(variants: any) {
+    const uniqSize = [];
+    if (!variants?.length) {
+      return uniqSize;
+    }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqSize.indexOf(variants[i].size) === -1 && variants[i].size) {
-        uniqSize.push(variants[i].size)
+        uniqSize.push(variants[i].size);
       }
     }
-    return uniqSize
+    return uniqSize;
   }
 
-  // Change Variants
-  ChangeVariants(color:any, product:any) {
-    product.variants.map((item:any) => {
+  ChangeVariants(color: any, product: any) {
+    product.variants.map((item: any) => {
       if (item.color === color) {
-        product.images.map((img:any) => {
+        product.images.map((img: any) => {
           if (img.image_id === item.image_id) {
-            this.ImageSrc = img.src
+            this.ImageSrc = img.src;
           }
-        })
+        });
       }
-    })
+    });
   }
 
-  // Increament
   increment() {
-    this.counter++ ;
+    this.counter++;
   }
 
-  // Decrement
   decrement() {
-    if (this.counter > 1) this.counter-- ;
+    if (this.counter > 1) {
+      this.counter--;
+    }
   }
 
-  // Add to cart
   async addToCart(product: any) {
     product.quantity = this.counter || 1;
     const status = await this.productService.addToCart(product);
-    if(status)
-      this.router.navigate(['/shop/cart']);
+    if (status) {
+      this.modalService.dismissAll();
+    }
+  }
+
+  async buyNow(product: any) {
+    product.quantity = this.counter || 1;
+    const status = await this.productService.addToCart(product);
+    if (status) {
+      this.modalService.dismissAll();
+      this.router.navigate(['/shop/checkout']);
+    }
+  }
+
+  goProductDetail(event: Event): void {
+    event.preventDefault();
+    if (!this.product?.id) {
+      return;
+    }
+    this.productService.persistShopProduct(this.product);
+    this.modalService.dismissAll();
+    this.router.navigate(['/shop/product/left/sidebar', this.product.id], {
+      state: { product: this.product }
+    });
   }
 
   ngOnDestroy() {
-    if(this.modalOpen){
+    if (this.modalOpen) {
       this.modalService.dismissAll();
     }
   }

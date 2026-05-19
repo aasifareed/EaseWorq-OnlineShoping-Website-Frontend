@@ -1,37 +1,56 @@
 <app-breadcrumb [title]="'Register'" [breadcrumb]="'Register'"></app-breadcrumb>
-<!-- section start -->
 <section class="register-page section-b-space">
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
                 <h3>create account</h3>
                 <div class="theme-card">
-                    <form class="theme-form">
+                    <form class="theme-form" [formGroup]="registerForm" (ngSubmit)="submit()">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="email">First Name</label>
-                                <input type="text" class="form-control" id="fname" placeholder="First Name" required="">
+                                <label for="fname">First Name</label>
+                                <input type="text" class="form-control" id="fname" formControlName="firstName"
+                                       placeholder="First Name">
                             </div>
                             <div class="col-md-6">
-                                <label for="review">Last Name</label>
-                                <input type="password" class="form-control" id="lname" placeholder="Last Name" required="">
+                                <label for="lname">Last Name</label>
+                                <input type="text" class="form-control" id="lname" formControlName="lastName"
+                                       placeholder="Last Name">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="email">email</label>
-                                <input type="text" class="form-control" id="email" placeholder="Email" required="">
+                                <input type="email" class="form-control" id="email" formControlName="email"
+                                       placeholder="Email">
                             </div>
                             <div class="col-md-6">
-                                <label for="review">Password</label>
-                                <input type="password" class="form-control" id="review" placeholder="Enter your password" required="">
+                                <label for="phone">Phone (optional)</label>
+                                <input type="text" class="form-control" id="phone" formControlName="phone"
+                                       placeholder="Phone">
                             </div>
                         </div>
-                        <button class="btn btn-solid">create Account</button>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password" formControlName="password"
+                                       placeholder="Enter your password" autocomplete="new-password">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" formControlName="confirmPassword"
+                                       placeholder="Confirm password" autocomplete="new-password">
+                            </div>
+                        </div>
+                        <small class="text-danger d-block mb-2" *ngIf="registerForm.errors?.['mismatch'] && registerForm.touched">
+                            Passwords do not match.
+                        </small>
+                        <button type="submit" class="btn btn-solid" [disabled]="loading">
+                            {{ loading ? 'Creating…' : 'create Account' }}
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!--Section ends-->
