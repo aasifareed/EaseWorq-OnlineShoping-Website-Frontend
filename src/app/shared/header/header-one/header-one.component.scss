@@ -282,6 +282,20 @@
     }
 
     .action-icons {
+      .account-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #ffcc00;
+        color: #000;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
       .label {
         font-size: 10px;
         font-weight: 700;
@@ -309,6 +323,16 @@
     .store-nav #mainnav,
     .store-nav .nav-menu {
       overflow: visible;
+    }
+
+    .nav-orders-link {
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+
+      &:hover {
+        opacity: 0.85;
+      }
     }
   }
 }

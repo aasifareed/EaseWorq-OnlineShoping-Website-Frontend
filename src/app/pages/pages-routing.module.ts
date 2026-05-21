@@ -15,6 +15,7 @@ import { SearchComponent } from './search/search.component';
 import { TypographyComponent } from './typography/typography.component';
 import { ReviewComponent } from './review/review.component';
 import { OrderSuccessComponent } from './order-success/order-success.component';
+import { MyOrdersComponent } from './my-orders/my-orders.component';
 import { CompareOneComponent } from './compare/compare-one/compare-one.component';
 import { CompareTwoComponent } from './compare/compare-two/compare-two.component';
 import { CollectionComponent } from './collection/collection.component';
@@ -91,6 +92,10 @@ const routes: Routes = [
   { 
     path: 'order/success', 
     component: OrderSuccessComponent 
+  },
+  {
+    path: 'my-orders',
+    component: MyOrdersComponent
   },
   { 
     path: 'compare/one', 

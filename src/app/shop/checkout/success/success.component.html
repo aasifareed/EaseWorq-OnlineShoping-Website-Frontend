@@ -1,116 +1,113 @@
-<!-- breadcrumb start -->
-<app-breadcrumb [title]="'404 page'" [breadcrumb]="'404 page'" *ngIf="!orderDetails"></app-breadcrumb>
-<!-- breadcrumb End -->
+<app-breadcrumb [title]="'Order success'" [breadcrumb]="'Order success'" *ngIf="!loading && order"></app-breadcrumb>
 
-<!-- section start -->
-<section class="p-0" *ngIf="!orderDetails">
+<section class="p-0" *ngIf="loading">
+    <div class="container py-5 text-center text-white">
+        <p>Loading your order…</p>
+    </div>
+</section>
+
+<section class="p-0" *ngIf="!loading && loadError">
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
                 <div class="error-section">
-                    <h1>404</h1>
-                    <h2>page not found</h2>
+                    <h2>Order not found</h2>
                     <a [routerLink]="'/home/fashion'" class="btn btn-solid">back to home</a>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Section ends -->
 
-<!-- thank-you section start -->
-<section class="section-b-space light-layout" *ngIf="orderDetails">
+<section class="section-b-space light-layout" *ngIf="!loading && order">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
                 <div class="success-text">
                     <i class="fa fa-check-circle" aria-hidden="true"></i>
                     <h2>thank you</h2>
-                    <p>Payment is has been received Order Placed Successfully</p>
-                    <p>Transaction ID:{{ orderDetails.orderId }}</p>
+                    <p>Your order has been placed successfully.</p>
+                    <p>Order #: {{ order.onlineOrderNumber }}</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Section ends -->
 
-<!-- order-detail section start -->
-<section class="section-b-space" *ngIf="orderDetails">
+<section class="section-b-space" *ngIf="!loading && order">
     <div class="container">
         <div class="row">
             <div class="col-lg-6">
                 <div class="product-order">
                     <h3>your order details</h3>
-                    <div class="row product-order-detail" *ngFor="let product of orderDetails.product">
+                    <div class="row product-order-detail" *ngFor="let line of order.products">
                         <div class="col-3">
-                            <img [src]="product.images[0].src" alt="" class="img-fluid">
+                            <img [src]="productImage(line.productImageUrl)" alt="" class="img-fluid">
                         </div>
                         <div class="col-3 order_detail">
                             <div>
                                 <h4>product name</h4>
-                                <h5>{{ product.title }}</h5>
+                                <h5>{{ line.productName }}</h5>
                             </div>
                         </div>
                         <div class="col-3 order_detail">
                             <div>
                                 <h4>quantity</h4>
-                                <h5>{{ product.quantity }}</h5>
+                                <h5>{{ line.quantity }}</h5>
                             </div>
                         </div>
                         <div class="col-3 order_detail">
                             <div>
                                 <h4>price</h4>
-                                <h5>{{ product?.price * productService?.Currency?.price | discount:product | currency:productService?.Currency.currency:'symbol' }}</h5>
+                                <h5>{{ line.lineTotal | currency:productService?.Currency.currency:'symbol' }}</h5>
                             </div>
                         </div>
                     </div>
                     <div class="total-sec">
                         <ul>
-                            <li>Subtotal <span>{{ orderDetails.totalAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
-                            <li>Shipping <span>$00.00</span></li>
-                            <li>Tax <span>$00.00</span></li>
+                            <li>Subtotal <span>{{ order.subTotalAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+                            <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | currency:productService?.Currency.currency:'symbol' }}</span></li>
+                            <li>Tax <span>{{ order.taxAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
                         </ul>
                     </div>
                     <div class="final-total">
-                        <h3>total <span>{{ orderDetails.totalAmount | currency:productService?.Currency.currency:'symbol' }}</span></h3>
+                        <h3>total <span>{{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</span></h3>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="row order-success-sec">
                     <div class="col-sm-6">
-                        <h4>summery</h4>
+                        <h4>summary</h4>
                         <ul class="order-detail">
-                            <li>order ID: {{ orderDetails.orderId }}</li>
-                            <li>Order Date: October 22, 2021</li>
-                            <li>Order Total: {{ orderDetails.totalAmount | currency:productService?.Currency.currency:'symbol' }}</li>
+                            <li>order ID: {{ order.onlineOrderNumber }}</li>
+                            <li>Order Date: {{ formatDate(order.orderDate) }}</li>
+                            <li>Order Total: {{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</li>
+                            <li>Shipping: {{ order.shippingMethodName }}</li>
                         </ul>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-6" *ngIf="order.shippingAddress as ship">
                         <h4>shipping address</h4>
                         <ul class="order-detail">
-                            <li>{{ orderDetails.shippingDetails.address }}</li>
-                            <li>{{ orderDetails.shippingDetails.state }}</li>
-                            <li>{{ orderDetails.shippingDetails.country }}, {{ orderDetails.shippingDetails.postalcode }}</li>
-                            <li>Contact No. {{ orderDetails.shippingDetails.phone }}</li>
+                            <li>{{ ship.customerName }}</li>
+                            <li>{{ ship.address }}</li>
+                            <li>{{ ship.townCity }}, {{ ship.stateCounty }} {{ ship.postalCode }}</li>
+                            <li>Contact No. {{ ship.phone }}</li>
                         </ul>
                     </div>
 
                     <div class="col-sm-12 payment-mode">
                         <h4>payment method</h4>
-                        <p>Pay on Delivery (Cash/Card). Cash on delivery (COD) available. Card/Net banking acceptance subject to device availability.</p>
+                        <p>{{ order.paymentMethodName }}</p>
                     </div>
                     <div class="col-md-12">
                         <div class="delivery-sec">
                             <h3>expected date of delivery</h3>
-                            <h2>March 21, 2021</h2>
+                            <h2>{{ formatDate(order.expectedDeliveryDate) }}</h2>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </section>
-<!-- Section ends -->

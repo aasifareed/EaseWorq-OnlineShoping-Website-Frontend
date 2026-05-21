@@ -90,15 +90,20 @@
                       </div>
                     </div>
                   </div>
+                  <!-- class="wishlist-btn" -->
                   <div class="product-buttons product-detail-actions">
                     <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="counter > (product?.stock ?? 0)" (click)="addToCart(product)">add to cart</a>
                     <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="counter > (product?.stock ?? 0)" (click)="buyNow(product)">buy now</a>
+                    <a href="javascript:void(0)" class="btn btn-solid" (click)="addToWishlist(product)">
+                      <i class="fa fa-heart"></i>
+                      <span class="title-font">Add To WishList</span>
+                    </a>
                   </div>
                   <div class="border-product">
                     <h6 class="product-title">product details</h6>
                     <p>{{ (product?.description || '').toString().substring(0, 200) }}{{ (product?.description || '').toString().length > 200 ? '...' : '' }}</p>
                   </div>
-                  <div class="border-product">
+                  <!-- <div class="border-product">
                     <h6 class="product-title">share it</h6>
                     <div class="product-icon">
                       <app-social></app-social>
@@ -109,10 +114,10 @@
                         </button>
                       </form>
                     </div>
-                  </div>
-                  <div class="border-product">
+                  </div> -->
+                  <!-- <div class="border-product">
                     <app-countdown [date]="'Apr 21 2021'"></app-countdown>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>

@@ -30,6 +30,7 @@ export interface SignupPayload {
 export class AuthService {
   private static readonly TOKEN_KEY = 'shop_auth_token';
   private static readonly USER_ID_KEY = 'shop_auth_user_id';
+  private static readonly EMAIL_KEY = 'shop_customer_email';
   private static readonly STORE_KEY = 'shop_store_id';
   private static readonly TENANT_KEY = 'shop_tenant_id';
   private static readonly TENANCY_NAME_KEY = 'shop_tenancy_name';
@@ -77,6 +78,31 @@ export class AuthService {
     return raw ? +raw : null;
   }
 
+  getCustomerEmail(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    const email = localStorage.getItem(AuthService.EMAIL_KEY);
+    return email?.trim() || null;
+  }
+
+  getInitials(): string {
+    const email = this.getCustomerEmail();
+    if (!email) {
+      return '';
+    }
+    const local = email.split('@')[0] || email;
+    const parts = local.replace(/[._-]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    const compact = local.replace(/[^a-zA-Z0-9]/g, '');
+    if (compact.length >= 2) {
+      return compact.substring(0, 2).toUpperCase();
+    }
+    return (compact[0] || '?').toUpperCase();
+  }
+
   login(email: string, password: string, rememberClient = false): Observable<ShopAuthSession> {
     const body = {
       userNameOrEmailAddress: email.trim(),
@@ -95,7 +121,7 @@ export class AuthService {
         }
         return data as ShopAuthSession;
       }),
-      tap((session) => this.persistSession(session)),
+      tap((session) => this.persistSession(session, email.trim())),
       catchError((err) => throwError(() => err))
     );
   }
@@ -133,8 +159,11 @@ export class AuthService {
     );
   }
 
-  persistSession(session: ShopAuthSession): void {
+  persistSession(session: ShopAuthSession, customerEmail?: string): void {
     localStorage.setItem(AuthService.TOKEN_KEY, session.accessToken);
+    if (customerEmail) {
+      localStorage.setItem(AuthService.EMAIL_KEY, customerEmail);
+    }
     if (session.userId != null) {
       localStorage.setItem(AuthService.USER_ID_KEY, String(session.userId));
     }
@@ -154,6 +183,7 @@ export class AuthService {
   logout(navigateToLogin = false): void {
     localStorage.removeItem(AuthService.TOKEN_KEY);
     localStorage.removeItem(AuthService.USER_ID_KEY);
+    localStorage.removeItem(AuthService.EMAIL_KEY);
     if (navigateToLogin) {
       this.router.navigate(['/pages/login']);
     }

@@ -351,6 +351,12 @@ private apiRoot(): string {
     return true;
   }
 
+  /** Clear cart after order is placed (memory + localStorage). */
+  public clearCart(): void {
+    state.cart = [];
+    localStorage.setItem('cartItems', '[]');
+  }
+
   // Total amount 
   public cartTotalAmount(): Observable<number> {
     return this.cartItems.pipe(map((product: Product[]) => {

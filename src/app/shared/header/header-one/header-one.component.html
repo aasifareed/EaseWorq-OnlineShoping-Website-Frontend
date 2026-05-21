@@ -138,25 +138,6 @@
             <span class="label-bold">Rome</span>
           </div>
 
-          <div class="top-item-box ">
-            <a href="#" class="border-sep">
-              <i class="fa fa-truck fa-flip-horizontal"></i>
-
-              Express Delivery</a>
-          </div>
-
-          <div class="top-item-box d-none d-md-flex">
-            <a href="#" class="border-sep">
-              <i class="fa fa-repeat"></i>
-
-              Free Returns</a>
-          </div>
-
-          <div class="top-item-box d-none d-lg-flex">
-            <a href="#" class="border-sep">
-              <i class="fa fa-map-marker"></i>
-              Our Location</a>
-          </div>
         </div>
 
         <div class="top-right-content d-flex align-items-center h-100">
@@ -225,12 +206,20 @@
           <div class="d-flex align-items-center action-icons">
             <div class="dropdown px-3 text-center border-end border-secondary-subtle">
               <a class="text-white text-decoration-none dropdown-toggle no-caret" data-bs-toggle="dropdown">
-                <i class="fa fa-user-o fs-5"></i>
+                <span *ngIf="isLoggedIn" class="account-initials">{{ userInitials }}</span>
+                <i *ngIf="!isLoggedIn" class="fa fa-user-o fs-5"></i>
                 <span class="d-block label">YOUR ACCOUNT</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-dark custom-drop">
-                <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
-                <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
+                <ng-container *ngIf="!isLoggedIn">
+                  <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
+                  <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
+                </ng-container>
+                <ng-container *ngIf="isLoggedIn">
+                  <li><a class="dropdown-item" [routerLink]="['/pages/my-orders']">My Orders</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><button type="button" class="dropdown-item" (click)="logout()">Log Out</button></li>
+                </ng-container>
               </ul>
             </div>
 
@@ -294,6 +283,10 @@
       <div class="flex-grow-1 ps-2">
         <app-menu></app-menu>
       </div>
+
+      <a [routerLink]="['/pages/my-orders']" class="nav-orders-link ms-auto px-4 text-dark fw-bold text-decoration-none">
+        ORDERS
+      </a>
     </div>
   </div>
 </header>

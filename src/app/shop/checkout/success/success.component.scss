@@ -1,0 +1,6 @@
+li {
+    word-wrap: break-word;       /* Older browsers */
+    overflow-wrap: break-word;   /* Modern standard */
+    word-break: break-all;       /* Forces break even if there are no spaces */
+    white-space: normal;         /* Ensures text wraps to the next line */
+}

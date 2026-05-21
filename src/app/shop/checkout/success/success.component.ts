@@ -1,6 +1,9 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { Order } from '../../../shared/classes/order';
-import { OrderService } from '../../../shared/services/order.service';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import {
+  OnlineShopOrderService,
+  OnlineShopOrderSuccessDetail
+} from '../../../shared/services/online-shop-order.service';
 import { ProductService } from '../../../shared/services/product.service';
 
 @Component({
@@ -8,20 +11,52 @@ import { ProductService } from '../../../shared/services/product.service';
   templateUrl: './success.component.html',
   styleUrls: ['./success.component.scss']
 })
-export class SuccessComponent implements OnInit, AfterViewInit{
+export class SuccessComponent implements OnInit {
 
-  public orderDetails : Order = {};
+  public order: OnlineShopOrderSuccessDetail | null = null;
+  public loading = true;
+  public loadError = false;
 
-  constructor(public productService: ProductService,
-    private orderService: OrderService) { }
+  constructor(
+    public productService: ProductService,
+    private route: ActivatedRoute,
+    private onlineShopOrder: OnlineShopOrderService
+  ) { }
 
-  ngOnInit(): void {	
-    debugger;
-    this.orderService.checkoutItems.subscribe(response => this.orderDetails = response);
+  ngOnInit(): void {
+    const orderId = this.route.snapshot.paramMap.get('id');
+    if (!orderId) {
+      this.loading = false;
+      this.loadError = true;
+      return;
+    }
+
+    this.productService.clearCart();
+    sessionStorage.removeItem('pending_online_shop_order_id');
+    sessionStorage.removeItem('pending_online_shop_order_number');
+
+    this.onlineShopOrder.getOrderForSuccessPage(orderId).subscribe({
+      next: (detail) => {
+        this.order = detail;
+        this.loading = false;
+        this.loadError = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
+    });
   }
 
-  ngAfterViewInit() {
-    
+  formatDate(iso: string): string {
+    if (!iso) {
+      return '';
+    }
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  productImage(url?: string): string {
+    return url || 'assets/images/product/1.jpg';
+  }
 }

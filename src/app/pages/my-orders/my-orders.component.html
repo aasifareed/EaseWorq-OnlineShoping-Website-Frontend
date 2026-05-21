@@ -1,0 +1,73 @@
+<app-breadcrumb [title]="'My Orders'" [breadcrumb]="'Orders'"></app-breadcrumb>
+
+<section class="section-b-space my-orders-page">
+  <div class="container">
+    <div *ngIf="!isLoggedIn" class="login-prompt theme-card text-center p-5">
+      <h3>Please log in</h3>
+      <p class="text-muted mb-4">Sign in with your email to see orders placed on this store.</p>
+      <button type="button" class="btn btn-solid" (click)="goToLogin()">Log In</button>
+    </div>
+
+    <div *ngIf="isLoggedIn">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">My Orders</h3>
+        <span class="text-muted" *ngIf="auth.getCustomerEmail()">{{ auth.getCustomerEmail() }}</span>
+      </div>
+
+      <div *ngIf="loading" class="text-center py-5">Loading orders…</div>
+
+      <div *ngIf="!loading && errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+
+      <div *ngIf="!loading && !errorMessage && !orders.length" class="theme-card text-center p-5">
+        <p class="mb-0">You have not placed any orders yet.</p>
+      </div>
+
+      <div *ngIf="!loading && orders.length" class="table-responsive theme-card">
+        <table class="table table-hover mb-0 orders-table">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Total</th>
+              <th>Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of orders">
+              <td class="fw-semibold">{{ order.onlineOrderNumber }}</td>
+              <td>{{ formatDate(order.orderDate) }}</td>
+              <td>
+                <span class="order-status-badge"
+                  [style.background-color]="order.orderStatusColorCode || '#6c757d'">
+                  {{ statusLabel(order) }}
+                </span>
+              </td>
+              <td>{{ order.totalAmount | number:'1.2-2' }}</td>
+              <td>{{ order.paidAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!loading && totalCount > pageSize" class="d-flex justify-content-between align-items-center mt-4">
+        <span class="text-muted">
+          Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ (currentPage - 1) * pageSize + orders.length }} of {{ totalCount }}
+        </span>
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage <= 1">
+              <button type="button" class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link">{{ currentPage }} / {{ totalPages }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage >= totalPages">
+              <button type="button" class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>

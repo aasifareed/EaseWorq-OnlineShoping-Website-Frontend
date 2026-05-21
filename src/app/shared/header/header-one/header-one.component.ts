@@ -4,6 +4,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
 import { OnlineShopSettingsService } from '../../services/online-shop-settings.service';
 import { OnlineShopStorefront } from '../../models/online-shop-storefront.model';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header-one',
@@ -25,8 +26,21 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
 
   constructor(
     public productService: ProductService,
+    public auth: AuthService,
     private storefrontSettings: OnlineShopSettingsService,
   ) { }
+
+  get isLoggedIn(): boolean {
+    return this.auth.isLoggedIn();
+  }
+
+  get userInitials(): string {
+    return this.auth.getInitials();
+  }
+
+  logout(): void {
+    this.auth.logout(true);
+  }
 
   ngOnInit(): void {
     this.filterbyCategory();
