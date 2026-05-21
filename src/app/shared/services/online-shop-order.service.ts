@@ -94,7 +94,7 @@ export interface CreateOnlineShopSaleOrderRequest {
 
   storeId: string;
 
-  customerId?: string | null;
+  userEmail: string;
 
   billingAddress: OnlineShopSaleOrderAddress;
 
@@ -282,6 +282,23 @@ export class OnlineShopOrderService {
     );
   }
 
+  getMyOrderDetail(
+    orderId: string,
+    customerEmail: string
+  ): Observable<OnlineShopOrderSuccessDetail> {
+    const path =
+      environment.urls?.OnlineShopSaleOrder_GetMyOrderDetail ||
+      'OnlineShopSaleOrder/GetMyOnlineShopSaleOrderDetailForCustomer';
+    const params = new HttpParams()
+      .set('OnlineShopSaleOrderId', orderId)
+      .set('StoreId', this.auth.storeId)
+      .set('CustomerEmail', customerEmail.trim());
+    const url = `${this.apiRoot()}api/services/app/${path}`;
+    return this.http.get<any>(url, { params }).pipe(
+      map((body) => this.normalizeSuccessDetail(body?.result ?? body))
+    );
+  }
+
   getMyOrders(customerEmail: string, skipCount: number, maxResultCount = 20): Observable<PagedOnlineShopOrders> {
     const path = environment.urls?.OnlineShopSaleOrder_GetMyOrders
       || 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrdersForCustomer';
@@ -336,11 +353,16 @@ export class OnlineShopOrderService {
 
 
 
+    const userEmail = this.auth.getCustomerEmail();
+    if (!userEmail) {
+      throw new Error('Please sign in to place an order.');
+    }
+
     return {
 
       storeId: this.auth.storeId,
 
-      customerId: null,
+      userEmail,
 
       billingAddress: billing,
 

@@ -39,11 +39,11 @@
                         <!-- side-bar colleps block stat -->
                         <div class="collection-filter-block microless-filter-section">
                             <!-- brand filter start -->
-                            <app-brands [products]="rawProducts" [brands]="brands" [brandOptions]="brandOptions" (brandsFilter)="updateFilter($event)">
+                            <app-brands [categoryTree]="categoryTree" [selectedBrandIds]="brands" (brandOptionsReady)="brandOptions = $event">
                             </app-brands>
-                            <app-colors [products]="rawProducts" [colors]="colors" (colorsFilter)="updateFilter($event)">
+                            <app-colors [categoryTree]="categoryTree" [selectedColors]="colors">
                             </app-colors>
-                            <app-size [products]="rawProducts" [size]="size" (sizeFilter)="updateFilter($event)">
+                            <app-size [categoryTree]="categoryTree" [selectedSizes]="size">
                             </app-size>
                             <!-- price filter start here -->
                             <app-price [min]="minPrice" [max]="maxPrice" (priceFilter)="updateFilter($event)">
@@ -84,7 +84,7 @@
                                         <img src="assets/images/collection-banner.jpg" class="img-fluid " alt="">
                                     </a> -->
                                     <div class="top-banner-content microless-page-heading">
-                                        <h1 class="collection-page-title">{{ pageTitle }}</h1>
+                                        <h1 class="collection-page-title mt-3">{{ pageTitle }}</h1>
                                         <!-- <h5>Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                                         </h5>
                                         <p>
@@ -106,7 +106,7 @@
                                 <ul class="product-filter-tags">
                                     <li class="me-1" *ngFor="let tag of tags">
                                         <a href="javascript:void(0)" class="filter_tag">
-                                            {{ tagLabel(tag) }} <i class="ti-close" (click)="removeTag(tag)"></i>
+                                            {{ tagLabel(tag) }} <i class="ti-close" (click)="removeTag(tag); $event.preventDefault()"></i>
                                         </a>
                                     </li>
                                     <li class="clear_filter" *ngIf="tags.length > 0">

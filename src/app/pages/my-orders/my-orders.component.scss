@@ -19,4 +19,25 @@
   .login-prompt h3 {
     margin-bottom: 0.5rem;
   }
+
+  .order-actions {
+    white-space: nowrap;
+
+    .btn {
+      min-width: 5.5rem;
+    }
+  }
+}
+
+.order-detail-modal-body {
+  .order-detail-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .order-detail-totals li {
+    padding: 0.2rem 0;
+  }
 }

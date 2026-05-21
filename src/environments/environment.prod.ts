@@ -13,11 +13,18 @@ export const environment = {
     OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop:
       'OnlineShopAvailableProduct/GetRelatedProductsForOnlineShop',
     OnlineShopBrand_GetBrandsListForOnline: 'OnlineShopBrand/GetBrandsListForOnline',
+    OnlineShopAvailableProduct_GetProductColorsListForOnline:
+      'OnlineShopAvailableProduct/GetProductColorsListForOnline',
+    OnlineShopAvailableProduct_GetProductSizesListForOnline:
+      'OnlineShopAvailableProduct/GetProductSizesListForOnline',
     OnlineShopWishlist_GetWishlistForOnlineShop: 'OnlineShopWishlist/GetWishlistForOnlineShop',
     OnlineShopWishlist_AddToWishlistForOnlineShop: 'OnlineShopWishlist/AddToWishlistForOnlineShop',
     OnlineShopWishlist_RemoveFromWishlistForOnlineShop:
       'OnlineShopWishlist/RemoveFromWishlistForOnlineShop',
     OnlineShopSaleOrder_CreateOnlineShopSaleOrder: 'OnlineShopSaleOrder/CreateOnlineShopSaleOrder',
+    OnlineShopSaleOrder_GetForSuccessPage: 'OnlineShopSaleOrder/GetOnlineShopSaleOrderForSuccessPage',
+    OnlineShopSaleOrder_GetMyOrders: 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrdersForCustomer',
+    OnlineShopSaleOrder_GetMyOrderDetail: 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrderDetailForCustomer',
     OnlinseShopUsers_SignupForOnlineShop: 'OnlinseShopUsers/SignupForOnlineShop',
     OnlinseShopUsers_ResetPasswordRequestForOnlineShop:
       'OnlinseShopUsers/ResetPasswordRequestForOnlineShop',

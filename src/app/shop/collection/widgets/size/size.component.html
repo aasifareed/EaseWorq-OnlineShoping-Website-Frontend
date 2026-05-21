@@ -1,16 +1,17 @@
-<div class="collection-collapse-block" [class.open]="collapse" *ngIf="displaySizes.length">
+<div class="collection-collapse-block" [class.open]="collapse" *ngIf="displaySizeList.length || loading">
     <h3 class="collapse-block-title" (click)="collapse = !collapse">Size</h3>
     <div class="collection-collapse-block-content">
       <div class="color-selector">
         <div class="collection-brand-filter">
           <div class="custom-control custom-checkbox collection-filter-checkbox"
-            *ngFor="let s of displaySizes; let i = index">
-            <input type="checkbox"
-              [value]="s.value"
-              [checked]="checked(s.value)"
+            *ngFor="let s of displaySizeList; let i = index">
+            <input
+              type="checkbox"
+              class="custom-control-input"
               [id]="'shop-size-' + i"
-              (change)="appliedFilter($event)"
-              class="custom-control-input" />
+              [value]="s.value"
+              [checked]="s.checked"
+              (click)="toggleSize(s.value, $event)" />
             <label class="custom-control-label" [attr.for]="'shop-size-' + i">{{ s.label }}</label>
           </div>
         </div>

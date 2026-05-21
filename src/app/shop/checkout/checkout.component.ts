@@ -10,6 +10,7 @@ import { OrderService } from '../../shared/services/order.service';
 import { CreatePayFastCheckoutRequest, PayFastPaymentService } from './pay-fast-payment.service';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
+import { AuthService } from '../../shared/services/auth.service';
 import {
   OnlineShopOrderService,
   OnlineShopPaymentMethod,
@@ -53,6 +54,7 @@ export class CheckoutComponent implements OnInit {
     public productService: ProductService,
     private orderService: OrderService,
     private onlineShopOrder: OnlineShopOrderService,
+    private auth: AuthService,
     private payFast: PayFastPaymentService,
     private router: Router,
     private toastr: ToastrService,
@@ -116,6 +118,12 @@ export class CheckoutComponent implements OnInit {
     }
     if (!this.products?.length) {
       this.toastr.warning('Your cart is empty.');
+      return;
+    }
+
+    if (!this.auth.isLoggedIn() || !this.auth.getCustomerEmail()) {
+      this.toastr.warning('Please sign in to place an order.');
+      this.auth.navigateToLogin('/shop/checkout');
       return;
     }
 

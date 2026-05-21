@@ -57,7 +57,6 @@ export class CollectionLeftSidebarComponent implements OnInit {
         next: (resp) => {
           this.categoryTree = resp.result || [];
           this.rebuildToolbarContext();
-          this.loadBrandOptions();
           if (this.category) {
             this.getProducts();
           }
@@ -66,9 +65,24 @@ export class CollectionLeftSidebarComponent implements OnInit {
       // Get Query params..
       this.route.queryParams.subscribe(params => {
 
-        this.brands = params.brand ? params.brand.split(",") : [];
-        this.colors = params.color ? params.color.split(",") : [];
-        this.size  = params.size ? params.size.split(",")  : [];
+        this.brands = params.brand
+          ? String(Array.isArray(params.brand) ? params.brand.join(',') : params.brand)
+              .split(',')
+              .map((id: string) => id.trim())
+              .filter((id: string) => id.length > 0)
+          : [];
+        this.colors = params.color
+          ? String(Array.isArray(params.color) ? params.color.join(',') : params.color)
+              .split(',')
+              .map((v: string) => v.trim())
+              .filter((v: string) => v.length > 0)
+          : [];
+        this.size = params.size
+          ? String(Array.isArray(params.size) ? params.size.join(',') : params.size)
+              .split(',')
+              .map((v: string) => v.trim())
+              .filter((v: string) => v.length > 0)
+          : [];
         const rawMin = params['minPrice'];
         const rawMax = params['maxPrice'];
         this.minPrice = rawMin !== undefined && rawMin !== null && rawMin !== '' ? +rawMin : null;
@@ -79,7 +93,6 @@ export class CollectionLeftSidebarComponent implements OnInit {
         this.sortBy = params.sortBy ? params.sortBy : 'ascending';
         this.pageNo = params.page != null && String(params.page) !== '' ? +params.page : 1;
         this.rebuildToolbarContext();
-        this.loadBrandOptions();
         this.getProducts();
         // Get Filtered Products..
         // this.productService.filterProducts(this.tags).subscribe(response => {         
@@ -159,30 +172,12 @@ export class CollectionLeftSidebarComponent implements OnInit {
     this.breadcrumbTrail = trail;
   }
 
-  private loadBrandOptions(): void {
-    const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
-    const categoryId =
-      resolvedPath?.length ? String(resolvedPath[resolvedPath.length - 1].id) : undefined;
-    this.productService.getBrandsForOnlineShop(categoryId || null).subscribe({
-      next: (resp) => {
-        const raw = resp?.result ?? resp?.items ?? [];
-        this.brandOptions = (raw as any[]).map((x) => ({
-          id: String(x.id ?? x.Id ?? ''),
-          name: String(x.brandName ?? x.BrandName ?? ''),
-          productCount: Number(x.productCount ?? x.ProductCount ?? 0)
-        })).filter((x) => x.id.length > 0);
-      },
-      error: () => {
-        this.brandOptions = [];
-      }
-    });
-  }
-
   /** Friendly chip label (brand query values are brand ids). */
   tagLabel(tag: string): string {
-    const b = this.brandOptions.find((x) => x.id === tag);
+    const key = String(tag).trim().toLowerCase();
+    const b = this.brandOptions.find((x) => String(x.id).trim().toLowerCase() === key);
     if (b) {
-      return `${b.name} (${b.productCount})`;
+      return `${b.name}`;
     }
     return tag;
   }
@@ -311,17 +306,17 @@ export class CollectionLeftSidebarComponent implements OnInit {
     });
     return path;
   }
-  // Append filter value to Url
+  // Append filter value to Url (color, size, price)
   updateFilter(tags: any) {
-    tags.page = null; // Reset Pagination
-    this.router.navigate([], { 
+    const queryParams = { ...tags, page: null };
+    this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: tags,
-      queryParamsHandling: 'merge', // preserve the existing query params in the route
-      skipLocationChange: false  // do trigger navigation
+      queryParams,
+      queryParamsHandling: 'merge',
+      skipLocationChange: false,
     }).finally(() => {
       this.viewScroller.setOffset([120, 120]);
-      this.viewScroller.scrollToAnchor('products'); // Anchore Link
+      this.viewScroller.scrollToAnchor('products');
     });
   }
 
@@ -339,16 +334,19 @@ export class CollectionLeftSidebarComponent implements OnInit {
   }
 
   // Remove Tag
-  removeTag(tag: any) {
-  
-    this.brands = this.brands.filter(val => val !== tag);
-    this.colors = this.colors.filter(val => val !== tag);
-    this.size = this.size.filter(val => val !== tag );
-
-    let params = { 
-      brand: this.brands.length ? this.brands.join(",") : null, 
-      color: this.colors.length ? this.colors.join(",") : null, 
-      size: this.size.length ? this.size.join(",") : null
+  removeTag(tag: string) {
+    const params: Record<string, string | null> = {};
+    if (this.brands.includes(tag)) {
+      const next = this.brands.filter((val) => val !== tag);
+      params.brand = next.length ? next.join(',') : null;
+    }
+    if (this.colors.includes(tag)) {
+      const next = this.colors.filter((val) => val !== tag);
+      params.color = next.length ? next.join(',') : null;
+    }
+    if (this.size.includes(tag)) {
+      const next = this.size.filter((val) => val !== tag);
+      params.size = next.length ? next.join(',') : null;
     }
 
     this.router.navigate([], { 

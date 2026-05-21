@@ -1,10 +1,25 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Product } from '../../../../shared/classes/product';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ProductService } from '../../../../shared/services/product.service';
 
 export interface ShopBrandOption {
   id: string;
   name: string;
-  productCount: number;
+}
+
+export interface ShopBrandDisplayOption extends ShopBrandOption {
+  checked: boolean;
 }
 
 @Component({
@@ -12,66 +27,112 @@ export interface ShopBrandOption {
   templateUrl: './brands.component.html',
   styleUrls: ['./brands.component.scss']
 })
-export class BrandsComponent implements OnInit {
+export class BrandsComponent implements OnInit, OnDestroy, OnChanges {
 
-  @Input() products: Product[] = [];
-  @Input() brands: any[] = [];
-  /** When set, checkboxes use brand ids (API); otherwise names are derived from the current product page. */
-  @Input() brandOptions: ShopBrandOption[] = [];
+  @Input() categoryTree: any[] = [];
+  @Input() selectedBrandIds: string[] = [];
 
-  @Output() brandsFilter: EventEmitter<any> = new EventEmitter<any>();
-  
-  public collapse: boolean = true;
+  @Output() brandOptionsReady = new EventEmitter<ShopBrandOption[]>();
 
-  constructor() { 
-  }
+  public brandList: ShopBrandOption[] = [];
+  public displayBrandList: ShopBrandDisplayOption[] = [];
+  public collapse = true;
+  public loading = false;
+
+  private routeSub?: Subscription;
+  private category: string | null = null;
+  private lastCategoryKey = '';
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private productService: ProductService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-  }
+    const snapshot = this.route.snapshot.queryParams;
+    this.category = snapshot['category'] ? String(snapshot['category']) : null;
+    this.lastCategoryKey = this.category || '';
+    this.loadBrands();
 
-  get filterbyBrand() {
-    const uniqueBrands: string[] = [];
-    this.products.forEach((product) => {
-      if (product.brand) {
-        const index = uniqueBrands.indexOf(product.brand);
-        if (index === -1) {
-          uniqueBrands.push(product.brand);
-        }
+    this.routeSub = this.route.queryParams.subscribe((params) => {
+      const categoryKey = params['category'] ? String(params['category']) : '';
+      if (categoryKey !== this.lastCategoryKey) {
+        this.lastCategoryKey = categoryKey;
+        this.category = categoryKey || null;
+        this.loadBrands();
       }
     });
-    return uniqueBrands;
   }
 
-  get displayBrands(): { value: string; label: string }[] {
-    if (this.brandOptions?.length) {
-      return this.brandOptions.map((b) => ({
-        value: b.id,
-        label: `${b.name} (${b.productCount})`
-      }));
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedBrandIds']) {
+      this.refreshDisplayList();
     }
-    return this.filterbyBrand.map((name) => ({ value: name, label: name }));
   }
 
-  appliedFilter(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
-    if (input.checked) {
-      if (this.brands.indexOf(value) === -1) {
-        this.brands.push(value);
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
+  }
+
+  private sameId(a: string, b: string): boolean {
+    return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+  }
+
+  private refreshDisplayList(): void {
+    this.displayBrandList = this.brandList.map((b) => ({
+      ...b,
+      checked: (this.selectedBrandIds || []).some((id) => this.sameId(id, b.id)),
+    }));
+    this.cdr.markForCheck();
+  }
+
+  private loadBrands(): void {
+    const resolvedPath = this.productService.findCategoryPathFlexible(
+      this.categoryTree,
+      this.category
+    );
+    const categoryId = resolvedPath?.length
+      ? String(resolvedPath[resolvedPath.length - 1].id)
+      : undefined;
+
+    this.loading = true;
+    this.productService.getBrandsForOnlineShop(categoryId || null).subscribe({
+      next: (resp) => {
+        const raw = resp?.result ?? resp?.items ?? [];
+        this.brandList = (raw as any[])
+          .map((x) => ({
+            id: String(x.id ?? x.Id ?? '').trim(),
+            name: String(x.brandName ?? x.BrandName ?? '')
+          }))
+          .filter((x) => x.id.length > 0);
+        this.brandOptionsReady.emit(this.brandList);
+        this.refreshDisplayList();
+        this.loading = false;
+      },
+      error: () => {
+        this.brandList = [];
+        this.displayBrandList = [];
+        this.brandOptionsReady.emit([]);
+        this.loading = false;
       }
+    });
+  }
+
+  toggleBrand(brandId: string, event: MouseEvent): void {
+    event.preventDefault();
+    const selected = [...(this.selectedBrandIds || [])];
+    const index = selected.findIndex((id) => this.sameId(id, brandId));
+    if (index === -1) {
+      selected.push(brandId);
     } else {
-      const index = this.brands.indexOf(value);
-      if (index !== -1) {
-        this.brands.splice(index, 1);
-      }
+      selected.splice(index, 1);
     }
-
-    const brands = this.brands.length ? { brand: this.brands.join(',') } : { brand: null };
-    this.brandsFilter.emit(brands);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { brand: selected.length ? selected.join(',') : null, page: null },
+      queryParamsHandling: 'merge',
+    });
   }
-
-  checked(item: string): boolean {
-    return this.brands.indexOf(item) !== -1;
-  }
-
 }

@@ -568,10 +568,32 @@ private apiRoot(): string {
 
   /** Brands (manufacturers) for the shop sidebar; optional category limits to products in that group. */
   public getBrandsForOnlineShop(productGroupId?: string | null): Observable<any> {
-    let url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopBrand_GetBrandsListForOnline}?TenantId=1&StoreId=d4d292f5-de72-4742-b728-ea34a1706191`;
+    let url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopBrand_GetBrandsListForOnline}?TenantId=1`;
     if (productGroupId) {
       url += `&ProductGroupId=${encodeURIComponent(productGroupId)}`;
     }
+    return this.http.get(url);
+  }
+
+  private onlineShopFacetQuery(categoryId?: string | null): string {
+    const storeId =
+      environment.storeId ||
+      environment.shop?.storeId ||
+      'd4d292f5-de72-4742-b728-ea34a1706191';
+    let q = `TenantId=1&StoreId=${encodeURIComponent(storeId)}`;
+    if (categoryId) {
+      q += `&CategoryId=${encodeURIComponent(categoryId)}`;
+    }
+    return q;
+  }
+
+  public getColorsForOnlineShop(categoryId?: string | null): Observable<any> {
+    const url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopAvailableProduct_GetProductColorsListForOnline}?${this.onlineShopFacetQuery(categoryId || null)}`;
+    return this.http.get(url);
+  }
+
+  public getSizesForOnlineShop(categoryId?: string | null): Observable<any> {
+    const url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopAvailableProduct_GetProductSizesListForOnline}?${this.onlineShopFacetQuery(categoryId || null)}`;
     return this.http.get(url);
   }
 

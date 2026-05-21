@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../../shared/services/auth.service';
 import {
   OnlineShopOrderListItem,
-  OnlineShopOrderService
+  OnlineShopOrderService,
+  OnlineShopOrderSuccessDetail
 } from '../../shared/services/online-shop-order.service';
+import { ProductService } from '../../shared/services/product.service';
 
 @Component({
   selector: 'app-my-orders',
@@ -13,15 +16,24 @@ import {
 export class MyOrdersComponent implements OnInit {
   readonly pageSize = 20;
 
+  @ViewChild('orderDetailModal') orderDetailModal!: TemplateRef<unknown>;
+
   orders: OnlineShopOrderListItem[] = [];
   totalCount = 0;
   currentPage = 1;
   loading = false;
   errorMessage = '';
 
+  detailLoading = false;
+  detailError = '';
+  orderDetail: OnlineShopOrderSuccessDetail | null = null;
+  private modalRef: NgbModalRef | null = null;
+
   constructor(
     public auth: AuthService,
-    private onlineShopOrder: OnlineShopOrderService
+    public productService: ProductService,
+    private onlineShopOrder: OnlineShopOrderService,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -78,6 +90,46 @@ export class MyOrdersComponent implements OnInit {
     this.auth.navigateToLogin('/pages/my-orders');
   }
 
+  trackOrder(_order: OnlineShopOrderListItem): void {
+    // Placeholder — tracking flow will be added later.
+  }
+
+  showDetail(order: OnlineShopOrderListItem): void {
+    const email = this.auth.getCustomerEmail();
+    if (!email) {
+      return;
+    }
+
+    this.detailLoading = true;
+    this.detailError = '';
+    this.orderDetail = null;
+    this.modalRef = this.modalService.open(this.orderDetailModal, {
+      size: 'lg',
+      centered: true,
+      scrollable: true
+    });
+
+    this.onlineShopOrder.getMyOrderDetail(order.id, email).subscribe({
+      next: (detail) => {
+        this.orderDetail = detail;
+        this.detailLoading = false;
+      },
+      error: (err) => {
+        this.detailLoading = false;
+        this.detailError =
+          err?.error?.error?.message ||
+          err?.error?.message ||
+          err?.message ||
+          'Could not load order details.';
+      }
+    });
+  }
+
+  closeDetailModal(): void {
+    this.modalRef?.close();
+    this.modalRef = null;
+  }
+
   formatDate(value: string): string {
     if (!value) {
       return '—';
@@ -86,7 +138,21 @@ export class MyOrdersComponent implements OnInit {
     return isNaN(d.getTime()) ? value : d.toLocaleString();
   }
 
+  formatShortDate(value: string): string {
+    if (!value) {
+      return '';
+    }
+    const d = new Date(value);
+    return isNaN(d.getTime())
+      ? value
+      : d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
   statusLabel(order: OnlineShopOrderListItem): string {
     return order.orderStatusDisplayName || order.orderStatusName || '—';
+  }
+
+  productImage(url?: string): string {
+    return url || 'assets/images/product/1.jpg';
   }
 }

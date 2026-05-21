@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
 import { ProductService } from "../../../shared/services/product.service";
 import { Product } from '../../../shared/classes/product';
+import { ShopBrandOption } from '../widgets/brands/brands.component';
 
 @Component({
   selector: 'app-collection-right-sidebar',
@@ -15,6 +16,8 @@ export class CollectionRightSidebarComponent implements OnInit {
   public layoutView: string = 'grid-view';
   public products: Product[] = [];
   public brands: any[] = [];
+  public categoryTree: any[] = [];
+  public brandOptions: ShopBrandOption[] = [];
   public colors: any[] = [];
   public size: any[] = [];
   public minPrice: number = 0;

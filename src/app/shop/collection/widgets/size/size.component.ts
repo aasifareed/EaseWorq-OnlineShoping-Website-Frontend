@@ -1,9 +1,25 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { Product } from '../../../../shared/classes/product';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ProductService } from '../../../../shared/services/product.service';
 
 export interface ShopSizeOption {
   value: string;
   label: string;
+}
+
+export interface ShopSizeDisplayOption extends ShopSizeOption {
+  checked: boolean;
 }
 
 @Component({
@@ -11,65 +27,119 @@ export interface ShopSizeOption {
   templateUrl: './size.component.html',
   styleUrls: ['./size.component.scss']
 })
-export class SizeComponent {
+export class SizeComponent implements OnInit, OnDestroy, OnChanges {
 
-  @Input() products: Product[] = [];
-  @Input() size: string[] = [];
+  @Input() categoryTree: any[] = [];
+  @Input() selectedSizes: string[] = [];
 
-  @Output() sizeFilter: EventEmitter<Record<string, string | null>> = new EventEmitter();
+  @Output() sizeOptionsReady = new EventEmitter<ShopSizeOption[]>();
 
+  public sizeList: ShopSizeOption[] = [];
+  public displaySizeList: ShopSizeDisplayOption[] = [];
   public collapse = true;
+  public loading = false;
 
-  /** Unique sizes from JSON `variants.size` and/or POS `productSize`. */
-  get displaySizes(): ShopSizeOption[] {
-    const map = new Map<string, string>();
-    for (const p of this.products || []) {
-      const ps = (p as Product).productSize;
-      if (ps != null && String(ps).trim() !== '') {
-        const label = String(ps).trim();
-        const key = label.toLowerCase();
-        if (!map.has(key)) {
-          map.set(key, label);
-        }
+  private routeSub?: Subscription;
+  private category: string | null = null;
+  private lastCategoryKey = '';
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private productService: ProductService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    const snapshot = this.route.snapshot.queryParams;
+    this.category = snapshot['category'] ? String(snapshot['category']) : null;
+    this.lastCategoryKey = this.category || '';
+    this.loadSizes();
+
+    this.routeSub = this.route.queryParams.subscribe((params) => {
+      const categoryKey = params['category'] ? String(params['category']) : '';
+      if (categoryKey !== this.lastCategoryKey) {
+        this.lastCategoryKey = categoryKey;
+        this.category = categoryKey || null;
+        this.loadSizes();
       }
-      (p.variants || []).forEach((v: any) => {
-        if (v?.size != null && String(v.size).trim() !== '') {
-          const label = String(v.size).trim();
-          const key = label.toLowerCase();
-          if (!map.has(key)) {
-            map.set(key, label);
-          }
-        }
-      });
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedSizes']) {
+      this.refreshDisplayList();
     }
-    return [...map.entries()]
-      .sort((a, b) => this.sizeSortKey(a[1]) - this.sizeSortKey(b[1]))
-      .map(([, label]) => ({ value: label, label }));
   }
 
-  private sizeSortKey(s: string): number {
-    const n = parseFloat(s.replace(',', '.'));
-    return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
   }
 
-  appliedFilter(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
-    if (input.checked) {
-      if (this.size.indexOf(value) === -1) {
-        this.size.push(value);
+  private sameValue(a: string, b: string): boolean {
+    const sa = String(a).trim().toLowerCase();
+    const sb = String(b).trim().toLowerCase();
+    if (sa === sb) {
+      return true;
+    }
+    const na = parseFloat(sa.replace(',', '.'));
+    const nb = parseFloat(sb.replace(',', '.'));
+    return Number.isFinite(na) && Number.isFinite(nb) && na === nb;
+  }
+
+  private refreshDisplayList(): void {
+    this.displaySizeList = this.sizeList.map((s) => ({
+      ...s,
+      checked: (this.selectedSizes || []).some((v) => this.sameValue(v, s.value)),
+    }));
+    this.cdr.markForCheck();
+  }
+
+  private loadSizes(): void {
+    const resolvedPath = this.productService.findCategoryPathFlexible(
+      this.categoryTree,
+      this.category
+    );
+    const categoryId = resolvedPath?.length
+      ? String(resolvedPath[resolvedPath.length - 1].id)
+      : undefined;
+
+    this.loading = true;
+    this.productService.getSizesForOnlineShop(categoryId || null).subscribe({
+      next: (resp) => {
+        const raw = resp?.result ?? resp?.items ?? [];
+        this.sizeList = (raw as any[])
+          .map((x) => {
+            const label = String(x.label ?? x.Label ?? x.value ?? x.Value ?? '').trim();
+            return { value: label, label };
+          })
+          .filter((x) => x.value.length > 0);
+        this.sizeOptionsReady.emit(this.sizeList);
+        this.refreshDisplayList();
+        this.loading = false;
+      },
+      error: () => {
+        this.sizeList = [];
+        this.displaySizeList = [];
+        this.sizeOptionsReady.emit([]);
+        this.loading = false;
       }
+    });
+  }
+
+  toggleSize(sizeValue: string, event: MouseEvent): void {
+    event.preventDefault();
+    const selected = [...(this.selectedSizes || [])];
+    const index = selected.findIndex((v) => this.sameValue(v, sizeValue));
+    if (index === -1) {
+      selected.push(sizeValue);
     } else {
-      const index = this.size.indexOf(value);
-      if (index !== -1) {
-        this.size.splice(index, 1);
-      }
+      selected.splice(index, 1);
     }
-    const payload = this.size.length ? { size: this.size.join(',') } : { size: null };
-    this.sizeFilter.emit(payload);
-  }
-
-  checked(item: string): boolean {
-    return this.size.indexOf(item) !== -1;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { size: selected.length ? selected.join(',') : null, page: null },
+      queryParamsHandling: 'merge',
+    });
   }
 }
