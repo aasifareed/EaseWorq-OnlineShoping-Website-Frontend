@@ -30,6 +30,7 @@ OnlineShopSaleOrder_CreateOnlineShopSaleOrder: "OnlineShopSaleOrder/CreateOnline
 OnlineShopSaleOrder_GetForSuccessPage: "OnlineShopSaleOrder/GetOnlineShopSaleOrderForSuccessPage",
 OnlineShopSaleOrder_GetMyOrders: "OnlineShopSaleOrder/GetMyOnlineShopSaleOrdersForCustomer",
 OnlineShopSaleOrder_GetMyOrderDetail: "OnlineShopSaleOrder/GetMyOnlineShopSaleOrderDetailForCustomer",
+TcsCourier_CreateBookingFromOrder: "TcsCourier/CreateBookingFromOrder",
 //OnlineShopUsersAppServcie
 OnlinseShopUsers_SignupForOnlineShop: "OnlinseShopUsers/SignupForOnlineShop",
 OnlinseShopUsers_ResetPasswordRequestForOnlineShop: "OnlinseShopUsers/ResetPasswordRequestForOnlineShop",

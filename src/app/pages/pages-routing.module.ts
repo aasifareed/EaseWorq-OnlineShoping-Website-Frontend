@@ -16,6 +16,7 @@ import { TypographyComponent } from './typography/typography.component';
 import { ReviewComponent } from './review/review.component';
 import { OrderSuccessComponent } from './order-success/order-success.component';
 import { MyOrdersComponent } from './my-orders/my-orders.component';
+import { TcsIntegrationTestComponent } from './tcs-integration-test/tcs-integration-test.component';
 import { CompareOneComponent } from './compare/compare-one/compare-one.component';
 import { CompareTwoComponent } from './compare/compare-two/compare-two.component';
 import { CollectionComponent } from './collection/collection.component';
@@ -96,6 +97,10 @@ const routes: Routes = [
   {
     path: 'my-orders',
     component: MyOrdersComponent
+  },
+  {
+    path: 'tcs-integration-test',
+    component: TcsIntegrationTestComponent
   },
   { 
     path: 'compare/one', 

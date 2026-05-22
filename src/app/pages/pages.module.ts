@@ -23,6 +23,7 @@ import { TypographyComponent } from './typography/typography.component';
 import { ReviewComponent } from './review/review.component';
 import { OrderSuccessComponent } from './order-success/order-success.component';
 import { MyOrdersComponent } from './my-orders/my-orders.component';
+import { TcsIntegrationTestComponent } from './tcs-integration-test/tcs-integration-test.component';
 import { CompareOneComponent } from './compare/compare-one/compare-one.component';
 import { CompareTwoComponent } from './compare/compare-two/compare-two.component';
 import { CollectionComponent } from './collection/collection.component';
@@ -61,6 +62,7 @@ import { MasonryFullWidthComponent } from './portfolio/masonry-full-width/masonr
     ReviewComponent,
     OrderSuccessComponent,
     MyOrdersComponent,
+    TcsIntegrationTestComponent,
     CompareOneComponent,
     CompareTwoComponent,
     CollectionComponent,

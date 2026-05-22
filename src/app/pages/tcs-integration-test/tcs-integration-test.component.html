@@ -1,0 +1,52 @@
+<app-breadcrumb [title]="'TCS Integration Test'" [breadcrumb]="'TCS Test'"></app-breadcrumb>
+
+<section class="section-b-space tcs-test-page">
+  <div class="container">
+    <div class="alert alert-info theme-card mb-4">
+      <strong>Dev / QA only.</strong> Calls <code>CreateBookingFromOrderAsync</code> —
+      POST <code>TcsCourier/CreateBookingFromOrder?orderId=...</code>
+      <br />
+      <strong>Route:</strong> <code>/pages/tcs-integration-test</code>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="theme-card p-4">
+          <h4 class="mb-3">Create TCS booking from order</h4>
+
+          <label class="form-label">Online shop sale order id (GUID)</label>
+          <input type="text" class="form-control mb-3" [(ngModel)]="orderId"
+            placeholder="e.g. 026E0765-6973-4E41-81B4-1041EEC66959" />
+
+          <button type="button" class="btn btn-solid mb-3"
+            [disabled]="loading"
+            (click)="createBookingFromOrder()">
+            {{ loading ? 'Creating booking…' : 'Create booking' }}
+          </button>
+
+          <div *ngIf="ordersLoading" class="text-muted small">Loading your recent orders…</div>
+          <div *ngIf="orders.length" class="mt-2">
+            <p class="small text-muted mb-2">Pick an order (optional):</p>
+            <ul class="list-group list-group-flush order-pick-list">
+              <li class="list-group-item list-group-item-action"
+                *ngFor="let o of orders"
+                (click)="useOrder(o)">
+                <div class="fw-semibold">{{ o.onlineOrderNumber }}</div>
+                <div class="small text-muted">{{ o.id }}</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="theme-card p-4 mt-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">Response</h4>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearOutput()">Clear</button>
+          </div>
+          <pre class="response-box mb-0" *ngIf="responseJson()">{{ responseJson() }}</pre>
+          <p class="text-muted mb-0" *ngIf="!responseJson()">Run create booking to see JSON here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
