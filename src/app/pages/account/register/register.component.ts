@@ -62,6 +62,11 @@ export class RegisterComponent implements OnInit {
     }).subscribe({
       next: (msg) => {
         this.loading = false;
+        this.auth.saveCustomerProfile({
+          customerName: `${v.firstName.trim()} ${v.lastName.trim()}`.trim(),
+          customerEmail: email,
+          customerMobileNo: v.phone?.trim() || undefined
+        });
         this.toastr.success(msg);
         this.router.navigate(['/pages/login']);
       },

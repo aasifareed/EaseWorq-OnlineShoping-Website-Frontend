@@ -83,7 +83,6 @@
                     class="store-mega-panel__links"
                     *ngIf="column.children?.length"
                     [class.store-mega-panel__links--grid]="column.megaColumnType === 'popular'"
-                    (mouseleave)="column.megaColumnType === 'categories' && onSubcategoriesColumnLeave(menuItem, $event)"
                   >
                     <li *ngFor="let link of column.children">
                       <a
@@ -93,9 +92,9 @@
                         class="store-mega-panel__link"
                         [class.store-mega-panel__link--primary]="column.megaColumnType === 'shop-all'"
                         [class.store-mega-panel__link--product]="column.megaColumnType === 'popular'"
-                        [class.store-mega-panel__link--sub-active]="column.megaColumnType === 'categories' && isSubcategoryHovered(link)"
-                        (mouseenter)="column.megaColumnType === 'shop-all' && onShopAllHover(menuItem); column.megaColumnType === 'categories' && onSubcategoryHover(link, menuItem)"
-                        (click)="onMegaLinkClick()"
+                        [class.store-mega-panel__link--sub-active]="column.megaColumnType === 'categories' && isSubcategorySelected(link)"
+                        (mouseenter)="column.megaColumnType === 'shop-all' && onShopAllHover(menuItem)"
+                        (click)="onMegaPanelLinkClick($event, link, menuItem, column)"
                       >
                         <span class="store-mega-panel__link-text">{{ menuLabel(link) }}</span>
                         <i

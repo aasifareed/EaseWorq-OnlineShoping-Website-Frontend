@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 export interface ShopAuthSession {
@@ -24,6 +24,17 @@ export interface SignupPayload {
   tenantId: number;
 }
 
+/** Checkout billing fields persisted after login / signup / previous orders. */
+export interface ShopCustomerProfile {
+  customerName?: string;
+  customerMobileNo?: string;
+  customerEmail?: string;
+  address?: string;
+  town?: string;
+  state?: string;
+  postalcode?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,6 +42,7 @@ export class AuthService {
   private static readonly TOKEN_KEY = 'shop_auth_token';
   private static readonly USER_ID_KEY = 'shop_auth_user_id';
   private static readonly EMAIL_KEY = 'shop_customer_email';
+  private static readonly PROFILE_KEY = 'shop_customer_profile';
   private static readonly STORE_KEY = 'shop_store_id';
   private static readonly TENANT_KEY = 'shop_tenant_id';
   private static readonly TENANCY_NAME_KEY = 'shop_tenancy_name';
@@ -86,6 +98,80 @@ export class AuthService {
     return email?.trim() || null;
   }
 
+  getCustomerProfile(): ShopCustomerProfile | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    const raw = localStorage.getItem(AuthService.PROFILE_KEY);
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as ShopCustomerProfile;
+    } catch {
+      return null;
+    }
+  }
+
+  saveCustomerProfile(partial: ShopCustomerProfile): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    const current = this.getCustomerProfile() ?? {};
+    const merged: ShopCustomerProfile = { ...current };
+
+    (Object.keys(partial) as (keyof ShopCustomerProfile)[]).forEach((key) => {
+      const value = partial[key];
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed) {
+          merged[key] = trimmed;
+        }
+      }
+    });
+
+    if (Object.keys(merged).length === 0) {
+      return;
+    }
+
+    localStorage.setItem(AuthService.PROFILE_KEY, JSON.stringify(merged));
+  }
+
+  /** Loads name/email from session API and merges into stored checkout profile. */
+  refreshCustomerProfileFromSession(): Observable<ShopCustomerProfile | null> {
+    if (!this.isLoggedIn()) {
+      return of(this.getCustomerProfile());
+    }
+
+    return this.http
+      .get<any>(`${this.apiRoot()}api/services/app/Session/GetCurrentLoginInformations`)
+      .pipe(
+        map((resp) => {
+          const user = resp?.result?.user ?? resp?.user;
+          const name = [user?.name ?? user?.Name, user?.surname ?? user?.Surname]
+            .map((part) => (part ?? '').toString().trim())
+            .filter(Boolean)
+            .join(' ');
+
+          const profilePatch: ShopCustomerProfile = {};
+          if (name) {
+            profilePatch.customerName = name;
+          }
+          const email = (user?.emailAddress ?? user?.EmailAddress ?? this.getCustomerEmail() ?? '').toString().trim();
+          if (email) {
+            profilePatch.customerEmail = email;
+          }
+
+          if (Object.keys(profilePatch).length) {
+            this.saveCustomerProfile(profilePatch);
+          }
+
+          return this.getCustomerProfile();
+        }),
+        catchError(() => of(this.getCustomerProfile()))
+      );
+  }
+
   getInitials(): string {
     const email = this.getCustomerEmail();
     if (!email) {
@@ -122,6 +208,12 @@ export class AuthService {
         return data as ShopAuthSession;
       }),
       tap((session) => this.persistSession(session, email.trim())),
+      switchMap((session) =>
+        this.refreshCustomerProfileFromSession().pipe(
+          map(() => session),
+          catchError(() => of(session))
+        )
+      ),
       catchError((err) => throwError(() => err))
     );
   }
@@ -172,6 +264,9 @@ export class AuthService {
     }
     localStorage.setItem(AuthService.TENANT_KEY, String(this.tenantId));
     localStorage.setItem(AuthService.TENANCY_NAME_KEY, this.tenancyName);
+    if (customerEmail) {
+      this.saveCustomerProfile({ customerEmail });
+    }
   }
 
   seedShopContextFromEnvironment(): void {
@@ -184,6 +279,7 @@ export class AuthService {
     localStorage.removeItem(AuthService.TOKEN_KEY);
     localStorage.removeItem(AuthService.USER_ID_KEY);
     localStorage.removeItem(AuthService.EMAIL_KEY);
+    localStorage.removeItem(AuthService.PROFILE_KEY);
     if (navigateToLogin) {
       this.router.navigate(['/pages/login']);
     }

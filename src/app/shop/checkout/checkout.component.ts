@@ -18,7 +18,9 @@ import {
   ONLINE_SHOP_PAYMENT_METHOD_LABELS,
   ONLINE_SHOP_SHIPPING_METHOD_LABELS,
   CheckoutFormValues,
-  CreateOnlineShopSaleOrderResponse
+  CreateOnlineShopSaleOrderResponse,
+  CheckoutAddressFormValues,
+  OnlineShopSaleOrderAddress
 } from '../../shared/services/online-shop-order.service';
 
 @Component({
@@ -79,6 +81,8 @@ export class CheckoutComponent implements OnInit {
         this.shippingGroup.reset();
       }
     });
+
+    this.prefillCheckoutCustomerDetails();
   }
 
   /** Do not use checkoutForm.valid — disabled nested groups break it; validate billing + shipping explicitly. */
@@ -147,6 +151,7 @@ export class CheckoutComponent implements OnInit {
 
         if (this.paymentMethod === OnlineShopPaymentMethod.CashOnDelivery) {
           this.loading = false;
+          this.persistCustomerProfileFromBilling(formValue.billing);
           this.clearCartAfterOrder();
           this.router.navigate(['/shop/checkout/success', created.onlineShopSaleOrderId]);
           return;
@@ -168,6 +173,7 @@ export class CheckoutComponent implements OnInit {
         this.payFast.createCheckout(payfastPayload).subscribe({
           next: (res) => {
             this.loading = false;
+            this.persistCustomerProfileFromBilling(formValue.billing);
             this.payFast.redirectToPayFast(res);
           },
           error: (err) => this.handleCheckoutError(err)
@@ -301,5 +307,119 @@ export class CheckoutComponent implements OnInit {
       ctrl.markAsTouched();
       ctrl.updateValueAndValidity();
     }
+  }
+
+  private prefillCheckoutCustomerDetails(): void {
+    if (!this.auth.isLoggedIn()) {
+      this.applyStoredCustomerProfile();
+      return;
+    }
+
+    this.auth.refreshCustomerProfileFromSession().subscribe({
+      next: () => {
+        this.applyStoredCustomerProfile();
+        this.loadBillingFromLastOrderIfMissing();
+      },
+      error: () => {
+        this.applyStoredCustomerProfile();
+        this.loadBillingFromLastOrderIfMissing();
+      }
+    });
+  }
+
+  private applyStoredCustomerProfile(): void {
+    const profile = this.auth.getCustomerProfile();
+    const email = profile?.customerEmail || this.auth.getCustomerEmail();
+
+    if (!profile && !email) {
+      return;
+    }
+
+    this.billingGroup.patchValue({
+      customerName: profile?.customerName ?? '',
+      customerMobileNo: profile?.customerMobileNo ?? '',
+      customerEmail: email ?? '',
+      address: profile?.address ?? '',
+      town: profile?.town ?? '',
+      state: profile?.state ?? '',
+      postalcode: profile?.postalcode ?? ''
+    });
+  }
+
+  private loadBillingFromLastOrderIfMissing(): void {
+    const billing = this.billingGroup.value as CheckoutAddressFormValues;
+    if (billing.address?.trim() && billing.customerMobileNo?.trim()) {
+      return;
+    }
+
+    const email = this.auth.getCustomerEmail();
+    if (!email) {
+      return;
+    }
+
+    this.onlineShopOrder.getMyOrders(email, 0, 1).subscribe({
+      next: (result) => {
+        const latestOrder = result.items?.[0];
+        if (!latestOrder?.id) {
+          return;
+        }
+
+        this.onlineShopOrder.getMyOrderDetail(latestOrder.id, email).subscribe({
+          next: (detail) => {
+            const addr = detail.billingAddress ?? detail.shippingAddress;
+            if (!addr) {
+              return;
+            }
+            this.patchBillingFromOrderAddress(addr, billing);
+          }
+        });
+      }
+    });
+  }
+
+  private patchBillingFromOrderAddress(
+    addr: OnlineShopSaleOrderAddress,
+    current: CheckoutAddressFormValues
+  ): void {
+    const patch: Partial<CheckoutAddressFormValues> = {};
+
+    if (!current.customerName?.trim() && addr.customerName) {
+      patch.customerName = addr.customerName;
+    }
+    if (!current.customerMobileNo?.trim() && addr.phone) {
+      patch.customerMobileNo = addr.phone;
+    }
+    if (!current.customerEmail?.trim() && addr.emailAddress) {
+      patch.customerEmail = addr.emailAddress;
+    }
+    if (!current.address?.trim() && addr.address) {
+      patch.address = addr.address;
+    }
+    if (!current.town?.trim() && addr.townCity) {
+      patch.town = addr.townCity;
+    }
+    if (!current.state?.trim() && addr.stateCounty) {
+      patch.state = addr.stateCounty;
+    }
+    if (!current.postalcode?.trim() && addr.postalCode) {
+      patch.postalcode = addr.postalCode;
+    }
+
+    if (Object.keys(patch).length) {
+      this.billingGroup.patchValue(patch);
+      this.persistCustomerProfileFromBilling(this.billingGroup.value as CheckoutAddressFormValues);
+    }
+  }
+
+  private persistCustomerProfileFromBilling(billing: CheckoutAddressFormValues): void {
+    this.auth.saveCustomerProfile({
+      customerName: billing.customerName,
+      customerMobileNo: billing.customerMobileNo,
+      customerEmail: billing.customerEmail,
+      address: billing.address,
+      town: billing.town,
+      state: billing.state,
+      postalcode: billing.postalcode
+    });
   }
 }
