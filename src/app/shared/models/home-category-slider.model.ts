@@ -1,0 +1,39 @@
+import { Product } from '../classes/product';
+
+/** API row for online-shop inventory (subset used on home sliders). */
+export interface AvailableProductInventoryDtoForOnlineShop {
+  id: string;
+  productId?: string;
+  productIdTag?: string;
+  productName?: string;
+  brandId?: string;
+  brandName?: string;
+  productSize?: number;
+  productColor?: string;
+  productDescription?: string;
+  actualSellPrice?: number;
+  productMSRP?: number;
+  discountOnProduct?: number;
+  categoryName?: string;
+  categoryId?: string;
+  storeId?: string;
+  storeName?: string;
+  isFavouriteProduct?: boolean;
+  productTaxesId?: string[];
+  pictureUrl?: string;
+  pictureUrls?: string[];
+}
+
+export interface HomeCategorySliderDto {
+  categoryId: string;
+  categoryName: string;
+  seeMoreUrl?: string;
+  products: AvailableProductInventoryDtoForOnlineShop[];
+}
+
+/** View model for home page slider binding. */
+export interface HomeCategorySliderView {
+  categoryId: string;
+  categoryName: string;
+  products: Product[];
+}

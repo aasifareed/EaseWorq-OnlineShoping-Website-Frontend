@@ -65,19 +65,22 @@
             </ng-template>
           </ng-container>
         </owl-carousel-o> -->
-        <app-product-box-vertical-slider [title]="'DAILY OFFERS'"></app-product-box-vertical-slider>
-        <br>
-        <app-product-box-vertical-slider [title]="'BEST SELLING LAPTOPS'"></app-product-box-vertical-slider>
-        <br>
-        <app-product-box-vertical-slider [title]="'POPULAR GAMING PCS'"></app-product-box-vertical-slider>
-        <br>
-        <app-product-box-vertical-slider [title]="'BLUETOOTH SPEAKERS'"></app-product-box-vertical-slider>
-        <br>
+        <ng-container *ngIf="loadingCategorySliders">
+          <p class="text-center py-3">Loading categories…</p>
+        </ng-container>
+        <ng-container *ngFor="let slider of categorySliders">
+          <app-product-box-vertical-slider
+            [title]="slider.categoryName"
+            [categoryId]="slider.categoryId"
+            [products]="slider.products">
+          </app-product-box-vertical-slider>
+          <br>
+        </ng-container>
       </div>
     </div>
     <div class="row">
 
-      <section class="py-4 ">
+      <!-- <section class="py-4 ">
         <div class="container-fluid px-3">
 
           <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">GAMING
@@ -135,22 +138,12 @@
 
           </div>
         </div>
-      </section>
+      </section> -->
 
     </div>
     <div class="row">
-      <div class="col">
-        <app-product-box-vertical-slider [title]="'DAILY OFFERS'"></app-product-box-vertical-slider>
-        <br>
-        <app-product-box-vertical-slider [title]="'BEST SELLING LAPTOPS'"></app-product-box-vertical-slider>
-        <br>
-        <app-product-box-vertical-slider [title]="'POPULAR GAMING PCS'"></app-product-box-vertical-slider>
-        <br>
-      </div>
-    </div>
-    <div class="row">
 
-      <section class="py-4 ">
+      <!-- <section class="py-4 ">
         <div class="container-fluid px-3">
 
           <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">Electronics
@@ -184,16 +177,12 @@
 
           </div>
         </div>
-      </section>
-
-    </div>
-    <div class="row">
-      <app-product-box-vertical-slider [title]="'DAILY OFFERS'"></app-product-box-vertical-slider>
+      </section> -->
 
     </div>
     <div class="row">
 
-      <section class="py-4 ">
+      <!-- <section class="py-4 ">
         <div class="container-fluid px-3">
 
           <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">EXPLORE OTHER
@@ -228,16 +217,13 @@
 
           </div>
         </div>
-      </section>
+      </section> -->
 
     </div>
-    <div class="row">
-      <app-product-box-vertical-slider [title]="'DAILY OFFERS'"></app-product-box-vertical-slider>
-      <br>
-      <app-product-box-vertical-slider [title]="'DAILY OFFERS'"></app-product-box-vertical-slider>
-      
-    </div>
-    <app-top-categories-slider></app-top-categories-slider>
+    <app-top-categories-slider
+      [title]="'EXPLORE OTHER CATEGORIES'"
+      [categoryFilter]="'nonPopular'">
+    </app-top-categories-slider>
   </div>
 </section>
 <!-- Product slider End -->

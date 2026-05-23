@@ -23,6 +23,8 @@ OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop: "OnlineShopAvailable
 OnlineShopBrand_GetBrandsListForOnline: "OnlineShopBrand/GetBrandsListForOnline",
 OnlineShopAvailableProduct_GetProductColorsListForOnline: "OnlineShopAvailableProduct/GetProductColorsListForOnlineShop",
 OnlineShopAvailableProduct_GetProductSizesListForOnline: "OnlineShopAvailableProduct/GetProductSizesListForOnlineShop",
+OnlineShopAvailableProduct_GetHomePopularCategoryProductSliders: "OnlineShopAvailableProduct/GetHomePopularCategoryProductSliders",
+OnlineShopProduct_GetHomePopularCategoryProductSliders: "OnlineShopProduct/GetHomePopularCategoryProductSliders",
 OnlineShopWishlist_GetWishlistForOnlineShop: "OnlineShopWishlist/GetWishlistForOnlineShop",
 OnlineShopWishlist_AddToWishlistForOnlineShop: "OnlineShopWishlist/AddToWishlistForOnlineShop",
 OnlineShopWishlist_RemoveFromWishlistForOnlineShop: "OnlineShopWishlist/RemoveFromWishlistForOnlineShop",
@@ -42,6 +44,7 @@ Page_GetActivePages: 'OnlineShopPage/GetActivePages',
 Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
 HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
 OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
+OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
 
    },
    shop: {
