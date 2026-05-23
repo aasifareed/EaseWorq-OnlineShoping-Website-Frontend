@@ -33,6 +33,7 @@ export const environment = {
     Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
     HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
     OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
+    OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
   },
   shop: {
     tenantId: '1',

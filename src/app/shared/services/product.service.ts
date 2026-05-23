@@ -4,6 +4,10 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, startWith, delay } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { Product } from '../classes/product';
+import {
+  AvailableProductInventoryDtoForOnlineShop,
+  HomeCategorySliderDto
+} from '../models/home-category-slider.model';
 import { environment } from 'src/environments/environment';
 
 const state = {
@@ -566,6 +570,46 @@ private apiRoot(): string {
         return this.http.get(`${this.apiRoot()}api/services/app/OnlineShopProductGroup/GetProductGroupHierarchyForOnline?TenantId=1&StoreId=d4d292f5-de72-4742-b728-ea34a1706191`);
   }
 
+  getProductGroupsListForOnline(input: {
+    tenantId?: number;
+    storeId?: string;
+    categoryFilter?: 'popular' | 'nonPopular' | 'all';
+  }): Observable<{ id: string; name: string; image: string }[]> {
+    const tenantId = input.tenantId ?? Number(environment.tenantId ?? environment.shop?.tenantId ?? 1);
+    const storeId = input.storeId ?? environment.storeId ?? environment.shop?.storeId ?? '';
+    let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
+    if (input.categoryFilter === 'popular') {
+      q += '&OnlyPopular=true';
+    } else if (input.categoryFilter === 'nonPopular') {
+      q += '&ExcludePopular=true';
+    }
+    const path = environment.urls.OnlineShopProductGroup_GetProductGroupsListForOnline;
+    return this.getProductsFromAPI(`${path}${q}`).pipe(
+      map((resp: { result?: unknown[] }) => {
+        const rows = resp?.result ?? (Array.isArray(resp) ? resp : []);
+        return (rows as Record<string, unknown>[]).map((row) => ({
+          id: String(row.id ?? row.Id ?? ''),
+          name: String(row.name ?? row.Name ?? ''),
+          image: this.resolveCategoryPictureUrl(row.pictureUrl ?? row.PictureUrl)
+        }));
+      }),
+      catchError(() => of([]))
+    );
+  }
+
+  private resolveCategoryPictureUrl(pictureUrl: unknown): string {
+    const raw = pictureUrl != null ? String(pictureUrl).trim() : '';
+    if (!raw) {
+      return 'assets/images/product/placeholder.jpg';
+    }
+    if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('assets/')) {
+      return raw;
+    }
+    const base = (environment.baseUrl || '').replace(/\/$/, '');
+    const path = raw.startsWith('/') ? raw : `/${raw}`;
+    return `${base}${path}`;
+  }
+
   /** Brands (manufacturers) for the shop sidebar; optional category limits to products in that group. */
   public getBrandsForOnlineShop(productGroupId?: string | null): Observable<any> {
     let url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopBrand_GetBrandsListForOnline}?TenantId=1`;
@@ -654,5 +698,63 @@ private apiRoot(): string {
   getRelatedProductsForOnlineShop(productInventoryId: string, maxCount = 4): Observable<any> {
     const path = `${environment.urls.OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop}${this.shopApiQuery(productInventoryId, { MaxCount: maxCount })}`;
     return this.getProductsFromAPI(path);
+  }
+
+  getHomePopularCategoryProductSliders(input: {
+    tenantId?: number;
+    storeId?: string;
+    productLimitPerCategory?: number;
+  }): Observable<HomeCategorySliderDto[]> {
+    const tenantId = input.tenantId ?? Number(environment.tenantId ?? environment.shop?.tenantId ?? 1);
+    const storeId = input.storeId ?? environment.storeId ?? environment.shop?.storeId ?? '';
+    let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
+    if (input.productLimitPerCategory != null && input.productLimitPerCategory > 0) {
+      q += `&ProductLimitPerCategory=${input.productLimitPerCategory}`;
+    }
+    const path =
+      environment.urls.OnlineShopProduct_GetHomePopularCategoryProductSliders ??
+      environment.urls.OnlineShopAvailableProduct_GetHomePopularCategoryProductSliders;
+    return this.getProductsFromAPI(`${path}${q}`).pipe(
+      map((resp: { result?: unknown[] }) => {
+        const rows = resp?.result ?? (Array.isArray(resp) ? resp : []);
+        return (rows as Record<string, unknown>[]).map((s) => this.normalizeHomeCategorySlider(s));
+      }),
+      catchError(() => of([] as HomeCategorySliderDto[]))
+    );
+  }
+
+  private normalizeHomeCategorySlider(s: Record<string, unknown>): HomeCategorySliderDto {
+    const products = (s.products ?? s.Products ?? []) as Record<string, unknown>[];
+    return {
+      categoryId: String(s.categoryId ?? s.CategoryId ?? ''),
+      categoryName: String(s.categoryName ?? s.CategoryName ?? ''),
+      seeMoreUrl: (s.seeMoreUrl ?? s.SeeMoreUrl) as string | undefined,
+      products: products.map((p) => this.normalizeInventoryApiRow(p))
+    };
+  }
+
+  private normalizeInventoryApiRow(p: Record<string, unknown>): AvailableProductInventoryDtoForOnlineShop {
+    return {
+      id: String(p.id ?? p.Id ?? ''),
+      productId: p.productId != null || p.ProductId != null ? String(p.productId ?? p.ProductId) : undefined,
+      productIdTag: (p.productIdTag ?? p.ProductIdTag) as string | undefined,
+      productName: (p.productName ?? p.ProductName) as string | undefined,
+      brandId: p.brandId != null || p.BrandId != null ? String(p.brandId ?? p.BrandId) : undefined,
+      brandName: (p.brandName ?? p.BrandName) as string | undefined,
+      productSize: (p.productSize ?? p.ProductSize) as number | undefined,
+      productColor: (p.productColor ?? p.ProductColor) as string | undefined,
+      productDescription: (p.productDescription ?? p.ProductDescription) as string | undefined,
+      actualSellPrice: (p.actualSellPrice ?? p.ActualSellPrice) as number | undefined,
+      productMSRP: (p.productMSRP ?? p.ProductMSRP) as number | undefined,
+      discountOnProduct: (p.discountOnProduct ?? p.DiscountOnProduct) as number | undefined,
+      categoryName: (p.categoryName ?? p.CategoryName) as string | undefined,
+      categoryId: p.categoryId != null || p.CategoryId != null ? String(p.categoryId ?? p.CategoryId) : undefined,
+      storeId: p.storeId != null || p.StoreId != null ? String(p.storeId ?? p.StoreId) : undefined,
+      storeName: (p.storeName ?? p.StoreName) as string | undefined,
+      isFavouriteProduct: (p.isFavouriteProduct ?? p.IsFavouriteProduct) as boolean | undefined,
+      productTaxesId: (p.productTaxesId ?? p.ProductTaxesId) as string[] | undefined,
+      pictureUrl: (p.pictureUrl ?? p.PictureUrl) as string | undefined,
+      pictureUrls: (p.pictureUrls ?? p.PictureUrls) as string[] | undefined
+    };
   }
 }

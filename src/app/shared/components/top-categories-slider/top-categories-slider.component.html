@@ -1,48 +1,20 @@
-<!-- TOP CATEGORIES SECTION -->
-<!-- <section class="py-4 ">
-  <div class="container-fluid px-3">
-
-    <!-- Header --
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="title-border">TOP CATEGORIES</h2>
-    </div>
-
-    <!-- Owl Carousel --
-    <owl-carousel-o [options]="categorySliderConfig">
-      <ng-container *ngFor="let category of categories">
-        <ng-template carouselSlide>
-
-          <a [href]="category.url" class="top-category-card d-block text-decoration-none text-center">
-            <div class="top-category-img">
-              <img [src]="category.image" [alt]="category.name" class="img-fluid" />
-            </div>
-            <div class="top-category-title mt-2">
-              <span>{{ category.name }}</span>
-            </div>
-          </a>
-
-        </ng-template>
-      </ng-container>
-    </owl-carousel-o>
-
-  </div>
-</section> -->
-
-<!-- TOP CATEGORIES SECTION -->
 <section class="py-4">
   <div class="container-fluid px-3">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="title-border" *ngIf="!gridMode">{{ title || 'TOP CATEGORIES' }}</h2>
-            <h3 class="title-border" [class.text-center]="gridMode"*ngIf="gridMode">{{ title || 'TOP CATEGORIES' }}</h3>
-
+      <h2 class="title-border" *ngIf="!gridMode" style="border-left:4px solid #f5b800;">{{ sectionTitle }}</h2>
+      <h3 class="title-border" [class.text-center]="gridMode" *ngIf="gridMode">{{ sectionTitle }}</h3>
     </div>
 
-    <!-- CAROUSEL MODE (default) -->
-    <owl-carousel-o [options]="categorySliderConfig" *ngIf="!gridMode">
+    <p *ngIf="loading" class="text-center py-3 mb-0">Loading categories…</p>
+
+    <owl-carousel-o [options]="categorySliderConfig" *ngIf="!gridMode && !loading && categories.length">
       <ng-container *ngFor="let category of categories">
         <ng-template carouselSlide>
-          <a [href]="category.url" class="top-category-card d-block text-decoration-none text-center">
+          <a
+            [routerLink]="['/shop/collection/left/sidebar']"
+            [queryParams]="{ category: category.id }"
+            class="top-category-card d-block text-decoration-none text-center">
             <div class="top-category-img">
               <img [src]="category.image" [alt]="category.name" class="img-fluid" />
             </div>
@@ -54,10 +26,12 @@
       </ng-container>
     </owl-carousel-o>
 
-    <!-- GRID MODE (shop page) -->
-    <div class="row g-3" *ngIf="gridMode">
+    <div class="row g-3" *ngIf="gridMode && !loading && categories.length">
       <div class="col-6 col-md-4 col-lg-3" *ngFor="let category of categories">
-        <a [href]="category.url" class="top-category-card d-block text-decoration-none text-center">
+        <a
+          [routerLink]="['/shop/collection/left/sidebar']"
+          [queryParams]="{ category: category.id }"
+          class="top-category-card d-block text-decoration-none text-center">
           <div class="top-category-img">
             <img [src]="category.image" [alt]="category.name" class="img-fluid" />
           </div>

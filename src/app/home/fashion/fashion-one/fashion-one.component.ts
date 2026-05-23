@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ProductSlider } from '../../../shared/data/slider';
 import { Product } from '../../../shared/classes/product';
 import { ProductService } from '../../../shared/services/product.service';
+import { HomeCategorySliderView } from '../../../shared/models/home-category-slider.model';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-fashion-one',
@@ -12,12 +14,13 @@ export class FashionOneComponent implements OnInit {
 
   public products: Product[] = [];
   public productCollections: any[] = [];
-  public active:any;
+  public active: any;
+  public categorySliders: HomeCategorySliderView[] = [];
+  public loadingCategorySliders = true;
 
   constructor(public productService: ProductService) {
     this.productService.getProducts.subscribe(response => {
       this.products = response.filter(item => item.type == 'fashion');
-      // Get Product Collection
       this.products.filter((item) => {
         item.collection?.filter((collection) => {
           const index = this.productCollections.indexOf(collection);
@@ -30,33 +33,22 @@ export class FashionOneComponent implements OnInit {
   public ProductSliderConfig: any = ProductSlider;
 
   public sliders = [{
-    // title: 'welcome to fashion',
-    // subTitle: 'Men fashion',
     image: 'https://microless.com/cdn/banners/microless-cases-sales-pc.jpg'
   },
    {
-    // title: 'welcome to fashion',
-    // subTitle: 'Women fashion',
     image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
   },
    {
-    // title: 'welcome to fashion',
-    // subTitle: 'Women fashion',
     image: 'https://microless.com/cdn/banners/3d-printer-pc.jpg'
   },
    {
-    // title: 'welcome to fashion',
-    // subTitle: 'Women fashion',
     image: 'https://microless.com/cdn/banners/wacom-pc.jpg'
   },
    {
-    // title: 'welcome to fashion',
-    // subTitle: 'Women fashion',
     image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
   },
 ]
 
-  // Collection banner
   public collections = [{
     image: 'assets/images/collection/fashion/1.jpg',
     save: 'save 50%',
@@ -67,7 +59,6 @@ export class FashionOneComponent implements OnInit {
     title: 'women'
   }];
 
-  // Blog
   public blog = [{
     image: 'assets/images/blog/1.jpg',
     date: '25 January 2018',
@@ -90,7 +81,6 @@ export class FashionOneComponent implements OnInit {
     by: 'John Dio'
   }];
 
-  // Logo
   public logo = [{
     image: 'https://microless.com/cdn/brands/1537eb5e996940fee59e6c8ff6619038.jpg',
   }, {
@@ -115,29 +105,40 @@ export class FashionOneComponent implements OnInit {
    {
     image: 'https://microless.com/cdn/brands/f9b38108e142f20ed569481ddcec24f0.jpg',
   },
-  //   image: 'assets/images/logos/1.png',
-  // }, {
-  //   image: 'assets/images/logos/2.png',
-  // }, {
-  //   image: 'assets/images/logos/3.png',
-  // }, {
-  //   image: 'assets/images/logos/4.png',
-  // }, {
-  //   image: 'assets/images/logos/5.png',
-  // }, {
-  //   image: 'assets/images/logos/6.png',
-  // }, {
-  //   image: 'assets/images/logos/7.png',
-  // }, {
-  //   image: 'assets/images/logos/8.png',
-  // }
 ];
 
   ngOnInit(): void {
+    this.loadCategorySliders();
   }
 
-  // Product Tab collection
-  getCollectionProducts(collection:any[]) {
+  private loadCategorySliders(): void {
+    const tenantId = Number(environment.tenantId ?? environment.shop?.tenantId ?? 1);
+    const storeId = String(environment.storeId ?? environment.shop?.storeId ?? '');
+    this.loadingCategorySliders = true;
+    this.productService
+      .getHomePopularCategoryProductSliders({ tenantId, storeId, productLimitPerCategory: 10 })
+      .subscribe({
+        next: (sliders) => {
+          this.categorySliders = (sliders || []).map((s) => ({
+            categoryId: s.categoryId,
+            categoryName: s.categoryName,
+            products: (s.products || []).map((row) =>
+              this.productService.mapInventoryItemToProduct(row)
+            )
+          }));
+          this.categorySliders.forEach((slider) =>
+            slider.products.forEach((p) => this.productService.persistShopProduct(p))
+          );
+          this.loadingCategorySliders = false;
+        },
+        error: () => {
+          this.categorySliders = [];
+          this.loadingCategorySliders = false;
+        }
+      });
+  }
+
+  getCollectionProducts(collection: any[]) {
     return this.products.filter((item) => {
       if (item.collection?.find(i => i === collection)) {
         return item

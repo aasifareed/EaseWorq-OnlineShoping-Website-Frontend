@@ -63,10 +63,14 @@
   </div> -->
 <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
   <h2 class="title-border">{{ title }}</h2>
-  <a href="/see-more" class="see-more-link">See more</a>
+  <a *ngIf="categoryId"
+     class="see-more-link"
+     [routerLink]="['/shop/collection/left/sidebar']"
+     [queryParams]="{ category: categoryId }">See more</a>
+  <a *ngIf="!categoryId" href="/see-more" class="see-more-link">See more</a>
 </div>
    <owl-carousel-o class="product-m no-arrow" [options]="ProductSliderConfig">
-          <ng-container *ngFor="let product of products | slice:0:16">
+          <ng-container *ngFor="let product of displayProducts | slice:0:16">
             <ng-template carouselSlide>
               <div class="product-box">
                 <app-product-box-one 
