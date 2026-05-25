@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Component, ElementRef, HostListener, OnInit, OnDestroy, Input } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
 import { OnlineShopSettingsService } from '../../services/online-shop-settings.service';
 import { OnlineShopStorefront } from '../../models/online-shop-storefront.model';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-header-one',
@@ -21,6 +22,8 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   @Input() sticky: boolean = false;
 
   public storefront: OnlineShopStorefront | null = null;
+  readonly cartCount$: Observable<number>;
+  isDarkMode = true;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -28,7 +31,22 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     public productService: ProductService,
     public auth: AuthService,
     private storefrontSettings: OnlineShopSettingsService,
-  ) { }
+    private themeService: ThemeService,
+    private elementRef: ElementRef<HTMLElement>,
+  ) {
+    this.cartCount$ = this.productService.cartCount;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isOpen) {
+      return;
+    }
+    const wrapper = this.elementRef.nativeElement.querySelector('.all-cat-wrapper');
+    if (wrapper && !wrapper.contains(event.target as Node)) {
+      this.closeMenu();
+    }
+  }
 
   get isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
@@ -42,17 +60,40 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     this.auth.logout(true);
   }
 
+  onThemeToggle(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.themeService.setTheme(checked ? 'dark' : 'light');
+  }
+
+  get currencyLabel(): string {
+    const name = this.storefront?.currencyName?.trim();
+    if (name) {
+      return name;
+    }
+    return this.productService.Currency?.name || '';
+  }
+
   ngOnInit(): void {
     this.filterbyCategory();
+    this.isDarkMode = this.themeService.isDark();
+    this.themeService.theme$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((theme) => {
+        this.isDarkMode = theme === 'dark';
+      });
 
     this.storefrontSettings.storefront$
       .pipe(takeUntil(this.destroy$))
       .subscribe((storefront) => {
         this.storefront = storefront;
+        if (storefront) {
+          this.productService.applyStoreCurrency(storefront);
+        }
       });
 
     if (this.storefrontSettings.snapshot) {
       this.storefront = this.storefrontSettings.snapshot;
+      this.productService.applyStoreCurrency(this.storefrontSettings.snapshot);
     } else {
       this.storefrontSettings.loadStorefront().subscribe();
     }

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 export interface ShopAuthSession {
@@ -24,6 +24,17 @@ export interface SignupPayload {
   tenantId: number;
 }
 
+/** Checkout billing fields persisted after login / signup / previous orders. */
+export interface ShopCustomerProfile {
+  customerName?: string;
+  customerMobileNo?: string;
+  customerEmail?: string;
+  address?: string;
+  town?: string;
+  state?: string;
+  postalcode?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,6 +42,7 @@ export class AuthService {
   private static readonly TOKEN_KEY = 'shop_auth_token';
   private static readonly USER_ID_KEY = 'shop_auth_user_id';
   private static readonly EMAIL_KEY = 'shop_customer_email';
+  private static readonly PROFILE_KEY = 'shop_customer_profile';
   private static readonly STORE_KEY = 'shop_store_id';
   private static readonly TENANT_KEY = 'shop_tenant_id';
   private static readonly TENANCY_NAME_KEY = 'shop_tenancy_name';
@@ -82,8 +94,177 @@ export class AuthService {
     if (typeof localStorage === 'undefined') {
       return null;
     }
-    const email = localStorage.getItem(AuthService.EMAIL_KEY);
-    return email?.trim() || null;
+
+    const fromStorage = localStorage.getItem(AuthService.EMAIL_KEY)?.trim();
+    if (fromStorage) {
+      return fromStorage;
+    }
+
+    const fromProfile = this.getCustomerProfile()?.customerEmail?.trim();
+    if (fromProfile) {
+      localStorage.setItem(AuthService.EMAIL_KEY, fromProfile);
+      return fromProfile;
+    }
+
+    const fromToken = this.getEmailFromAccessToken();
+    if (fromToken) {
+      localStorage.setItem(AuthService.EMAIL_KEY, fromToken);
+      return fromToken;
+    }
+
+    return null;
+  }
+
+  private getEmailFromAccessToken(): string | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const base64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+      if (!base64) {
+        return null;
+      }
+      const payload = JSON.parse(atob(base64));
+      const email =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+        ?? payload.email
+        ?? payload.Email
+        ?? payload.unique_name
+        ?? payload.preferred_username;
+
+      return typeof email === 'string' && email.includes('@') ? email.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  getCustomerProfile(): ShopCustomerProfile | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    const raw = localStorage.getItem(AuthService.PROFILE_KEY);
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as ShopCustomerProfile;
+    } catch {
+      return null;
+    }
+  }
+
+  saveCustomerProfile(partial: ShopCustomerProfile): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    const current = this.getCustomerProfile() ?? {};
+    const merged: ShopCustomerProfile = { ...current };
+
+    (Object.keys(partial) as (keyof ShopCustomerProfile)[]).forEach((key) => {
+      const value = partial[key];
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed) {
+          merged[key] = trimmed;
+        }
+      }
+    });
+
+    if (Object.keys(merged).length === 0) {
+      return;
+    }
+
+    localStorage.setItem(AuthService.PROFILE_KEY, JSON.stringify(merged));
+  }
+
+  /** Loads name/email from session API and merges into stored checkout profile. */
+  refreshCustomerProfileFromSession(): Observable<ShopCustomerProfile | null> {
+    if (!this.isLoggedIn()) {
+      return of(this.getCustomerProfile());
+    }
+
+    return this.http
+      .get<any>(`${this.apiRoot()}api/services/app/Session/GetCurrentLoginInformations`)
+      .pipe(
+        map((resp) => {
+          const user = resp?.result?.user ?? resp?.user;
+          const name = [user?.name ?? user?.Name, user?.surname ?? user?.Surname]
+            .map((part) => (part ?? '').toString().trim())
+            .filter(Boolean)
+            .join(' ');
+
+          const profilePatch: ShopCustomerProfile = {};
+          if (name) {
+            profilePatch.customerName = name;
+          }
+          const email = (user?.emailAddress ?? user?.EmailAddress ?? this.getCustomerEmail() ?? '').toString().trim();
+          if (email) {
+            profilePatch.customerEmail = email;
+            localStorage.setItem(AuthService.EMAIL_KEY, email);
+          }
+
+          const phone = (user?.phoneNumber ?? user?.PhoneNumber ?? '').toString().trim();
+          if (phone) {
+            profilePatch.customerMobileNo = phone;
+          }
+
+          if (Object.keys(profilePatch).length) {
+            this.saveCustomerProfile(profilePatch);
+          }
+
+          return this.getCustomerProfile();
+        }),
+        catchError(() => of(this.getCustomerProfile()))
+      );
+  }
+
+  /** Session + POS customer + latest order billing for checkout prefill. */
+  refreshCustomerProfileForCheckout(): Observable<ShopCustomerProfile | null> {
+    if (!this.isLoggedIn()) {
+      return of(this.getCustomerProfile());
+    }
+
+    return this.refreshCustomerProfileFromSession().pipe(
+      switchMap(() => this.fetchCustomerProfileFromStore()),
+      map(() => this.getCustomerProfile()),
+      catchError(() => of(this.getCustomerProfile()))
+    );
+  }
+
+  private fetchCustomerProfileFromStore(): Observable<void> {
+    const email = this.getCustomerEmail();
+    if (!email) {
+      return of(undefined);
+    }
+
+    const url = `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_GetCustomerProfileForOnlineShop}`;
+    const params = new HttpParams()
+      .set('StoreId', this.storeId)
+      .set('TenantId', String(this.tenantId))
+      .set('CustomerEmail', email);
+
+    return this.http.get<any>(url, { params }).pipe(
+      tap((resp) => {
+        const data = resp?.result ?? resp;
+        if (!data) {
+          return;
+        }
+
+        this.saveCustomerProfile({
+          customerName: data.customerName ?? data.CustomerName,
+          customerMobileNo: data.customerMobileNo ?? data.CustomerMobileNo,
+          customerEmail: data.customerEmail ?? data.CustomerEmail ?? email,
+          address: data.address ?? data.Address,
+          town: data.town ?? data.Town,
+          state: data.state ?? data.State,
+          postalcode: data.postalcode ?? data.Postalcode ?? data.postalCode ?? data.PostalCode,
+        });
+      }),
+      map(() => undefined),
+      catchError(() => of(undefined))
+    );
   }
 
   getInitials(): string {
@@ -122,6 +303,12 @@ export class AuthService {
         return data as ShopAuthSession;
       }),
       tap((session) => this.persistSession(session, email.trim())),
+      switchMap((session) =>
+        this.refreshCustomerProfileForCheckout().pipe(
+          map(() => session),
+          catchError(() => of(session))
+        )
+      ),
       catchError((err) => throwError(() => err))
     );
   }
@@ -172,6 +359,9 @@ export class AuthService {
     }
     localStorage.setItem(AuthService.TENANT_KEY, String(this.tenantId));
     localStorage.setItem(AuthService.TENANCY_NAME_KEY, this.tenancyName);
+    if (customerEmail) {
+      this.saveCustomerProfile({ customerEmail });
+    }
   }
 
   seedShopContextFromEnvironment(): void {
@@ -184,6 +374,7 @@ export class AuthService {
     localStorage.removeItem(AuthService.TOKEN_KEY);
     localStorage.removeItem(AuthService.USER_ID_KEY);
     localStorage.removeItem(AuthService.EMAIL_KEY);
+    localStorage.removeItem(AuthService.PROFILE_KEY);
     if (navigateToLogin) {
       this.router.navigate(['/pages/login']);
     }

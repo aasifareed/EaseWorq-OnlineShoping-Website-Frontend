@@ -96,7 +96,7 @@
         <div class="ml-top-header-right d-flex align-items-center">
            <div class="ml-header-features border-end pe-3">
               <label class="theme-switch">
-                <input type="checkbox" id="darkCheck">
+                <input type="checkbox" id="darkCheck" [checked]="isDarkMode" (change)="onThemeToggle($event)">
                 <span class="theme-slider">
                   <i class="fa fa-sun-o"></i>
                   <i class="fa fa-moon-o"></i>
@@ -108,7 +108,7 @@
               <button class="btn-top-select dropdown-toggle" type="button" data-bs-toggle="dropdown">
                 USD
               </button>
-              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+              <ul class="dropdown-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
                 <li><a class="dropdown-item active">USD - USA Dollars</a></li>
                 <li><a class="dropdown-item">EUR - Eurozone Euro</a></li>
               </ul>
@@ -118,7 +118,7 @@
               <button class="btn-top-select dropdown-toggle" type="button" data-bs-toggle="dropdown">
                 <i class="fa fa-globe"></i> English
               </button>
-              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+              <ul class="dropdown-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
                 <li><a class="dropdown-item">English</a></li>
                 <li><a class="dropdown-item">العربية</a></li>
               </ul>
@@ -129,60 +129,35 @@
   </div> -->
   <div class="ml-top-header" *ngIf="topbar">
     <div class="container-fluid">
-      <div class="d-flex justify-content-between align-items-center h-100">
-
-        <div class="top-left-content d-flex align-items-center h-100">
-          <div class="top-item-box">
-            <span class="label-light">Deliver to</span>
-            <img src="https://flagcdn.com/w20/it.png" class="country-flag">
-            <span class="label-bold">Rome</span>
-          </div>
-
+      <div class="ml-top-utilities">
+        <div class="ml-utility-toggle">
+          <label class="ml-theme-switch" for="headerDarkCheck" aria-label="Toggle dark mode">
+            <input type="checkbox"
+                   id="headerDarkCheck"
+                   class="ml-theme-switch__input"
+                   [checked]="isDarkMode"
+                   (change)="onThemeToggle($event)">
+            <span class="ml-theme-switch__track">
+              <i class="fa fa-sun-o"></i>
+              <i class="fa fa-moon-o"></i>
+            </span>
+          </label>
         </div>
 
-        <div class="top-right-content d-flex align-items-center h-100">
-          <div class="top-item-box  pe-3">
-            <div class="mode-switch">
-              <input type="checkbox" id="darkCheck">
-              <label for="darkCheck" class="switch-label">
-                <i class="fa fa-sun-o"></i>
-                <i class="fa fa-moon-o"></i>
-              </label>
-            </div>
-          </div>
+        <span class="ml-utility-meta" *ngIf="currencyLabel" title="Store currency">
+          <i class="fa fa-money" aria-hidden="true"></i>
+          {{ currencyLabel }}
+        </span>
 
-          <div class="dropdown h-100 p-1  ">
-            <div class="border-sep dropdown">
-              <button class=" btn-small top-dropdown-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                aria-expanded="false" type="button" data-bs-toggle="dropdown">
-                USD
-              </button>
-              <ul class="dropdown-menu dropdown-menu-dark shadow-lg">
-                <li><a class="dropdown-item active">USD - USA Dollars</a></li>
-                <li><a class="dropdown-item">EUR - Eurozone Euro</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="dropdown h-100 p-1  ">
-            <div class="border-sep dropdown">
-              <button class=" btn-small  top-dropdown-btn  dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fa fa-globe"></i> English
-              </button>
-              <ul class="dropdown-menu dropdown-menu-dark shadow-lg">
-                <li><a class="dropdown-item">English</a></li>
-                <li><a class="dropdown-item">Arabic</a></li>
-              </ul>
-            </div>
-
-          </div>
-        </div>
-
+        <span class="ml-utility-meta" title="Store language">
+          <i class="fa fa-globe" aria-hidden="true"></i>
+          English
+        </span>
       </div>
     </div>
   </div>
 
-  <div class="main-header-microless bg-black">
+  <div class="main-header-microless">
     <div class="container-fluid">
       <div class="row align-items-center gx-0">
         <div class="col-auto">
@@ -205,12 +180,12 @@
         <div class="col-auto">
           <div class="d-flex align-items-center action-icons">
             <div class="dropdown px-3 text-center border-end border-secondary-subtle">
-              <a class="text-white text-decoration-none dropdown-toggle no-caret" data-bs-toggle="dropdown">
+              <a class="text-decoration-none dropdown-toggle no-caret header-action-link" data-bs-toggle="dropdown">
                 <span *ngIf="isLoggedIn" class="account-initials">{{ userInitials }}</span>
                 <i *ngIf="!isLoggedIn" class="fa fa-user-o fs-5"></i>
                 <span class="d-block label">YOUR ACCOUNT</span>
               </a>
-              <ul class="dropdown-menu dropdown-menu-dark custom-drop">
+              <ul class="dropdown-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
                 <ng-container *ngIf="!isLoggedIn">
                   <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
                   <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
@@ -224,14 +199,20 @@
             </div>
 
             <div  [routerLink]="['/shop/wishlist']" class="px-3 text-center border-end border-secondary-subtle pointer">
-              <i class="fa fa-heart-o fs-5 text-white"></i>
-              <span class="d-block label text-white">WISHLIST</span>
+              <i class="fa fa-heart-o fs-5 header-action-icon"></i>
+              <span class="d-block label header-action-label">WISHLIST</span>
             </div>
 
-            <div class="px-3 text-center pointer" [routerLink]="['/shop/cart']">
-              <i class="fa fa-shopping-cart fs-5 text-white"></i>
-              <span class="d-block label text-white">YOUR CART</span>
-            </div>
+            <a class="px-3 text-center header-cart-link text-decoration-none" [routerLink]="['/shop/cart']"
+              aria-label="View shopping cart">
+              <span class="header-cart-icon-wrap">
+                <i class="fa fa-shopping-cart fs-5 header-action-icon" aria-hidden="true"></i>
+                <ng-container *ngIf="cartCount$ | async as count">
+                  <span class="header-cart-badge" *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
+                </ng-container>
+              </span>
+              <span class="d-block label header-action-label">YOUR CART</span>
+            </a>
           </div>
         </div>
       </div>

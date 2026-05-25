@@ -49,11 +49,13 @@
                             <app-price [min]="minPrice" [max]="maxPrice" (priceFilter)="updateFilter($event)">
                             </app-price>
                             <div class="microless-inline-filters">
-                                <div class="custom-control custom-checkbox collection-filter-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="ml-out-stock"
+                                <label class="microless-stock-option" for="ml-out-stock">
+                                    <input type="checkbox"
+                                        class="microless-stock-option__input"
+                                        id="ml-out-stock"
                                         [(ngModel)]="includeOutOfStock">
-                                    <label class="custom-control-label" for="ml-out-stock">Include Out of Stock</label>
-                                </div>
+                                    <span class="microless-stock-option__text">Include Out of Stock</span>
+                                </label>
                                 <!-- <div class="custom-control custom-checkbox collection-filter-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="ml-fulfilled"
                                         [(ngModel)]="fulfilledByShop">

@@ -140,19 +140,9 @@
                                class="cart-title d-block mb-2">
                                 {{ product?.title }}
                             </a>
-                            <br>
-                            <!-- Sold by -->
-                            <p class="mb-1  text-secondary">
-                                Sold by: <a href="#" class="text-white">Microless</a>
+                            <p class="mb-1 cart-meta" *ngIf="storeName">
+                                Sold by: <span class="cart-meta-strong">{{ storeName }}</span>
                             </p>
-
-                            <!-- Delivery -->
-                            <p class="mb-1  ">
-                                <strong class="text-white">Free</strong> delivery by
-                                <span class="text-success fw-semibold">Tomorrow, May 01</span>
-                            </p>
-                            <p class="mb-1  ">If you order within 1 Hour, 19 Minutes</p>
-                            <br>
                             <!-- Warranty -->
                             <!-- <p class="mb-2 small text-secondary">
                                 <i class="fa fa-shield me-1"></i>
@@ -181,7 +171,7 @@
 
                             <!-- Prices -->
                             <div class="mb-3">
-                                <div class="text-white fw-bold" style="font-size:18px;">
+                                <div class="cart-price-value fw-bold">
                                   {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | currency:productService?.Currency.currency:'symbol' }}</div>
                                 <div class="text-secondary text-decoration-line-through small"
                                     *ngIf="product?.discount > 0"> {{ product.price * (productService?.Currency?.price ?? 1) |
@@ -233,12 +223,12 @@
                     <a class="text-secondary text-decoration-none d-flex align-items-center gap-1 coupon-toggle"
                         data-bs-toggle="collapse" href="#couponCollapse" role="button" aria-expanded="false">
                         <i class="fa fa-chevron-down coupon-arrow"></i>
-                        <strong class="text-white">Enter a gift card or promotional code</strong>
+                        <strong class="cart-meta-strong">Enter a gift card or promotional code</strong>
                     </a>
 
                     <div class="collapse coupon-collapse mt-2" id="couponCollapse">
                         <div class="input-group">
-                            <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary"
+                            <input type="text" class="form-control form-control-sm cart-promo-input"
                                 placeholder="Enter code" />
                             <button class="btn btn-primary btn-sm px-3">Apply</button>
                         </div>

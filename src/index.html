@@ -13,6 +13,18 @@
 </head>
 
 <body class="ltr">
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('shop_theme');
+          if (theme !== 'light') {
+            document.body.classList.add('dark');
+          }
+        } catch (e) {
+          document.body.classList.add('dark');
+        }
+      })();
+    </script>
     <app-root></app-root>
     <script src="https://checkout.stripe.com/checkout.js"></script>
     <!-- facebook chat section start -->

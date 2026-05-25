@@ -1,0 +1,229 @@
+/* Microless UI theme tokens — light by default, dark when body.dark is set */
+
+:root,
+body:not(.dark) {
+  --mc-bg: #ffffff;
+  --mc-border: #e2e2e8;
+  --mc-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --mc-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --mc-img-bg: #f5f5f7;
+  --mc-title: #1d1d2b;
+  --mc-sale-color: #1d1d2b;
+  --mc-old: #999999;
+  --mc-compare-border: #dddddd;
+  --mc-compare-text: #666666;
+
+  --ml-toolbar-bg: #f8f8f9;
+  --ml-toolbar-border: #e5e5ea;
+  --ml-toolbar-text: #333333;
+  --ml-toolbar-text-strong: #111111;
+  --ml-toolbar-text-muted: #666666;
+  --ml-toolbar-text-faint: #999999;
+  --ml-toolbar-text-sep: #cccccc;
+  --ml-toolbar-input-bg: #ffffff;
+  --ml-toolbar-input-border: #d0d0d5;
+  --ml-toolbar-input-text: #333333;
+  --ml-toolbar-toggle-bg: #ffffff;
+  --ml-toolbar-toggle-hover: #f0f0f0;
+
+  --ml-sidebar-bg: #ffffff;
+  --ml-sidebar-border: #e5e5ea;
+  --ml-sidebar-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --ml-sidebar-divider: #eeeeee;
+  --ml-sidebar-title: #222222;
+  --ml-sidebar-text: #444444;
+  --ml-sidebar-text-muted: #777777;
+  --ml-sidebar-text-faint: #999999;
+  --ml-sidebar-active: #111111;
+  --ml-sidebar-collapse-icon: #888888;
+
+  --ml-page-heading-border: #e5e5ea;
+  --ml-page-title: #222222;
+
+  --ml-header-top-bg: #f8f9fa;
+  --ml-header-top-border: #e8eaed;
+  --ml-header-top-text: #5f6368;
+  --ml-header-top-text-bold: #202124;
+  --ml-header-top-hover-bg: rgba(60, 64, 67, 0.08);
+  --ml-header-main-bg: #ffffff;
+  --ml-header-main-text: #222222;
+  --ml-header-search-bg: #f0f0f0;
+  --ml-header-search-text: #333333;
+  --ml-header-search-placeholder: #888888;
+  --ml-header-dropdown-bg: #ffffff;
+  --ml-header-dropdown-border: #dddddd;
+  --ml-header-dropdown-text: #333333;
+  --ml-header-dropdown-hover: #f5f5f5;
+  --ml-header-sticky-bg: #ffffff;
+  --ml-header-sticky-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --ml-header-cart-badge-border: #ffffff;
+  --ml-header-separator: #dddddd;
+  --ml-header-switch-bg: #dddddd;
+  --ml-header-switch-icon: #555555;
+
+  --ml-surface-bg: #ffffff;
+  --ml-surface-border: #e5e5ea;
+  --ml-surface-text: #333333;
+  --ml-surface-text-muted: #777777;
+
+  --ml-cart-item-bg: #ffffff;
+  --ml-cart-summary-bg: #ffffff;
+  --ml-cart-summary-border: #e5e5ea;
+  --ml-cart-title: #222222;
+
+  --ml-price-input-bg: #ffffff;
+  --ml-price-input-border: #d0d0d5;
+  --ml-price-input-text: #333333;
+
+  --ml-cat-dropdown-bg: #ffffff;
+  --ml-cat-dropdown-border: #e0e0e0;
+  --ml-cat-dropdown-text: #444444;
+  --ml-cat-dropdown-hover-bg: #f5f5f5;
+  --ml-cat-dropdown-hover-text: #c99700;
+  --ml-cat-sub-panel-bg: #fafafa;
+  --ml-cat-sub-link: #666666;
+
+  --ml-footer-cta-bg: #f5f5f5;
+  --ml-footer-icon-bg: #e8e8e8;
+  --ml-footer-divider: rgba(0, 0, 0, 0.08);
+  --ml-footer-contact-value: #555555;
+
+  --ml-carousel-nav-bg: rgba(0, 0, 0, 0.08);
+
+  --ml-mega-bg: #ffffff;
+  --ml-mega-border: #e5e5ea;
+  --ml-mega-col-border: #eeeeee;
+  --ml-mega-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  --ml-mega-heading: #c99700;
+  --ml-mega-link: #444444;
+  --ml-mega-link-hover: #111111;
+  --ml-mega-link-primary: #111111;
+  --ml-mega-link-hover-bg: rgba(255, 204, 0, 0.12);
+  --ml-mega-link-active-bg: rgba(255, 204, 0, 0.18);
+  --ml-mega-chevron: #999999;
+  --ml-mega-loading: #888888;
+  --ml-mega-scrollbar: #cccccc;
+  --ml-mega-mobile-bg: #ffffff;
+  --ml-mega-mobile-sub-bg: #f8f8f9;
+  --ml-mega-mobile-border: #e5e5ea;
+  --ml-mega-mobile-link: #444444;
+}
+
+body.dark {
+  --mc-bg: #303030;
+  --mc-border: #3a3a50;
+  --mc-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --mc-hover: 0 8px 24px rgba(0, 0, 0, 0.65);
+  --mc-img-bg: #303030;
+  --mc-title: #e8e8f0;
+  --mc-sale-color: #ffffff;
+  --mc-old: #666677;
+  --mc-compare-border: #3a3a50;
+  --mc-compare-text: #666677;
+
+  --ml-toolbar-bg: #222226;
+  --ml-toolbar-border: rgba(255, 255, 255, 0.1);
+  --ml-toolbar-text: rgba(255, 255, 255, 0.82);
+  --ml-toolbar-text-strong: rgba(255, 255, 255, 0.95);
+  --ml-toolbar-text-muted: rgba(255, 255, 255, 0.65);
+  --ml-toolbar-text-faint: rgba(255, 255, 255, 0.55);
+  --ml-toolbar-text-sep: rgba(255, 255, 255, 0.35);
+  --ml-toolbar-input-bg: #121214;
+  --ml-toolbar-input-border: rgba(255, 255, 255, 0.12);
+  --ml-toolbar-input-text: #ffffff;
+  --ml-toolbar-toggle-bg: #121214;
+  --ml-toolbar-toggle-hover: rgba(255, 255, 255, 0.06);
+
+  --ml-sidebar-bg: #1c1c20;
+  --ml-sidebar-border: rgba(255, 255, 255, 0.07);
+  --ml-sidebar-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  --ml-sidebar-divider: rgba(255, 255, 255, 0.06);
+  --ml-sidebar-title: rgba(255, 255, 255, 0.92);
+  --ml-sidebar-text: rgba(255, 255, 255, 0.82);
+  --ml-sidebar-text-muted: rgba(255, 255, 255, 0.75);
+  --ml-sidebar-text-faint: rgba(255, 255, 255, 0.45);
+  --ml-sidebar-active: #ffffff;
+  --ml-sidebar-collapse-icon: rgba(255, 255, 255, 0.55);
+
+  --ml-page-heading-border: rgba(255, 255, 255, 0.1);
+  --ml-page-title: #ffffff;
+
+  --ml-header-top-bg: #202124;
+  --ml-header-top-border: #3c4043;
+  --ml-header-top-text: #bdc1c6;
+  --ml-header-top-text-bold: #e8eaed;
+  --ml-header-top-hover-bg: rgba(232, 234, 237, 0.08);
+  --ml-header-main-bg: #000000;
+  --ml-header-main-text: #ffffff;
+  --ml-header-search-bg: #333333;
+  --ml-header-search-text: #ffffff;
+  --ml-header-search-placeholder: #777777;
+  --ml-header-dropdown-bg: #262626;
+  --ml-header-dropdown-border: #444444;
+  --ml-header-dropdown-text: #ffffff;
+  --ml-header-dropdown-hover: #262626;
+  --ml-header-sticky-bg: #000000;
+  --ml-header-sticky-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  --ml-header-cart-badge-border: #000000;
+  --ml-header-separator: #333333;
+  --ml-header-switch-bg: #333333;
+  --ml-header-switch-icon: #ffffff;
+
+  --ml-surface-bg: #303030;
+  --ml-surface-border: transparent;
+  --ml-surface-text: #ffffff;
+  --ml-surface-text-muted: #cccccc;
+
+  --ml-cart-item-bg: #303030;
+  --ml-cart-summary-bg: #303030;
+  --ml-cart-summary-border: #303030;
+  --ml-cart-title: #e8e8f0;
+
+  --ml-price-input-bg: #2a2a3a;
+  --ml-price-input-border: #444444;
+  --ml-price-input-text: #ffffff;
+
+  --ml-cat-dropdown-bg: #404040;
+  --ml-cat-dropdown-border: #333333;
+  --ml-cat-dropdown-text: #e1e1e1;
+  --ml-cat-dropdown-hover-bg: #2a2a2a;
+  --ml-cat-dropdown-hover-text: #f5b800;
+  --ml-cat-sub-panel-bg: #222222;
+  --ml-cat-sub-link: #bbbbbb;
+
+  --ml-footer-cta-bg: #000000;
+  --ml-footer-icon-bg: #282828;
+  --ml-footer-divider: rgba(255, 255, 255, 0.08);
+  --ml-footer-contact-value: #cccccc;
+
+  --ml-carousel-nav-bg: rgba(255, 255, 255, 0.5);
+
+  --ml-mega-bg: #161616;
+  --ml-mega-border: #2a2a2a;
+  --ml-mega-col-border: #2e2e2e;
+  --ml-mega-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --ml-mega-heading: #ffcc00;
+  --ml-mega-link: #e8e8e8;
+  --ml-mega-link-hover: #ffffff;
+  --ml-mega-link-primary: #ffffff;
+  --ml-mega-link-hover-bg: rgba(255, 204, 0, 0.08);
+  --ml-mega-link-active-bg: rgba(255, 204, 0, 0.15);
+  --ml-mega-chevron: #aaaaaa;
+  --ml-mega-loading: #aaaaaa;
+  --ml-mega-scrollbar: #444444;
+  --ml-mega-mobile-bg: #111111;
+  --ml-mega-mobile-sub-bg: #0d0d0d;
+  --ml-mega-mobile-border: #333333;
+  --ml-mega-mobile-link: #dddddd;
+}
+
+/* Global overrides for Multikart filter blocks inside Microless sidebar */
+body:not(.dark) .shop-sidebar-microless {
+  .collection-filter-block {
+    background-color: transparent !important;
+  }
+
+  .collection-filter-checkbox label {
+    color: var(--ml-sidebar-text) !important;
+  }
+}

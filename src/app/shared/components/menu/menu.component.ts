@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { debounceTime, filter, map, switchMap, takeUntil } from 'rxjs/operators';
+import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
 import { NavService, Menu } from '../../services/nav.service';
 import { OnlineShopHeaderMenuService } from '../../services/online-shop-header-menu.service';
 
@@ -13,13 +13,14 @@ import { OnlineShopHeaderMenuService } from '../../services/online-shop-header-m
 export class MenuComponent implements OnInit, OnDestroy {
   public menuItems: Menu[] = [];
   public activeMegaMenu: Menu | null = null;
-  public hoveredSubcategoryId: string | null = null;
+  public selectedSubcategoryId: string | null = null;
   public popularProductsLoading = false;
 
   private readonly destroy$ = new Subject<void>();
-  private readonly subcategoryHover$ = new Subject<{ categoryId: string; megaMenu: Menu }>();
+  private readonly subcategorySelect$ = new Subject<{ categoryId: string; megaMenu: Menu }>();
   private megaCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly defaultPopularByMega = new Map<Menu, Menu[]>();
+  private ignoreMegaOpenUntil = 0;
   constructor(
     private router: Router,
     public navServices: NavService,
@@ -47,9 +48,8 @@ export class MenuComponent implements OnInit, OnDestroy {
       window.addEventListener('scroll', this.syncMegaPanelTop, true);
     }
 
-    this.subcategoryHover$
+    this.subcategorySelect$
       .pipe(
-        debounceTime(120),
         switchMap(({ categoryId, megaMenu }) =>
           this.headerMenuService.getPopularProductLinks(categoryId).pipe(
             map((children) => ({ megaMenu, children, categoryId })),
@@ -102,9 +102,26 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
-      this.closeMegaMenu();
+    if (!this.activeMegaMenu) {
+      return;
     }
+
+    const target = event.target as HTMLElement;
+    if (target.closest('.store-mega-panel__inner') || target.closest('.mega-menu-backdrop')) {
+      return;
+    }
+
+    if (target.closest('li.mega-menu-open')) {
+      return;
+    }
+
+    this.closeMegaMenu();
+  }
+
+  onMegaBackdropClick(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeMegaMenu();
   }
 
   mainMenuToggle(): void {
@@ -130,33 +147,29 @@ export class MenuComponent implements OnInit, OnDestroy {
     return megaMenu.children?.find((c) => c.megaColumnType === 'popular');
   }
 
-  isSubcategoryHovered(link: Menu): boolean {
+  isSubcategorySelected(link: Menu): boolean {
     const id = link.queryParams?.['category'];
-    return !!id && this.hoveredSubcategoryId === String(id);
+    return !!id && this.selectedSubcategoryId === String(id);
   }
 
-  onSubcategoryHover(link: Menu, megaMenu: Menu): void {
+  onSubcategoryClick(link: Menu, megaMenu: Menu): void {
     const categoryId = link.queryParams?.['category'];
     if (!categoryId || !megaMenu.megaMenu) {
       return;
     }
-    this.hoveredSubcategoryId = String(categoryId);
+    this.selectedSubcategoryId = String(categoryId);
     this.popularProductsLoading = true;
-    this.subcategoryHover$.next({ categoryId: String(categoryId), megaMenu });
+    this.subcategorySelect$.next({ categoryId: String(categoryId), megaMenu });
   }
 
-  onSubcategoriesColumnLeave(megaMenu: Menu, event: MouseEvent): void {
-    const related = event.relatedTarget as Node | null;
-    if (related instanceof Element) {
-      if (related.closest('.store-mega-panel__col--popular')) {
-        return;
-      }
-      if (related.closest('.store-mega-panel__col--shop-all')) {
-        this.resetPopularToDefault(megaMenu);
-        return;
-      }
+  onMegaPanelLinkClick(event: MouseEvent, link: Menu, megaMenu: Menu, column: Menu): void {
+    if (column.megaColumnType === 'categories') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.onSubcategoryClick(link, megaMenu);
+      return;
     }
-    this.resetPopularToDefault(megaMenu);
+    this.onMegaLinkClick();
   }
 
   onShopAllHover(megaMenu: Menu): void {
@@ -164,7 +177,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   private resetPopularToDefault(megaMenu: Menu): void {
-    this.hoveredSubcategoryId = null;
+    this.selectedSubcategoryId = null;
     this.popularProductsLoading = false;
     this.restoreDefaultPopularProducts(megaMenu);
   }
@@ -188,12 +201,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   openMegaMenu(item: Menu): void {
-    if (!item.megaMenu) {
+    if (!item.megaMenu || Date.now() < this.ignoreMegaOpenUntil) {
       return;
     }
     this.clearMegaCloseTimer();
     this.activeMegaMenu = item;
-    this.hoveredSubcategoryId = null;
+    this.selectedSubcategoryId = null;
     this.cacheDefaultPopularProducts(item);
     this.syncMegaPanelTop();
   }
@@ -202,7 +215,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.clearMegaCloseTimer();
     this.megaCloseTimer = setTimeout(() => {
       this.activeMegaMenu = null;
-      this.hoveredSubcategoryId = null;
+      this.selectedSubcategoryId = null;
       this.popularProductsLoading = false;
     }, 320);
   }
@@ -230,8 +243,9 @@ export class MenuComponent implements OnInit, OnDestroy {
   closeMegaMenu(): void {
     this.clearMegaCloseTimer();
     this.activeMegaMenu = null;
-    this.hoveredSubcategoryId = null;
+    this.selectedSubcategoryId = null;
     this.popularProductsLoading = false;
+    this.ignoreMegaOpenUntil = Date.now() + 350;
   }
 
   toggletNavActive(item: Menu): void {
