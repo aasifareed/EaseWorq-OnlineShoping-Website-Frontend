@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
@@ -94,8 +94,50 @@ export class AuthService {
     if (typeof localStorage === 'undefined') {
       return null;
     }
-    const email = localStorage.getItem(AuthService.EMAIL_KEY);
-    return email?.trim() || null;
+
+    const fromStorage = localStorage.getItem(AuthService.EMAIL_KEY)?.trim();
+    if (fromStorage) {
+      return fromStorage;
+    }
+
+    const fromProfile = this.getCustomerProfile()?.customerEmail?.trim();
+    if (fromProfile) {
+      localStorage.setItem(AuthService.EMAIL_KEY, fromProfile);
+      return fromProfile;
+    }
+
+    const fromToken = this.getEmailFromAccessToken();
+    if (fromToken) {
+      localStorage.setItem(AuthService.EMAIL_KEY, fromToken);
+      return fromToken;
+    }
+
+    return null;
+  }
+
+  private getEmailFromAccessToken(): string | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const base64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+      if (!base64) {
+        return null;
+      }
+      const payload = JSON.parse(atob(base64));
+      const email =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+        ?? payload.email
+        ?? payload.Email
+        ?? payload.unique_name
+        ?? payload.preferred_username;
+
+      return typeof email === 'string' && email.includes('@') ? email.trim() : null;
+    } catch {
+      return null;
+    }
   }
 
   getCustomerProfile(): ShopCustomerProfile | null {
@@ -160,6 +202,12 @@ export class AuthService {
           const email = (user?.emailAddress ?? user?.EmailAddress ?? this.getCustomerEmail() ?? '').toString().trim();
           if (email) {
             profilePatch.customerEmail = email;
+            localStorage.setItem(AuthService.EMAIL_KEY, email);
+          }
+
+          const phone = (user?.phoneNumber ?? user?.PhoneNumber ?? '').toString().trim();
+          if (phone) {
+            profilePatch.customerMobileNo = phone;
           }
 
           if (Object.keys(profilePatch).length) {
@@ -170,6 +218,53 @@ export class AuthService {
         }),
         catchError(() => of(this.getCustomerProfile()))
       );
+  }
+
+  /** Session + POS customer + latest order billing for checkout prefill. */
+  refreshCustomerProfileForCheckout(): Observable<ShopCustomerProfile | null> {
+    if (!this.isLoggedIn()) {
+      return of(this.getCustomerProfile());
+    }
+
+    return this.refreshCustomerProfileFromSession().pipe(
+      switchMap(() => this.fetchCustomerProfileFromStore()),
+      map(() => this.getCustomerProfile()),
+      catchError(() => of(this.getCustomerProfile()))
+    );
+  }
+
+  private fetchCustomerProfileFromStore(): Observable<void> {
+    const email = this.getCustomerEmail();
+    if (!email) {
+      return of(undefined);
+    }
+
+    const url = `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_GetCustomerProfileForOnlineShop}`;
+    const params = new HttpParams()
+      .set('StoreId', this.storeId)
+      .set('TenantId', String(this.tenantId))
+      .set('CustomerEmail', email);
+
+    return this.http.get<any>(url, { params }).pipe(
+      tap((resp) => {
+        const data = resp?.result ?? resp;
+        if (!data) {
+          return;
+        }
+
+        this.saveCustomerProfile({
+          customerName: data.customerName ?? data.CustomerName,
+          customerMobileNo: data.customerMobileNo ?? data.CustomerMobileNo,
+          customerEmail: data.customerEmail ?? data.CustomerEmail ?? email,
+          address: data.address ?? data.Address,
+          town: data.town ?? data.Town,
+          state: data.state ?? data.State,
+          postalcode: data.postalcode ?? data.Postalcode ?? data.postalCode ?? data.PostalCode,
+        });
+      }),
+      map(() => undefined),
+      catchError(() => of(undefined))
+    );
   }
 
   getInitials(): string {
@@ -209,7 +304,7 @@ export class AuthService {
       }),
       tap((session) => this.persistSession(session, email.trim())),
       switchMap((session) =>
-        this.refreshCustomerProfileFromSession().pipe(
+        this.refreshCustomerProfileForCheckout().pipe(
           map(() => session),
           catchError(() => of(session))
         )

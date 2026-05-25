@@ -28,6 +28,8 @@ export const environment = {
     OnlinseShopUsers_SignupForOnlineShop: 'OnlinseShopUsers/SignupForOnlineShop',
     OnlinseShopUsers_ResetPasswordRequestForOnlineShop:
       'OnlinseShopUsers/ResetPasswordRequestForOnlineShop',
+    OnlinseShopUsers_GetCustomerProfileForOnlineShop:
+      'OnlinseShopUsers/GetCustomerProfileForOnlineShop',
     Page_GetBySlug: 'OnlineShopPage/GetBySlug',
     Page_GetActivePages: 'OnlineShopPage/GetActivePages',
     Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',

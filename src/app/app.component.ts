@@ -4,8 +4,10 @@ import { LoadingBarService } from '@ngx-loading-bar/core';
 import { map, delay, withLatestFrom } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from './shared/services/auth.service';
+import { ProductService } from './shared/services/product.service';
 import { OnlineShopSettingsService } from './shared/services/online-shop-settings.service';
 import { OnlineShopPageService } from './shared/services/online-shop-page.service';
+import { ThemeService } from './shared/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +29,8 @@ export class AppComponent implements OnInit {
     translate: TranslateService,
     private storefrontSettings: OnlineShopSettingsService,
     private pageService: OnlineShopPageService,
+    private themeService: ThemeService,
+    private productService: ProductService,
     // @Inject(PLATFORM_ID) private platformId: Object,
     auth: AuthService
   ) {
@@ -38,14 +42,18 @@ export class AppComponent implements OnInit {
       translate.setDefaultLang('en');
       translate.addLangs(['en', 'fr']);
       auth.seedShopContextFromEnvironment();
+      this.themeService.init();
     }
   }
 
   ngOnInit(): void {
     
     if (isPlatformBrowser(this.platformId)) {
-      this.storefrontSettings.loadStorefront().subscribe(() => {
+      this.storefrontSettings.loadStorefront().subscribe((storefront) => {
         this.pageService.clearActivePagesCache();
+        if (storefront) {
+          this.productService.applyStoreCurrency(storefront);
+        }
       });
     }
   }

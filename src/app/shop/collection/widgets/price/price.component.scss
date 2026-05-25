@@ -1,16 +1,15 @@
 .price-input {
   width: 80px;
-  background: #2a2a3a;
-  border: 1px solid #444;
+  background: var(--ml-price-input-bg);
+  border: 1px solid var(--ml-price-input-border);
   border-radius: 4px;
-  color: #fff;
+  color: var(--ml-price-input-text);
   font-size: 12px;
   padding: 4px 8px;
   text-align: center;
 
   &:focus { outline: none; border-color: #888; }
 
-  // hide number arrows
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button { -webkit-appearance: none; }
 }

@@ -36,6 +36,7 @@ TcsCourier_CreateBookingFromOrder: "TcsCourier/CreateBookingFromOrder",
 //OnlineShopUsersAppServcie
 OnlinseShopUsers_SignupForOnlineShop: "OnlinseShopUsers/SignupForOnlineShop",
 OnlinseShopUsers_ResetPasswordRequestForOnlineShop: "OnlinseShopUsers/ResetPasswordRequestForOnlineShop",
+OnlinseShopUsers_GetCustomerProfileForOnlineShop: "OnlinseShopUsers/GetCustomerProfileForOnlineShop",
 
 // OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:
 // 'OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop',

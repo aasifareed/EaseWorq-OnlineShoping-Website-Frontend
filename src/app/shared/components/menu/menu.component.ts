@@ -20,6 +20,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   private readonly subcategorySelect$ = new Subject<{ categoryId: string; megaMenu: Menu }>();
   private megaCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly defaultPopularByMega = new Map<Menu, Menu[]>();
+  private ignoreMegaOpenUntil = 0;
   constructor(
     private router: Router,
     public navServices: NavService,
@@ -101,9 +102,26 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target as Node)) {
-      this.closeMegaMenu();
+    if (!this.activeMegaMenu) {
+      return;
     }
+
+    const target = event.target as HTMLElement;
+    if (target.closest('.store-mega-panel__inner') || target.closest('.mega-menu-backdrop')) {
+      return;
+    }
+
+    if (target.closest('li.mega-menu-open')) {
+      return;
+    }
+
+    this.closeMegaMenu();
+  }
+
+  onMegaBackdropClick(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeMegaMenu();
   }
 
   mainMenuToggle(): void {
@@ -183,7 +201,7 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   openMegaMenu(item: Menu): void {
-    if (!item.megaMenu) {
+    if (!item.megaMenu || Date.now() < this.ignoreMegaOpenUntil) {
       return;
     }
     this.clearMegaCloseTimer();
@@ -227,6 +245,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.activeMegaMenu = null;
     this.selectedSubcategoryId = null;
     this.popularProductsLoading = false;
+    this.ignoreMegaOpenUntil = Date.now() + 350;
   }
 
   toggletNavActive(item: Menu): void {

@@ -1,12 +1,11 @@
 .product-top-filter--microless {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: #222226;
+  border-top: 1px solid var(--ml-toolbar-border);
+  border-bottom: 1px solid var(--ml-toolbar-border);
+  background: var(--ml-toolbar-bg);
 
   .product-filter-content {
     border: 0;
     padding: 0;
-    /* Override theme .product-filter-content so the bar spans full width (theme flex was shrinking to content). */
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
@@ -30,7 +29,7 @@
     gap: 16px;
     padding: 12px 16px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--ml-toolbar-text);
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
@@ -43,40 +42,39 @@
     gap: 10px 14px;
     flex: 1 1 auto;
     min-width: 0;
-    /* Let breadcrumb use remaining space; do not grow past row so controls stay on the right */
     max-width: 100%;
   }
 
   .microless-toolbar__range {
     flex: 0 0 auto;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--ml-toolbar-text-strong);
     white-space: nowrap;
   }
 
   .microless-toolbar__bread {
     flex: 0 1 auto;
     text-align: left;
-    color: rgba(255, 255, 255, 0.65);
+    color: var(--ml-toolbar-text-muted);
     min-width: 0;
 
     a {
-      color: rgba(255, 255, 255, 0.88);
+      color: var(--ml-toolbar-text);
       text-decoration: none;
       &:hover {
         text-decoration: underline;
-        color: #fff;
+        color: var(--ml-toolbar-text-strong);
       }
     }
 
     .current {
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--ml-toolbar-text-strong);
       font-weight: 600;
     }
 
     .sep {
       margin: 0 5px;
-      color: rgba(255, 255, 255, 0.35);
+      color: var(--ml-toolbar-text-sep);
       user-select: none;
     }
   }
@@ -114,15 +112,15 @@
       min-width: 160px;
       padding: 8px 30px 8px 10px;
       border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: #121214;
-      color: #fff;
+      border: 1px solid var(--ml-toolbar-input-border);
+      background: var(--ml-toolbar-input-bg);
+      color: var(--ml-toolbar-input-text);
       cursor: pointer;
       font-size: 13px;
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23ffffff' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23666666' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 10px center;
     }
@@ -133,20 +131,20 @@
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--ml-toolbar-text-faint);
     margin: 0;
     flex: 0 0 auto;
     white-space: nowrap;
     line-height: 1;
-    padding-top: 1px; /* optical align with select cap height */
+    padding-top: 1px;
   }
 
   .microless-view-toggle {
     display: inline-flex;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--ml-toolbar-input-border);
     border-radius: 4px;
     overflow: hidden;
-    background: #121214;
+    background: var(--ml-toolbar-toggle-bg);
   }
 
   .microless-view-btn {
@@ -156,19 +154,19 @@
     padding: 8px 12px;
     border: 0;
     background: transparent;
-    color: rgba(255, 255, 255, 0.65);
+    color: var(--ml-toolbar-text-muted);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
 
     + .microless-view-btn {
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 1px solid var(--ml-toolbar-border);
     }
 
     &:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.06);
+      color: var(--ml-toolbar-text-strong);
+      background: var(--ml-toolbar-toggle-hover);
     }
 
     &--active {
@@ -185,4 +183,8 @@
   .search-count {
     display: none;
   }
+}
+
+body.dark .product-top-filter--microless .microless-sort select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23ffffff' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
 }

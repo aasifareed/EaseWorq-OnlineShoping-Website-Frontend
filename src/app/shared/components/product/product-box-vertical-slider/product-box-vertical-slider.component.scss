@@ -1,17 +1,19 @@
- h2 {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    line-height: 30px !important;
-    text-transform: uppercase !important;
+h2 {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 30px !important;
+  text-transform: uppercase !important;
+  color: var(--ml-page-title) !important;
 }
+
 .see-more-link {
-  color: #fff;
-font-weight: 700;
-    font-size: 14px;
+  color: var(--ml-sidebar-text);
+  font-weight: 700;
+  font-size: 14px;
   text-decoration: underline;
   white-space: nowrap;
 
   &:hover {
-    color: #f5b800;
+    color: var(--theme-deafult, #ffc107);
   }
 }

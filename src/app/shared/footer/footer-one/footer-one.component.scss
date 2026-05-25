@@ -56,7 +56,7 @@ footer {
         width: 36px;
         height: 36px;
         flex-shrink: 0;
-        background: #282828;
+        background: var(--ml-footer-icon-bg);
         border-radius: 50%;
         line-height: 36px;
         text-align: center;
@@ -84,7 +84,7 @@ footer {
 
   .footer-contact-value {
     font-size: 13px;
-    color: #ccc;
+    color: var(--ml-footer-contact-value);
     text-decoration: none;
     word-break: break-word;
 
@@ -99,7 +99,7 @@ footer {
   }
 
   .footer-payment-row {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--ml-footer-divider);
   }
 
   .footer-payment-label {
@@ -144,17 +144,16 @@ footer {
   border-color: rgba(0,0,0,0.05) !important;
 }
 .cta-footer {
-  background: #000000 !important;
-    border-color: rgba(0,0,0,0.05) !important;
-
+  background: var(--ml-footer-cta-bg) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
 }
 section.section-b-space.light-layout{
   padding-bottom: 0px !important;
 }
-.cta-row i.fa{
-    width: 50px;
-    height: 50px;
-    background: #282828;
-    line-height: 50px;
-    border-radius: 50%;
+.cta-row i.fa {
+  width: 50px;
+  height: 50px;
+  background: var(--ml-footer-icon-bg);
+  line-height: 50px;
+  border-radius: 50%;
 }

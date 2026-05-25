@@ -1,31 +1,30 @@
-
-
 li { display: block !important; }
 
-// Count badge
 .category-list span {
-  color: #888;
+  color: var(--ml-sidebar-text-faint);
   font-size: 11px;
   margin-left: 4px;
 }
 
-// Level 1
 .category-list > li > a {
   font-weight: 600;
   font-size: 13px;
+  color: var(--ml-sidebar-text);
 
   &::before {
     content: '\f105';
     font-family: 'FontAwesome';
     margin-right: 6px;
     font-size: 11px;
-    color: #888;
+    color: var(--ml-sidebar-text-faint);
   }
 
-  &.active { color: #fff; font-weight: 700; }
+  &.active {
+    color: var(--ml-sidebar-active);
+    font-weight: 700;
+  }
 }
 
-// Level 2
 .category-list ul {
   list-style: none;
   padding-left: 14px;
@@ -34,19 +33,19 @@ li { display: block !important; }
   li > a {
     font-weight: 500;
     font-size: 12px;
-    &.active { color: #fff; }
+    color: var(--ml-sidebar-text);
+    &.active { color: var(--ml-sidebar-active); }
   }
 }
 
-// Level 3
 .category-list ul ul {
   padding-left: 12px;
 
   li > a {
     font-weight: 400;
     font-size: 11px;
-    color: #999;
-    &.active { color: #fff; }
+    color: var(--ml-sidebar-text-muted);
+    &.active { color: var(--ml-sidebar-active); }
   }
 }
 
@@ -57,28 +56,28 @@ li { display: block !important; }
 .microless-cat-back {
   display: inline-block;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ml-sidebar-text-muted);
   text-decoration: none;
   margin-bottom: 10px;
 
   &:hover {
-    color: #fff;
+    color: var(--ml-sidebar-active);
     text-decoration: underline;
   }
 }
 
 .microless-cat-back-chevron {
   margin-right: 4px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--ml-sidebar-text-faint);
 }
 
 .microless-cat-current {
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--ml-sidebar-active);
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--ml-sidebar-divider);
 }
 
 .microless-cat-children {
@@ -94,23 +93,23 @@ li { display: block !important; }
   a {
     font-size: 13px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--ml-sidebar-text);
     text-decoration: none;
     display: block;
     padding: 4px 0;
 
     &:hover {
-      color: #fff;
+      color: var(--ml-sidebar-active);
     }
 
     &.active {
-      color: #fff;
+      color: var(--ml-sidebar-active);
       font-weight: 700;
     }
   }
 
   span {
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--ml-sidebar-text-faint);
     font-size: 12px;
     margin-left: 4px;
   }

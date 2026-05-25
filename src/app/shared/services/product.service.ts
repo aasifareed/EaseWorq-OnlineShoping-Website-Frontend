@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, startWith, delay } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -9,6 +9,8 @@ import {
   HomeCategorySliderDto
 } from '../models/home-category-slider.model';
 import { environment } from 'src/environments/environment';
+import { AuthService } from './auth.service';
+import { OnlineShopStorefront } from '../models/online-shop-storefront.model';
 
 const state = {
   products: JSON.parse(localStorage['products'] || '[]'),
@@ -27,7 +29,28 @@ export class ProductService {
   public OpenCart: boolean = false;
   public Products:any;
 
+  /** Apply currency from storefront admin configuration (locked at runtime). */
+  applyStoreCurrency(storefront: OnlineShopStorefront | null | undefined): void {
+    if (!storefront) {
+      return;
+    }
+
+    const name = storefront.currencyName?.trim();
+    const symbol = storefront.currencySymbol?.trim();
+
+    if (!name && !symbol) {
+      return;
+    }
+
+    this.Currency = {
+      name: name || this.Currency.name,
+      currency: symbol || name || this.Currency.currency,
+      price: 1,
+    };
+  }
+
   private readonly wishlistChanged = new BehaviorSubject<Product[]>(state.wishlist);
+  private readonly cartChanged = new BehaviorSubject<Product[]>([...state.cart]);
 
   /** In-memory index of last shop grid (API) products by inventory id. */
   private readonly shopProductById = new Map<string, Product>();
@@ -96,8 +119,11 @@ export class ProductService {
     return this.getProductBySlug(routeKey);
   }
 
-  constructor(private http: HttpClient,
-    private toastrService: ToastrService) { }
+  constructor(
+    private http: HttpClient,
+    private toastrService: ToastrService,
+    private auth: AuthService,
+  ) { }
 
 private apiRoot(): string {
         const b = environment.baseUrl || '';
@@ -163,17 +189,37 @@ private apiRoot(): string {
     this.syncWishlistLocal(state.wishlist);
   }
 
-  private wishlistMutationQuery(productInventoryId: string): string {
+  private buildWishlistRequest(productInventoryId?: string): Record<string, unknown> {
+    const tenantId = Number(environment.shop?.tenantId ?? 1);
+    const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
+    const email = this.auth.getCustomerEmail();
+    const payload: Record<string, unknown> = {
+      tenantId,
+      storeId,
+      customerEmail: email ?? ''
+    };
+    if (productInventoryId) {
+      payload.productInventoryId = productInventoryId;
+    }
+    return payload;
+  }
+
+  private wishlistQueryParams(): HttpParams {
     const tenantId = environment.shop?.tenantId ?? '1';
     const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
-    return `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}&ProductInventoryId=${encodeURIComponent(productInventoryId)}`;
+    const email = this.auth.getCustomerEmail();
+    let params = new HttpParams()
+      .set('TenantId', String(tenantId))
+      .set('StoreId', storeId);
+    if (email) {
+      params = params.set('CustomerEmail', email);
+    }
+    return params;
   }
 
   loadWishlistFromApi(): Observable<Product[]> {
-    const tenantId = environment.shop?.tenantId ?? '1';
-    const storeId = environment.shop?.storeId ?? 'd4d292f5-de72-4742-b728-ea34a1706191';
-    const path = `${environment.urls.OnlineShopWishlist_GetWishlistForOnlineShop}?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
-    return this.http.get(`${this.apiRoot()}api/services/app/${path}`).pipe(
+    const path = `${environment.urls.OnlineShopWishlist_GetWishlistForOnlineShop}`;
+    return this.http.get(`${this.apiRoot()}api/services/app/${path}`, { params: this.wishlistQueryParams() }).pipe(
       map((resp: any) => {
         const rows = resp?.result ?? [];
         const products = rows
@@ -197,16 +243,31 @@ private apiRoot(): string {
       return of(false);
     }
 
-    const path = `${environment.urls.OnlineShopWishlist_AddToWishlistForOnlineShop}${this.wishlistMutationQuery(inventoryId)}`;
-    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, {}).pipe(
+    if (!this.auth.isLoggedIn()) {
+      this.toastrService.warning('Please sign in to use your wishlist.');
+      this.auth.navigateToLogin();
+      return of(false);
+    }
+
+    const email = this.auth.getCustomerEmail();
+    if (!email) {
+      this.toastrService.warning('Could not read your account email. Please sign in again.');
+      this.auth.navigateToLogin();
+      return of(false);
+    }
+
+    const path = `${environment.urls.OnlineShopWishlist_AddToWishlistForOnlineShop}`;
+    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, this.buildWishlistRequest(inventoryId)).pipe(
       map(() => {
         this.addToWishlistLocal(product);
         this.toastrService.success('Product has been added to wishlist.');
         return true;
       }),
       catchError((err) => {
-        const msg = err?.error?.error?.message || err?.error?.error?.details || 'Could not add to wishlist. Please sign in and try again.';
-        this.toastrService.error(msg);
+        if (err?.status !== 400 && err?.status !== 401) {
+          const msg = err?.error?.error?.message || err?.error?.error?.details || 'Could not add to wishlist.';
+          this.toastrService.error(msg);
+        }
         return of(false);
       })
     );
@@ -218,8 +279,8 @@ private apiRoot(): string {
       return of(false);
     }
 
-    const path = `${environment.urls.OnlineShopWishlist_RemoveFromWishlistForOnlineShop}${this.wishlistMutationQuery(inventoryId)}`;
-    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, {}).pipe(
+    const path = `${environment.urls.OnlineShopWishlist_RemoveFromWishlistForOnlineShop}`;
+    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, this.buildWishlistRequest(inventoryId)).pipe(
       map(() => {
         const next = state.wishlist.filter((item) => !this.sameLineId(item.id, product.id));
         this.syncWishlistLocal(next);
@@ -277,11 +338,21 @@ private apiRoot(): string {
 
   // Get Cart Items
   public get cartItems(): Observable<Product[]> {
-    const itemsStream = new Observable(observer => {
-      observer.next(state.cart);
-      observer.complete();
-    });
-    return <Observable<Product[]>>itemsStream;
+    return this.cartChanged.asObservable();
+  }
+
+  /** Total units in cart (sum of line quantities). */
+  public get cartCount(): Observable<number> {
+    return this.cartChanged.pipe(
+      map((items) =>
+        (items || []).reduce((sum, item) => sum + Math.max(0, Number(item.quantity) || 0), 0),
+      ),
+    );
+  }
+
+  private syncCartState(): void {
+    localStorage.setItem('cartItems', JSON.stringify(state.cart));
+    this.cartChanged.next([...state.cart]);
   }
 
   // Add to Cart
@@ -317,7 +388,7 @@ private apiRoot(): string {
     }
 
     this.OpenCart = true;
-    localStorage.setItem('cartItems', JSON.stringify(state.cart));
+    this.syncCartState();
     return true;
   }
 
@@ -341,7 +412,7 @@ private apiRoot(): string {
     } else {
       state.cart[idx].quantity = nextQty;
     }
-    localStorage.setItem('cartItems', JSON.stringify(state.cart));
+    this.syncCartState();
     return true;
   }
 
@@ -350,7 +421,7 @@ private apiRoot(): string {
     const idx = state.cart.findIndex((item: any) => this.sameLineId(item.id, product.id));
     if (idx !== -1) {
       state.cart.splice(idx, 1);
-      localStorage.setItem('cartItems', JSON.stringify(state.cart));
+      this.syncCartState();
     }
     return true;
   }
@@ -358,7 +429,7 @@ private apiRoot(): string {
   /** Clear cart after order is placed (memory + localStorage). */
   public clearCart(): void {
     state.cart = [];
-    localStorage.setItem('cartItems', '[]');
+    this.syncCartState();
   }
 
   // Total amount 

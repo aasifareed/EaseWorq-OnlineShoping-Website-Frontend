@@ -1,4 +1,10 @@
 <div class="main-navbar store-nav">
+  <div
+    class="mega-menu-backdrop"
+    *ngIf="activeMegaMenu"
+    (mousedown)="onMegaBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
   <div id="mainnav">
     <div class="toggle-nav" (click)="mainMenuToggle()">
       <i class="fa fa-bars sidebar-bar"></i>

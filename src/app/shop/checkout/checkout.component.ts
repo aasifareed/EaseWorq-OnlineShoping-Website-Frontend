@@ -19,8 +19,7 @@ import {
   ONLINE_SHOP_SHIPPING_METHOD_LABELS,
   CheckoutFormValues,
   CreateOnlineShopSaleOrderResponse,
-  CheckoutAddressFormValues,
-  OnlineShopSaleOrderAddress
+  CheckoutAddressFormValues
 } from '../../shared/services/online-shop-order.service';
 
 @Component({
@@ -315,15 +314,9 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
-    this.auth.refreshCustomerProfileFromSession().subscribe({
-      next: () => {
-        this.applyStoredCustomerProfile();
-        this.loadBillingFromLastOrderIfMissing();
-      },
-      error: () => {
-        this.applyStoredCustomerProfile();
-        this.loadBillingFromLastOrderIfMissing();
-      }
+    this.auth.refreshCustomerProfileForCheckout().subscribe({
+      next: () => this.applyStoredCustomerProfile(),
+      error: () => this.applyStoredCustomerProfile()
     });
   }
 
@@ -335,79 +328,33 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
-    this.billingGroup.patchValue({
-      customerName: profile?.customerName ?? '',
-      customerMobileNo: profile?.customerMobileNo ?? '',
-      customerEmail: email ?? '',
-      address: profile?.address ?? '',
-      town: profile?.town ?? '',
-      state: profile?.state ?? '',
-      postalcode: profile?.postalcode ?? ''
-    });
-  }
-
-  private loadBillingFromLastOrderIfMissing(): void {
-    const billing = this.billingGroup.value as CheckoutAddressFormValues;
-    if (billing.address?.trim() && billing.customerMobileNo?.trim()) {
-      return;
-    }
-
-    const email = this.auth.getCustomerEmail();
-    if (!email) {
-      return;
-    }
-
-    this.onlineShopOrder.getMyOrders(email, 0, 1).subscribe({
-      next: (result) => {
-        const latestOrder = result.items?.[0];
-        if (!latestOrder?.id) {
-          return;
-        }
-
-        this.onlineShopOrder.getMyOrderDetail(latestOrder.id, email).subscribe({
-          next: (detail) => {
-            const addr = detail.billingAddress ?? detail.shippingAddress;
-            if (!addr) {
-              return;
-            }
-            this.patchBillingFromOrderAddress(addr, billing);
-          }
-        });
-      }
-    });
-  }
-
-  private patchBillingFromOrderAddress(
-    addr: OnlineShopSaleOrderAddress,
-    current: CheckoutAddressFormValues
-  ): void {
+    const current = this.billingGroup.value as CheckoutAddressFormValues;
     const patch: Partial<CheckoutAddressFormValues> = {};
 
-    if (!current.customerName?.trim() && addr.customerName) {
-      patch.customerName = addr.customerName;
+    if (!current.customerName?.trim() && profile?.customerName) {
+      patch.customerName = profile.customerName;
     }
-    if (!current.customerMobileNo?.trim() && addr.phone) {
-      patch.customerMobileNo = addr.phone;
+    if (!current.customerMobileNo?.trim() && profile?.customerMobileNo) {
+      patch.customerMobileNo = profile.customerMobileNo;
     }
-    if (!current.customerEmail?.trim() && addr.emailAddress) {
-      patch.customerEmail = addr.emailAddress;
+    if (!current.customerEmail?.trim() && email) {
+      patch.customerEmail = email;
     }
-    if (!current.address?.trim() && addr.address) {
-      patch.address = addr.address;
+    if (!current.address?.trim() && profile?.address) {
+      patch.address = profile.address;
     }
-    if (!current.town?.trim() && addr.townCity) {
-      patch.town = addr.townCity;
+    if (!current.town?.trim() && profile?.town) {
+      patch.town = profile.town;
     }
-    if (!current.state?.trim() && addr.stateCounty) {
-      patch.state = addr.stateCounty;
+    if (!current.state?.trim() && profile?.state) {
+      patch.state = profile.state;
     }
-    if (!current.postalcode?.trim() && addr.postalCode) {
-      patch.postalcode = addr.postalCode;
+    if (!current.postalcode?.trim() && profile?.postalcode) {
+      patch.postalcode = profile.postalcode;
     }
 
     if (Object.keys(patch).length) {
       this.billingGroup.patchValue(patch);
-      this.persistCustomerProfileFromBilling(this.billingGroup.value as CheckoutAddressFormValues);
     }
   }
 

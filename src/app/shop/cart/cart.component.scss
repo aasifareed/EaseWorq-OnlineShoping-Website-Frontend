@@ -1,23 +1,39 @@
+.cart-section {
+  .cart-meta {
+    color: var(--ml-sidebar-text-muted);
+  }
+
+  .cart-meta-strong,
+  .cart-price-value {
+    color: var(--ml-cart-title);
+  }
+
+  .cart-price-value {
+    font-size: 18px;
+  }
+
+  .cart-promo-input {
+    background: var(--ml-price-input-bg);
+    color: var(--ml-price-input-text);
+    border-color: var(--ml-price-input-border);
+  }
+}
+
 // Card wrapper
 .cart-item {
-    background: #303030;
-    //   border: 1px solid #3a3a52;
-    border-radius: 8px;
+  background: var(--ml-cart-item-bg);
+  border-radius: 8px;
+  border: 1px solid var(--ml-cart-summary-border);
 }
 
-// Product image
 .cart-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    //   background: #303030;
-    //   border-radius: 6px;
-    //   padding: 8px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-// Title link
 .cart-title {
-    color: #e8e8f0;
+  color: var(--ml-cart-title);
     text-decoration: none;
     font-size: 14px;
     font-weight: 700;
@@ -48,8 +64,8 @@
 // Only the summary box needs custom styling
 // Your existing styles — untouched
 .cart-summary-box {
-  background: #303030;
-  border: 1px solid #303030;
+  background: var(--ml-cart-summary-bg);
+  border: 1px solid var(--ml-cart-summary-border);
   border-radius: 8px;
   min-width: 420px;
   position: relative;

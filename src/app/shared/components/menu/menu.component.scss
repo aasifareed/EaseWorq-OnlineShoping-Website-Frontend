@@ -145,6 +145,18 @@
       background: transparent;
     }
 
+    .mega-menu-backdrop {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: var(--store-mega-top, 130px);
+      bottom: 0;
+      z-index: 1048;
+      background: transparent;
+      cursor: default;
+    }
+
     .store-mega-panel {
       /* Reset theme mega-menu link floats that cause column overlap */
       .store-mega-panel__links li,
@@ -175,7 +187,7 @@
         display: block;
         opacity: 1;
         visibility: visible;
-        pointer-events: auto;
+        pointer-events: none;
         transform: translateY(0);
       }
 
@@ -183,6 +195,7 @@
         max-width: 1320px;
         margin: 0 auto;
         padding: 0 12px;
+        pointer-events: auto;
       }
 
       &__grid {
@@ -190,10 +203,10 @@
         flex-wrap: nowrap;
         align-items: stretch;
         gap: 0;
-        background: #161616;
-        border: 1px solid #2a2a2a;
+        background: var(--ml-mega-bg);
+        border: 1px solid var(--ml-mega-border);
         border-top: 3px solid #ffcc00;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+        box-shadow: var(--ml-mega-shadow);
         padding: 22px 8px 20px;
         min-height: 180px;
         overflow: hidden;
@@ -204,7 +217,7 @@
         min-width: 0;
         max-width: 100%;
         padding: 0 20px;
-        border-right: 1px solid #2e2e2e;
+        border-right: 1px solid var(--ml-mega-col-border);
         overflow: hidden;
         box-sizing: border-box;
 
@@ -236,7 +249,7 @@
             }
 
             &::-webkit-scrollbar-thumb {
-              background: #444;
+              background: var(--ml-mega-scrollbar);
               border-radius: 4px;
             }
           }
@@ -281,7 +294,7 @@
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #ffcc00;
+        color: var(--ml-mega-heading);
       }
 
       &__links {
@@ -311,7 +324,7 @@
         min-width: 0;
         box-sizing: border-box;
         padding: 7px 0;
-        color: #e8e8e8 !important;
+        color: var(--ml-mega-link) !important;
         text-decoration: none;
         font-size: 13px;
         font-weight: 500;
@@ -324,9 +337,9 @@
 
         &:hover,
         &:focus-visible {
-          color: #fff !important;
+          color: var(--ml-mega-link-hover) !important;
           padding-left: 6px;
-          background: rgba(255, 204, 0, 0.08);
+          background: var(--ml-mega-link-hover-bg);
 
           .store-mega-panel__chevron {
             opacity: 1;
@@ -337,7 +350,7 @@
 
         &--primary {
           font-weight: 700;
-          color: #fff !important;
+          color: var(--ml-mega-link-primary) !important;
           font-size: 14px;
         }
 
@@ -352,8 +365,8 @@
         }
 
         &--sub-active {
-          color: #fff !important;
-          background: rgba(255, 204, 0, 0.15) !important;
+          color: var(--ml-mega-link-hover) !important;
+          background: var(--ml-mega-link-active-bg) !important;
           padding-left: 8px !important;
 
           .store-mega-panel__chevron {
@@ -366,7 +379,7 @@
       &__loading {
         margin-left: 6px;
         font-size: 11px;
-        color: #aaa;
+        color: var(--ml-mega-loading);
         letter-spacing: 2px;
       }
 
@@ -405,7 +418,7 @@
         flex-shrink: 0;
         font-size: 12px;
         opacity: 0;
-        color: #aaa;
+        color: var(--ml-mega-chevron);
         transition:
           opacity 0.15s ease,
           transform 0.15s ease,
@@ -426,11 +439,11 @@
     }
 
     .nav-submenu--accordion {
-      background: #111;
-      border-top: 1px solid #333;
+      background: var(--ml-mega-mobile-bg);
+      border-top: 1px solid var(--ml-mega-mobile-border);
 
       .nav-submenu__group {
-        border-bottom: 1px solid #2a2a2a;
+        border-bottom: 1px solid var(--ml-mega-col-border);
       }
 
       .nav-submenu__heading {
@@ -438,7 +451,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 12px 16px;
-        color: #ffcc00 !important;
+        color: var(--ml-mega-heading) !important;
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
@@ -447,7 +460,7 @@
       }
 
       .nav-sub-childmenu {
-        background: #0d0d0d;
+        background: var(--ml-mega-mobile-sub-bg);
         padding: 4px 0 8px;
 
         &--grid {
@@ -460,11 +473,11 @@
         li a.nav-submenu__link {
           display: block;
           padding: 10px 24px;
-          color: #ddd !important;
+          color: var(--ml-mega-mobile-link) !important;
           font-size: 13px;
 
           &--featured {
-            color: #fff !important;
+            color: var(--ml-mega-link-primary) !important;
             font-weight: 700;
           }
         }
