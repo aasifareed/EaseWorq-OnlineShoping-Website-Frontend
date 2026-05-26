@@ -1,9 +1,8 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ProductDetailsMainSlider, ProductDetailsThumbSlider } from '../../../../shared/data/slider';
 import { Product } from '../../../../shared/classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
-import { SizeModalComponent } from "../../../../shared/components/modal/size-modal/size-modal.component";
+import { SizeModalComponent } from '../../../../shared/components/modal/size-modal/size-modal.component';
 
 @Component({
   selector: 'app-product-left-sidebar',
@@ -17,44 +16,43 @@ export class ProductLeftSidebarComponent implements OnInit {
   public detailLoading = false;
   public relatedLoading = false;
   public counter: number = 1;
-  public activeSlide: any = 0;
+  public activeSlide = 0;
   public selectedSize: any;
   public active = 1;
+  public zoomActive = false;
+  public zoomOrigin = '50% 50%';
 
   readonly placeholderImage = 'assets/images/product/placeholder.jpg';
 
-  @ViewChild("sizeChart") SizeChart: SizeModalComponent;
+  @ViewChild('sizeChart') SizeChart: SizeModalComponent;
 
-  public mainSliderOptions: any = { ...ProductDetailsMainSlider };
-  public ProductDetailsThumbConfig: any = ProductDetailsThumbSlider;
+  private touchStartX = 0;
 
   get displayImages(): { src: string; alt: string }[] {
-    const raw = this.product?.images ?? [];
-    const mapped = raw
-      .filter((img) => img?.src)
-      .map((img) => ({
-        src: String(img.src),
-        alt: img.alt || this.product?.title || 'Product'
-      }));
-    if (mapped.length) {
-      return mapped;
-    }
-    return [{ src: this.placeholderImage, alt: this.product?.title || 'Product' }];
+    const urls = this.productService.getProductImages(this.product);
+    const alt = this.product?.title || 'Product';
+    return urls.map((src) => ({ src, alt }));
   }
 
   get hasMultipleImages(): boolean {
     return this.displayImages.length > 1;
   }
 
-  constructor(private route: ActivatedRoute, private router: Router,
-    public productService: ProductService) {
+  get currentImageSrc(): string {
+    return this.displayImages[this.activeSlide]?.src ?? this.placeholderImage;
   }
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    public productService: ProductService
+  ) {}
 
   ngOnInit(): void {
     this.route.data.subscribe((d) => {
       const initial = (d['data'] as Product) || {};
       this.product = { ...initial };
-      this.updateMainSliderOptions();
+      this.activeSlide = 0;
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -63,8 +61,63 @@ export class ProductLeftSidebarComponent implements OnInit {
         this.loadProductDetail(inventoryId);
       }
     });
+  }
 
-    this.updateMainSliderOptions();
+  selectGalleryImage(index: number): void {
+    if (index < 0 || index >= this.displayImages.length) {
+      return;
+    }
+    this.activeSlide = index;
+    this.zoomActive = false;
+  }
+
+  prevImage(): void {
+    const n = this.displayImages.length;
+    if (n <= 1) {
+      return;
+    }
+    this.selectGalleryImage((this.activeSlide - 1 + n) % n);
+  }
+
+  nextImage(): void {
+    const n = this.displayImages.length;
+    if (n <= 1) {
+      return;
+    }
+    this.selectGalleryImage((this.activeSlide + 1) % n);
+  }
+
+  onGalleryTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.changedTouches[0]?.clientX ?? 0;
+  }
+
+  onGalleryTouchEnd(event: TouchEvent): void {
+    const endX = event.changedTouches[0]?.clientX ?? 0;
+    const delta = endX - this.touchStartX;
+    if (Math.abs(delta) < 40) {
+      return;
+    }
+    if (delta > 0) {
+      this.prevImage();
+    } else {
+      this.nextImage();
+    }
+  }
+
+  onZoomMove(event: MouseEvent): void {
+    const el = event.currentTarget as HTMLElement;
+    if (!el) {
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    this.zoomOrigin = `${x}% ${y}%`;
+    this.zoomActive = true;
+  }
+
+  onZoomLeave(): void {
+    this.zoomActive = false;
   }
 
   onImageError(event: Event): void {
@@ -72,13 +125,6 @@ export class ProductLeftSidebarComponent implements OnInit {
     if (img && img.src !== this.placeholderImage) {
       img.src = this.placeholderImage;
     }
-  }
-
-  private updateMainSliderOptions(): void {
-    this.mainSliderOptions = {
-      ...ProductDetailsMainSlider,
-      loop: this.hasMultipleImages
-    };
   }
 
   private loadProductDetail(inventoryId: string): void {
@@ -89,7 +135,7 @@ export class ProductLeftSidebarComponent implements OnInit {
         if (item) {
           const mapped = this.productService.mapInventoryItemToProduct(item);
           this.product = { ...this.product, ...mapped };
-          this.updateMainSliderOptions();
+          this.activeSlide = 0;
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
           this.loadRelatedProducts(inventoryId);
@@ -126,10 +172,10 @@ export class ProductLeftSidebarComponent implements OnInit {
     }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqColor.indexOf(variants[i].color) === -1 && variants[i].color) {
-        uniqColor.push(variants[i].color)
+        uniqColor.push(variants[i].color);
       }
     }
-    return uniqColor
+    return uniqColor;
   }
 
   Size(variants: any) {
@@ -139,10 +185,10 @@ export class ProductLeftSidebarComponent implements OnInit {
     }
     for (let i = 0; i < Object.keys(variants).length; i++) {
       if (uniqSize.indexOf(variants[i].size) === -1 && variants[i].size) {
-        uniqSize.push(variants[i].size)
+        uniqSize.push(variants[i].size);
       }
     }
-    return uniqSize
+    return uniqSize;
   }
 
   selectSize(size) {
@@ -154,7 +200,9 @@ export class ProductLeftSidebarComponent implements OnInit {
   }
 
   decrement() {
-    if (this.counter > 1) this.counter--;
+    if (this.counter > 1) {
+      this.counter--;
+    }
   }
 
   async addToCart(product: any) {
@@ -173,5 +221,4 @@ export class ProductLeftSidebarComponent implements OnInit {
   addToWishlist(product: any) {
     this.productService.addToWishlist(product).subscribe();
   }
-
 }

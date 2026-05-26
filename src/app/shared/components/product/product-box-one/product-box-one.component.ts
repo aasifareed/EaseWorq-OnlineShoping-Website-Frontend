@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input, ViewChild, ViewEncapsulation, HostBinding } from '@angular/core';
 import { QuickViewComponent } from "../../modal/quick-view/quick-view.component";
 import { CartModalComponent } from "../../modal/cart-modal/cart-modal.component";
 import { Product } from "../../../classes/product";
@@ -10,25 +10,63 @@ import { ProductService } from "../../../services/product.service";
   styleUrls: ['./product-box-one.component.scss'],
   encapsulation: ViewEncapsulation.Emulated
 })
-export class ProductBoxOneComponent implements OnInit {
+export class ProductBoxOneComponent implements OnInit, OnChanges {
 
   @Input() product?: Product;
-  @Input() currency: any = this.productService.Currency; // Default Currency 
-  @Input() thumbnail: boolean = false; // Default False 
-  @Input() onHowerChangeImage: boolean = false; // Default False
-  @Input() cartModal: boolean = false; // Default False
+  @Input() currency: any = this.productService.Currency;
+  @Input() thumbnail: boolean = false;
+  @Input() onHowerChangeImage: boolean = false;
+  @Input() cartModal: boolean = false;
   @Input() loader: boolean = false;
+  /** Full-width horizontal row (shop list view). */
+  @Input() listMode = false;
+
+  @HostBinding('class.product-box-one--list')
+  get hostListClass(): boolean {
+    return this.listMode;
+  }
   
   @ViewChild("quickView") QuickView?: QuickViewComponent;
   @ViewChild("cartModal") CartModal?: CartModalComponent;
 
-  public ImageSrc? : string;
+  public ImageSrc?: string;
 
   constructor(private productService: ProductService) { }
 
   ngOnInit(): void {
-    if(this.loader) {
-      setTimeout(() => { this.loader = false; }, 2000); // Skeleton Loader
+    this.syncCardImage();
+    if (this.loader) {
+      setTimeout(() => { this.loader = false; }, 2000);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['product']) {
+      this.syncCardImage();
+    }
+  }
+
+  get productLink(): (string | number)[] {
+    if (this.product?.id != null) {
+      return ['/shop/product/left/sidebar', this.product.id];
+    }
+    return ['/shop/collection/left/sidebar'];
+  }
+
+  /** First gallery image for listing cards (pictureUrls[0] || pictureUrl). */
+  get cardImageSrc(): string {
+    return this.ImageSrc || this.productService.getProductImages(this.product)[0];
+  }
+
+  private syncCardImage(): void {
+    this.ImageSrc = this.productService.getProductImages(this.product)[0];
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    const fallback = this.productService.defaultProductImage;
+    if (img && img.src !== fallback) {
+      img.src = fallback;
     }
   }
 

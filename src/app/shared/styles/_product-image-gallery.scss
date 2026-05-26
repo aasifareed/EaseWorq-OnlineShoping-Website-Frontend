@@ -1,0 +1,116 @@
+/* Shared product gallery (detail + quick view) */
+.product-image-gallery {
+  .gallery-main {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    max-height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f0f0f;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .gallery-zoom-stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-in;
+    touch-action: pan-y;
+  }
+
+  .gallery-main-img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.15s ease-out;
+    will-change: transform;
+    pointer-events: none;
+
+    &.is-zoomed {
+      transform: scale(2);
+    }
+  }
+
+  .gallery-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(245, 184, 0, 0.9);
+      color: #111;
+    }
+
+    &.prev {
+      left: 8px;
+    }
+
+    &.next {
+      right: 8px;
+    }
+  }
+
+  .gallery-thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .gallery-thumb-btn {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    padding: 4px;
+    margin: 0;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: #141414;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+
+    &.active,
+    &:hover {
+      border-color: #f5b800;
+    }
+
+    img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+    }
+  }
+}
+
+::ng-deep .Quickview .product-image-gallery .gallery-main {
+  height: 320px;
+}

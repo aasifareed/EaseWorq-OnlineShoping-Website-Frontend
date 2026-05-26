@@ -19,6 +19,8 @@ export interface AvailableProductInventoryDtoForOnlineShop {
   storeId?: string;
   storeName?: string;
   isFavouriteProduct?: boolean;
+  /** True when product was created within the last 7 days. */
+  isNew?: boolean;
   productTaxesId?: string[];
   pictureUrl?: string;
   pictureUrls?: string[];

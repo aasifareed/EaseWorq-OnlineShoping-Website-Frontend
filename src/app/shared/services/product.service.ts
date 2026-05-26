@@ -716,36 +716,97 @@ private apiRoot(): string {
         return this.http.get(`${this.apiRoot()}api/services/app/${url}`);
   }
 
+  readonly defaultProductImage = 'assets/images/product/placeholder.jpg';
+
+  /** Fix API paths that use backslashes so browsers load images correctly. */
+  normalizeImageUrl(url: string | null | undefined): string {
+    if (url == null || String(url).trim() === '') {
+      return '';
+    }
+    let u = String(url).trim().replace(/\\/g, '/');
+    if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('assets/')) {
+      return u;
+    }
+    const base = (environment.baseUrl || '').replace(/\/$/, '');
+    const path = u.startsWith('/') ? u : `/${u}`;
+    return `${base}${path}`;
+  }
+
+  /** Merge primary pictureUrl into pictureUrls without duplicates. */
+  mergeProductPictureUrls(
+    pictureUrl?: string | null,
+    pictureUrls?: string[] | null
+  ): string[] {
+    const merged: string[] = [];
+    const add = (raw: string) => {
+      const n = this.normalizeImageUrl(raw);
+      if (n && merged.indexOf(n) === -1) {
+        merged.push(n);
+      }
+    };
+    if (pictureUrl) {
+      add(String(pictureUrl));
+    }
+    (pictureUrls || []).forEach((u) => {
+      if (u) {
+        add(String(u));
+      }
+    });
+    return merged;
+  }
+
+  /** Resolved gallery URLs for detail, quick view, and listing (first image). */
+  getProductImages(product: any): string[] {
+    const primary = product?.pictureUrl ?? product?.images?.[0]?.src;
+    const list = product?.pictureUrls?.length
+      ? product.pictureUrls
+      : primary
+        ? [primary]
+        : (product?.images || []).map((img: any) => img?.src).filter((x: string) => !!x);
+
+    const normalized = this.mergeProductPictureUrls(primary, list as string[]);
+    return normalized.length ? normalized : [this.defaultProductImage];
+  }
+
   /** Map POS online-shop inventory API row to shop `Product`. */
   mapInventoryItemToProduct(item: any): Product {
-    const desc = item?.productDescription ?? '';
+    const desc = item?.productDescription ?? item?.ProductDescription ?? '';
+    const name = item?.productName ?? item?.ProductName ?? '';
+    const pictureUrl = item?.pictureUrl ?? item?.PictureUrl;
+    const pictureUrlsRaw = item?.pictureUrls ?? item?.PictureUrls;
+    const imageUrls = this.mergeProductPictureUrls(pictureUrl, pictureUrlsRaw);
+    const gallery = imageUrls.length ? imageUrls : [this.defaultProductImage];
+
     return {
-      id: item.id,
-      title: item.productName,
+      id: item.id ?? item.Id,
+      title: name,
       description: desc,
-      type: item.categoryName,
-      brand: item.brandName,
-      category: item.categoryName,
-      productId: item.productId != null ? String(item.productId) : undefined,
+      type: item.categoryName ?? item.CategoryName,
+      brand: item.brandName ?? item.BrandName,
+      category: item.categoryName ?? item.CategoryName,
+      productId: item.productId != null || item.ProductId != null
+        ? String(item.productId ?? item.ProductId)
+        : undefined,
       color: item.productColor != null && String(item.productColor).trim() !== ''
         ? String(item.productColor).trim()
-        : undefined,
+        : item.ProductColor != null && String(item.ProductColor).trim() !== ''
+          ? String(item.ProductColor).trim()
+          : undefined,
       productSize: item.productSize != null && item.productSize !== ''
         ? Number(item.productSize)
-        : undefined,
-      price: item.actualSellPrice,
-      sale: (item.discountOnProduct ?? 0) > 0,
-      discount: item.discountOnProduct ?? 0,
-      stock: item.productUnitStock,
-      quantity: item.productQuantityPerUnit ?? 1,
-      new: true,
-      images: [
-        {
-          src: item.pictureUrl || 'assets/images/product/placeholder.jpg',
-          alt: item.productName
-        }
-      ],
-      tags: item.productIdTag ? [item.productIdTag] : []
+        : item.ProductSize != null && item.ProductSize !== ''
+          ? Number(item.ProductSize)
+          : undefined,
+      price: item.actualSellPrice ?? item.ActualSellPrice,
+      sale: (item.discountOnProduct ?? item.DiscountOnProduct ?? 0) > 0,
+      discount: item.discountOnProduct ?? item.DiscountOnProduct ?? 0,
+      stock: item.productUnitStock ?? item.ProductUnitStock,
+      quantity: item.productQuantityPerUnit ?? item.ProductQuantityPerUnit ?? 1,
+      new: !!(item.isNew ?? item.IsNew),
+      pictureUrl: gallery[0],
+      pictureUrls: gallery,
+      images: gallery.map((src) => ({ src, alt: name })),
+      tags: item.productIdTag || item.ProductIdTag ? [item.productIdTag ?? item.ProductIdTag] : []
     };
   }
 
@@ -823,6 +884,7 @@ private apiRoot(): string {
       storeId: p.storeId != null || p.StoreId != null ? String(p.storeId ?? p.StoreId) : undefined,
       storeName: (p.storeName ?? p.StoreName) as string | undefined,
       isFavouriteProduct: (p.isFavouriteProduct ?? p.IsFavouriteProduct) as boolean | undefined,
+      isNew: (p.isNew ?? p.IsNew) as boolean | undefined,
       productTaxesId: (p.productTaxesId ?? p.ProductTaxesId) as string[] | undefined,
       pictureUrl: (p.pictureUrl ?? p.PictureUrl) as string | undefined,
       pictureUrls: (p.pictureUrls ?? p.PictureUrls) as string[] | undefined

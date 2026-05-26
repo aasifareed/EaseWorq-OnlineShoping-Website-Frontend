@@ -1,31 +1,9 @@
+@import '../../../../shared/styles/product-image-gallery';
+
 .product-detail-page {
   .product-detail-gallery {
-    .product-slick {
-      .owl-stage-outer {
-        overflow: hidden;
-      }
-
-      .owl-item > div,
-      .product-detail-slide {
-        margin-bottom: 0;
-      }
-    }
-
-    .product-detail-img {
-      width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-    }
-
-    .slider-nav {
-      margin-top: 12px;
-
-      .owl-thumb img {
-        max-height: 72px;
-        object-fit: contain;
-      }
+    .gallery-main {
+      min-height: 380px;
     }
   }
 

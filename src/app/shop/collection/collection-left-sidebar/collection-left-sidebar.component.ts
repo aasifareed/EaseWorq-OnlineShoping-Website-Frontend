@@ -232,32 +232,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
       this.TotalCount = resp.result.totalCount; 
           this.paginate = this.productService.getPager(resp.result.totalCount,+this.pageNo ,this.pageSize);     // get paginate object from service
 
-      this.rawProducts = resp.result.items.map((item: any): Product => {
-        return {
-          id: item.id, // String ID ko interface accept karega
-          title: item.productName, // A1K (ZNF)
-          description: item.productDescription, // A1K/Realme C2
-          type: item.categoryName, // Mobile Parts/Units
-          brand: item.brandName, // Oppo
-          category: item.categoryName,
-          productId: item.productId != null ? String(item.productId) : undefined,
-          color: item.productColor != null && String(item.productColor).trim() !== '' ? String(item.productColor).trim() : undefined,
-          productSize: item.productSize != null && item.productSize !== '' ? Number(item.productSize) : undefined,
-          price: item.actualSellPrice, // 1800
-          sale: item.discountOnProduct > 0, // Agar discount hai to sale true
-          discount: item.discountOnProduct, // 0
-          stock: item.productUnitStock, // 2
-          quantity: item.productQuantityPerUnit, // 1
-          new: true, // Dynamic property based on logic
-          images: [
-            {
-              src: item.pictureUrl, // API picture URL
-              alt: item.productName
-            }
-          ],
-          tags: [item.productIdTag] // WebP_1000
-        };
-      });
+      this.rawProducts = resp.result.items.map((item: any): Product =>
+        this.productService.mapInventoryItemToProduct(item)
+      );
       this.productService.cacheShopProducts(this.rawProducts);
       this.rawProducts.forEach((p) => this.productService.persistShopProduct(p));
       this.products = this.rawProducts;
