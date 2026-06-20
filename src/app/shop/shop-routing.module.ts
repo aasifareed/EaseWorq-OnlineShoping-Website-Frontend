@@ -19,6 +19,7 @@ import { WishlistComponent } from './wishlist/wishlist.component';
 import { CompareComponent } from './compare/compare.component';
 import { CheckoutComponent } from './checkout/checkout.component';
 import { SuccessComponent } from './checkout/success/success.component';
+import { FailureComponent } from './checkout/failure/failure.component';
 
 import { Resolver } from '../shared/services/resolver.service';
 import { authGuard } from '../shared/guards/auth.guard';
@@ -109,6 +110,14 @@ const routes: Routes = [
   {
     path: 'checkout/success/:id',
     component: SuccessComponent
+  },
+  {
+    path: 'checkout/failure/:id',
+    component: FailureComponent
+  },
+  {
+    path: 'checkout/failure',
+    component: FailureComponent
   }
 ];
 

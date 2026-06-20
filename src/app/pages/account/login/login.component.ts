@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
+import { SignalRService } from '../../../shared/services/signal-r.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -18,6 +19,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: UntypedFormBuilder,
     private auth: AuthService,
+    private signalRService: SignalRService,
     private route: ActivatedRoute,
     private toastr: ToastrService
   ) {
@@ -45,6 +47,7 @@ export class LoginComponent implements OnInit {
     this.auth.login(email, password, !!remember).subscribe({
       next: () => {
         this.loading = false;
+        this.signalRService.startConnection();
         this.toastr.success('Welcome! You have logged in successfully.');
         this.auth.navigateAfterLogin(this.returnUrl);
       },

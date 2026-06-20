@@ -53,7 +53,8 @@
                                     <input type="checkbox"
                                         class="microless-stock-option__input"
                                         id="ml-out-stock"
-                                        [(ngModel)]="includeOutOfStock">
+                                        [(ngModel)]="includeOutOfStock"
+                                        (change)="onIncludeOutOfStockChange()">
                                     <span class="microless-stock-option__text">Include Out of Stock</span>
                                 </label>
                                 <!-- <div class="custom-control custom-checkbox collection-filter-checkbox">
@@ -121,10 +122,16 @@
                                     <app-grid [products]="products" [paginate]="paginate" [pageSize]="pageSize" [TotalCount]="TotalCount" [layoutView]="layoutView" [sortBy]="sortBy" [breadcrumbTrail]="breadcrumbTrail" (setGrid)="updateGridLayout($event)" (setLayout)="updateLayoutView($event)" (sortedBy)="sortByFilter($event)">
                                     </app-grid>
                                     <div class="product-wrapper-grid" [ngClass]="layoutView">
-                                        <div class="row">
+                                        <div class="row" [class.g-0]="layoutView === 'list-view'">
                                             <div class="col-grid-box" [ngClass]="grid" *ngFor="let product of products">
-                                                <div class="product-box">
-                                                    <app-product-box-one [product]="product" [currency]="productService?.Currency" [thumbnail]="false" [cartModal]="true" [loader]="true">
+                                                <div class="product-box" [class.product-box--list]="layoutView === 'list-view'">
+                                                    <app-product-box-one
+                                                      [product]="product"
+                                                      [currency]="productService?.Currency"
+                                                      [thumbnail]="false"
+                                                      [cartModal]="true"
+                                                      [loader]="true"
+                                                      [listMode]="layoutView === 'list-view'">
                                                     </app-product-box-one>
                                                 </div>
                                             </div>

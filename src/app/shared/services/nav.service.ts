@@ -1,6 +1,7 @@
 import { Injectable, HostListener } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { OnlineShopHeaderMenuService } from './online-shop-header-menu.service';
+import { TenantService } from './tenant.service';
 
 // Menu
 export type MegaColumnType = 'shop-all' | 'categories' | 'popular';
@@ -34,8 +35,11 @@ export class NavService {
 		{ path: '/shop/collection/left/sidebar', title: 'Shop', type: 'link' },
 	];
 
-	constructor(private headerMenuService: OnlineShopHeaderMenuService) {
-		this.loadDynamicMenus();
+	constructor(
+		private headerMenuService: OnlineShopHeaderMenuService,
+		private tenantService: TenantService,
+	) {
+		this.tenantService.whenReady().subscribe(() => this.loadDynamicMenus());
 	}
 
 	loadDynamicMenus(): void {

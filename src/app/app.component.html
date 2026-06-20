@@ -1,5 +1,16 @@
+<div id="storefront-bootstrap-loader" class="loader-wrapper" *ngIf="bootstrapping$ | async">
+
+  <div class="loader"></div>
+
+</div>
+
 <ngx-loading-bar></ngx-loading-bar>
+
 <router-outlet></router-outlet>
+
 <app-tap-to-top></app-tap-to-top>
+
 <!-- Theme layout customizer (gear icon) hidden for storefront -->
+
 <!-- <app-layout-box></app-layout-box> -->
+

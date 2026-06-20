@@ -5,11 +5,36 @@
                 <span aria-hidden="true">&times;</span>
             </button>
             <div class="row">
-                <div class="col-lg-6  col-xs-12">
-                    <div class="quick-view-img">
-                        <img [src]="ImageSrc || product?.images?.[0]?.src || 'assets/images/product/placeholder.jpg'"
-                             [alt]="product?.images?.[0]?.alt || product?.title"
-                             class="img-fluid">
+                <div class="col-lg-6 col-xs-12 product-image-gallery">
+                    <div class="gallery-main"
+                         (touchstart)="onGalleryTouchStart($event)"
+                         (touchend)="onGalleryTouchEnd($event)">
+                        <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage()" aria-label="Previous image">
+                            <i class="ti-angle-left"></i>
+                        </button>
+                        <div class="gallery-zoom-stage"
+                             (mousemove)="onZoomMove($event)"
+                             (mouseleave)="onZoomLeave()">
+                            <img [src]="selectedImage"
+                                 [alt]="product?.title"
+                                 class="gallery-main-img"
+                                 [class.is-zoomed]="zoomActive"
+                                 [style.transform-origin]="zoomOrigin"
+                                 (error)="onImageError($event)">
+                        </div>
+                        <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage()" aria-label="Next image">
+                            <i class="ti-angle-right"></i>
+                        </button>
+                    </div>
+                    <div class="gallery-thumbs" *ngIf="hasMultipleImages">
+                        <button type="button"
+                                class="gallery-thumb-btn"
+                                *ngFor="let image of productImages; index as i"
+                                [class.active]="selectedIndex === i"
+                                (click)="selectThumbnail(i)"
+                                [attr.aria-label]="'Show image ' + (i + 1)">
+                            <img [src]="image" [alt]="product?.title" (error)="onImageError($event)">
+                        </button>
                     </div>
                 </div>
                 <div class="col-lg-6 rtl-text">
@@ -33,7 +58,7 @@
                                             <i class="ti-angle-left"></i>
                                         </button>
                                     </span>
-                                    <input type="text" name="quantity" class="form-control input-number"  [value]="counter" disabled>
+                                    <input type="text" name="quantity" class="form-control input-number" [value]="counter" disabled>
                                     <span class="input-group-prepend">
                                         <button type="button" class="btn quantity-right-plus" data-type="plus" (click)="increment()">
                                             <i class="ti-angle-right"></i>

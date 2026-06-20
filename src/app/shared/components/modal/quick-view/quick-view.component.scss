@@ -1,8 +1,9 @@
+@import '../../../styles/product-image-gallery';
+
 .close.float-end {
   background: unset !important;
 }
 
-/* Modal is rendered on document body (windowClass: Quickview). */
 ::ng-deep .Quickview .quick-view-modal .quick-view-actions {
   display: flex;
   flex-wrap: wrap;

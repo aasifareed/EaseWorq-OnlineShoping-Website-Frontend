@@ -7,33 +7,36 @@
         <div class="col-12">
           <div class="container-fluid p-0">
             <div class="row">
-              <div class="col-lg-6 product-detail-gallery">
-                <owl-carousel-o [options]="mainSliderOptions" #owlCar class="product-slick">
-                  <ng-container *ngFor="let image of displayImages; index as i">
-                    <ng-template carouselSlide [id]="i">
-                      <div class="product-detail-slide">
-                        <img [src]="image.src"
-                             [alt]="image.alt"
-                             class="img-fluid product-detail-img"
-                             (error)="onImageError($event)">
-                      </div>
-                    </ng-template>
-                  </ng-container>
-                </owl-carousel-o>
-                <div class="slider-nav" *ngIf="hasMultipleImages">
-                  <owl-carousel-o [options]="ProductDetailsThumbConfig" class="product-slick">
-                    <ng-container *ngFor="let image of displayImages; index as i">
-                      <ng-template carouselSlide [id]="i">
-                        <div class="owl-thumb" [class.active]="i == activeSlide">
-                          <img [src]="image.src"
-                               [alt]="image.alt"
-                               class="img-fluid"
-                               (error)="onImageError($event)"
-                               (click)="owlCar.to(activeSlide = i.toString())">
-                        </div>
-                      </ng-template>
-                    </ng-container>
-                  </owl-carousel-o>
+              <div class="col-lg-6 product-detail-gallery product-image-gallery" *ngIf="displayImages.length">
+                <div class="gallery-main"
+                     (touchstart)="onGalleryTouchStart($event)"
+                     (touchend)="onGalleryTouchEnd($event)">
+                  <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage()" aria-label="Previous image">
+                    <i class="ti-angle-left"></i>
+                  </button>
+                  <div class="gallery-zoom-stage"
+                       (mousemove)="onZoomMove($event)"
+                       (mouseleave)="onZoomLeave()">
+                    <img [src]="currentImageSrc"
+                         [alt]="displayImages[activeSlide]?.alt || product?.title"
+                         class="gallery-main-img"
+                         [class.is-zoomed]="zoomActive"
+                         [style.transform-origin]="zoomOrigin"
+                         (error)="onImageError($event)">
+                  </div>
+                  <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage()" aria-label="Next image">
+                    <i class="ti-angle-right"></i>
+                  </button>
+                </div>
+                <div class="gallery-thumbs" *ngIf="hasMultipleImages">
+                  <button type="button"
+                          class="gallery-thumb-btn"
+                          *ngFor="let image of displayImages; index as i"
+                          [class.active]="activeSlide === i"
+                          (click)="selectGalleryImage(i)"
+                          [attr.aria-label]="'Show image ' + (i + 1)">
+                    <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event)">
+                  </button>
                 </div>
               </div>
               <div class="col-lg-6 rtl-text">
@@ -47,10 +50,10 @@
                       {{ (product?.price | discount:product) * productService.Currency?.price | currency: productService.Currency?.currency:'symbol' }}
                   </h3>
                   <ul class="color-variant" *ngIf="Color(product?.variants).length">
-                    <li [class]="color" [class.active]="activeSlide == i.toString()"
+                    <li [class]="color" [class.active]="activeSlide === i"
                         *ngFor="let color of Color(product?.variants); index as i"
                         [ngStyle]="{'background-color': color}"
-                        (click)="owlCar.to(activeSlide = i.toString())">
+                        (click)="selectGalleryImage(i < displayImages.length ? i : 0)">
                     </li>
                   </ul>
                   <app-stock-inventory [stock]="product?.stock"></app-stock-inventory>

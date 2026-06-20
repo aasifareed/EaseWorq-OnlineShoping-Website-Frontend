@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap, catchError, shareReplay } from 'rxjs/operators';
+import { map, tap, catchError, shareReplay, finalize } from 'rxjs/operators';
 import { Meta, Title } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import {
@@ -9,20 +9,25 @@ import {
   OnlineShopStorefront,
   OnlineShopStorefrontTax,
 } from '../models/online-shop-storefront.model';
+import { ShopContextService } from './shop-context.service';
+import { normalizeStoreGuid, resolveStoreIdFromApiPayload } from '../utils/shop-context.util';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OnlineShopSettingsService {
   private readonly storefrontSubject = new BehaviorSubject<OnlineShopStorefront | null>(null);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   private loadRequest$: Observable<OnlineShopStorefront | null> | null = null;
 
   readonly storefront$ = this.storefrontSubject.asObservable();
+  readonly loading$ = this.loadingSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private title: Title,
     private meta: Meta,
+    private shopContext: ShopContextService,
   ) {}
 
   get snapshot(): OnlineShopStorefront | null {
@@ -30,6 +35,10 @@ export class OnlineShopSettingsService {
   }
 
   loadStorefront(force = false): Observable<OnlineShopStorefront | null> {
+    if (force) {
+      this.loadRequest$ = null;
+    }
+
     if (!force && this.storefrontSubject.value) {
       return of(this.storefrontSubject.value);
     }
@@ -39,6 +48,7 @@ export class OnlineShopSettingsService {
     }
 
     const url = this.buildUrl();
+    this.loadingSubject.next(true);
     this.loadRequest$ = this.http.get<AbpResponse<Record<string, unknown>>>(url).pipe(
       map((response) => this.normalize(response?.result)),
       tap((storefront) => {
@@ -51,6 +61,7 @@ export class OnlineShopSettingsService {
         this.storefrontSubject.next(null);
         return of(null);
       }),
+      finalize(() => this.loadingSubject.next(false)),
       shareReplay(1),
     );
 
@@ -102,14 +113,15 @@ export class OnlineShopSettingsService {
     const root = base.endsWith('/') ? base : `${base}/`;
     const path = environment.urls.Settings_GetForStorefront;
     const params: string[] = [];
+    const tenantId = this.shopContext.resolveTenantId();
 
-    if (environment.tenantId != null) {
-      params.push(`tenantId=${environment.tenantId}`);
+    if (tenantId > 0) {
+      params.push(`tenantId=${tenantId}`);
     }
 
-    const storeId = environment.storeId ?? environment.shop?.storeId;
+    const storeId = normalizeStoreGuid(this.shopContext.resolveStoreId());
     if (storeId) {
-      params.push(`customStoreId=${storeId}`);
+      params.push(`customStoreId=${encodeURIComponent(storeId)}`);
     }
 
     const query = params.length ? `?${params.join('&')}` : '';
@@ -130,8 +142,8 @@ export class OnlineShopSettingsService {
     }));
 
     return {
-      tenantId: Number(raw.tenantId ?? raw.TenantId ?? environment.tenantId ?? 0),
-      storeId: (raw.storeId ?? raw.StoreId) as string | undefined,
+      tenantId: Number(raw.tenantId ?? raw.TenantId ?? this.shopContext.resolveTenantId() ?? 0),
+      storeId: resolveStoreIdFromApiPayload(raw) ?? normalizeStoreGuid(this.shopContext.getStoreId()),
       isOnlineShopEnabled: (raw.isOnlineShopEnabled ?? raw.IsOnlineShopEnabled) !== false,
       storeName: (raw.storeName ?? raw.StoreName) as string | undefined,
       logoUrl: (raw.logoUrl ?? raw.LogoUrl) as string | undefined,
@@ -157,6 +169,9 @@ export class OnlineShopSettingsService {
       estimatedDeliveryDays: (raw.estimatedDeliveryDays ?? raw.EstimatedDeliveryDays) as number | undefined,
       isSameDayDeliveryEnabled: !!(raw.isSameDayDeliveryEnabled ?? raw.IsSameDayDeliveryEnabled),
       isCashOnDeliveryEnabled: (raw.isCashOnDeliveryEnabled ?? raw.IsCashOnDeliveryEnabled) !== false,
+      collectShippingChargesOnCod: !!(
+        raw.collectShippingChargesOnCod ?? raw.CollectShippingChargesOnCod
+      ),
       isGoPayFastEnabled: this.resolveGoPayFastEnabled(raw),
       receiptFooterText: (raw.receiptFooterText ?? raw.ReceiptFooterText) as string | undefined,
       metaTitle: (raw.metaTitle ?? raw.MetaTitle) as string | undefined,

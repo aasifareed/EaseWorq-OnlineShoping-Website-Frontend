@@ -4,12 +4,17 @@ import { Routes, RouterModule } from '@angular/router';
 import { ShopComponent } from './shop/shop.component';
 import { PagesComponent } from './pages/pages.component';
 import { ElementsComponent } from './elements/elements.component';
+import { SiteNotAvailableComponent } from './site-not-available/site-not-available.component';
 
 const routes: Routes = [
   {
     path: '',
     redirectTo: 'home/fashion',
     pathMatch: 'full'
+  },
+  {
+    path: 'site-not-available',
+    component: SiteNotAvailableComponent,
   },
   {
     path: 'home',

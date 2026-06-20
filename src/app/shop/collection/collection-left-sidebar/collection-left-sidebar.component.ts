@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ViewportScroller } from '@angular/common';
+import { switchMap } from 'rxjs/operators';
+import { AuthService } from '../../../shared/services/auth.service';
 import { ProductService } from "../../../shared/services/product.service";
+import { TenantService } from '../../../shared/services/tenant.service';
 import { Product } from '../../../shared/classes/product';
 import { environment } from 'src/environments/environment';
 import { CollectionToolbarBreadcrumb } from '../widgets/grid/grid.component';
@@ -28,6 +31,7 @@ export class CollectionLeftSidebarComponent implements OnInit {
   public brandOptions: ShopBrandOption[] = [];
   public tags: any[] = [];
   public category: string | null = null;
+  public searchText: string | null = null;
   public pageNo: number = 1;
   public paginate: any = {}; // Pagination use only
   public pageSize: any =20; // Pagination use only
@@ -51,15 +55,20 @@ export class CollectionLeftSidebarComponent implements OnInit {
 
   filter: any = {};
 
-  constructor(private route: ActivatedRoute, private router: Router,
-    private viewScroller: ViewportScroller, public productService: ProductService) {   
-      this.productService.getCategories().subscribe({
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private viewScroller: ViewportScroller,
+    public productService: ProductService,
+    private auth: AuthService,
+    private tenantService: TenantService,
+  ) {
+      this.tenantService.whenReady().pipe(
+        switchMap(() => this.productService.getCategories()),
+      ).subscribe({
         next: (resp) => {
           this.categoryTree = resp.result || [];
           this.rebuildToolbarContext();
-          if (this.category) {
-            this.getProducts();
-          }
         }
       });
       // Get Query params..
@@ -90,6 +99,7 @@ export class CollectionLeftSidebarComponent implements OnInit {
         this.tags = [...this.brands, ...this.colors, ...this.size]; // All Tags Array
         
         this.category = params.category ? params.category : null;
+        this.searchText = params.search ? String(params.search).trim() : null;
         this.sortBy = params.sortBy ? params.sortBy : 'ascending';
         this.pageNo = params.page != null && String(params.page) !== '' ? +params.page : 1;
         this.rebuildToolbarContext();
@@ -152,6 +162,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
     });
     if (catPath?.length) {
       this.pageTitle = catPath[catPath.length - 1].title;
+      if (this.searchText) {
+        this.pageTitle = `${this.pageTitle} · ${this.searchText}`;
+      }
       catPath.forEach((node, i) => {
         const last = i === catPath.length - 1;
         trail.push({
@@ -161,6 +174,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
           current: last
         });
       });
+    } else if (this.searchText) {
+      this.pageTitle = `Search: ${this.searchText}`;
+      trail.push({ label: this.pageTitle, current: true });
     } else {
       this.pageTitle = this.category ? this.formatFallbackCategoryTitle(String(this.category)) : 'Shop';
       if (this.category) {
@@ -183,14 +199,24 @@ export class CollectionLeftSidebarComponent implements OnInit {
   }
 
   getProducts() {
+      this.tenantService.whenReady().subscribe(() => {
+        this.fetchProducts();
+      });
+  }
+
+  private fetchProducts() {
       this.loader = true;
       let url = environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop;
 
       const filter: Record<string, any> = {};
       filter['maxResultCount'] = this.pageSize;
       filter['skipCount'] = (this.pageNo - 1) * this.pageSize;
-      filter['TenantId'] = '1';
-      filter['StoreId'] = 'd4d292f5-de72-4742-b728-ea34a1706191';
+      filter['TenantId'] = String(this.auth.tenantId);
+      filter['StoreId'] = this.auth.storeId;
+
+      if (this.searchText) {
+        filter['Search'] = this.searchText;
+      }
 
       const resolvedPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
       const apiCategoryId = resolvedPath?.length
@@ -225,6 +251,10 @@ export class CollectionLeftSidebarComponent implements OnInit {
 
       filter['ShopSortBy'] = this.sortBy && String(this.sortBy).trim() !== '' ? this.sortBy : 'ascending';
 
+      if (this.includeOutOfStock) {
+        filter['IncludeOutOfStock'] = true;
+      }
+
       this.filter = filter;
       url = url + this.setFilterURL();
   this.productService.getProductsFromAPI(url).subscribe({
@@ -232,32 +262,9 @@ export class CollectionLeftSidebarComponent implements OnInit {
       this.TotalCount = resp.result.totalCount; 
           this.paginate = this.productService.getPager(resp.result.totalCount,+this.pageNo ,this.pageSize);     // get paginate object from service
 
-      this.rawProducts = resp.result.items.map((item: any): Product => {
-        return {
-          id: item.id, // String ID ko interface accept karega
-          title: item.productName, // A1K (ZNF)
-          description: item.productDescription, // A1K/Realme C2
-          type: item.categoryName, // Mobile Parts/Units
-          brand: item.brandName, // Oppo
-          category: item.categoryName,
-          productId: item.productId != null ? String(item.productId) : undefined,
-          color: item.productColor != null && String(item.productColor).trim() !== '' ? String(item.productColor).trim() : undefined,
-          productSize: item.productSize != null && item.productSize !== '' ? Number(item.productSize) : undefined,
-          price: item.actualSellPrice, // 1800
-          sale: item.discountOnProduct > 0, // Agar discount hai to sale true
-          discount: item.discountOnProduct, // 0
-          stock: item.productUnitStock, // 2
-          quantity: item.productQuantityPerUnit, // 1
-          new: true, // Dynamic property based on logic
-          images: [
-            {
-              src: item.pictureUrl, // API picture URL
-              alt: item.productName
-            }
-          ],
-          tags: [item.productIdTag] // WebP_1000
-        };
-      });
+      this.rawProducts = resp.result.items.map((item: any): Product =>
+        this.productService.mapInventoryItemToProduct(item)
+      );
       this.productService.cacheShopProducts(this.rawProducts);
       this.rawProducts.forEach((p) => this.productService.persistShopProduct(p));
       this.products = this.rawProducts;
@@ -306,6 +313,11 @@ export class CollectionLeftSidebarComponent implements OnInit {
     });
     return path;
   }
+  onIncludeOutOfStockChange(): void {
+    this.pageNo = 1;
+    this.getProducts();
+  }
+
   // Append filter value to Url (color, size, price)
   updateFilter(tags: any) {
     const queryParams = { ...tags, page: null };

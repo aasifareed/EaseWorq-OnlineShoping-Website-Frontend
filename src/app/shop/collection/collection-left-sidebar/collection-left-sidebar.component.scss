@@ -127,3 +127,29 @@ section.shop-layout-microless {
     color: var(--ml-sidebar-text) !important;
   }
 }
+
+/* List view — main product grid (not inside sidebar) */
+.shop-layout-microless .product-wrapper-grid.list-view {
+  .col-grid-box {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+
+  .product-box.product-box--list {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-bottom: 0 !important;
+
+    > * {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    app-product-box-one.product-box-one--list {
+      display: block !important;
+      width: 100% !important;
+    }
+  }
+}

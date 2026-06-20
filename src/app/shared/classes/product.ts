@@ -16,6 +16,10 @@ export interface Product {
     tags?: any[];
     variants?: Variants[];
     images?: Images[];
+    /** Primary image URL from online-shop API. */
+    pictureUrl?: string;
+    /** All product image URLs (primary may also appear here). */
+    pictureUrls?: string[];
     /** POS catalog product id when available (separate from inventory row id). */
     productId?: string;
     /** POS product color (flat field from API; use with or without `variants`). */

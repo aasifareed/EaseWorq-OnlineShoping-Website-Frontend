@@ -28,8 +28,6 @@ export class ShopComponent implements OnInit, OnDestroy {
           this.themeLogo = storefront.logoUrl;
         }
       });
-
-    this.storefrontSettings.loadStorefront().subscribe();
   }
 
   ngOnDestroy(): void {

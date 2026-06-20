@@ -4,3 +4,7 @@ li {
     word-break: break-all;       /* Forces break even if there are no spaces */
     white-space: normal;         /* Ensures text wraps to the next line */
 }
+
+.total-sec .order-success-discount span {
+    color: #16a34a;
+}

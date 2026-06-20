@@ -1,7 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClient, HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { JwtInterceptor } from './shared/interceptors/jwt.interceptor';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { LoadingBarHttpClientModule } from '@ngx-loading-bar/http-client';
@@ -16,6 +17,9 @@ import { AppComponent } from './app.component';
 import { ShopComponent } from './shop/shop.component';
 import { PagesComponent } from './pages/pages.component';
 import { ElementsComponent } from './elements/elements.component';
+import { SiteNotAvailableComponent } from './site-not-available/site-not-available.component';
+import { storefrontBootstrapFactory } from './storefront-bootstrap';
+import { TenantService } from './shared/services/tenant.service';
 
 
 // AoT requires an exported function for factories
@@ -28,7 +32,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     AppComponent,
     ShopComponent,
     PagesComponent,
-    ElementsComponent
+    ElementsComponent,
+    SiteNotAvailableComponent,
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'serverApp' }),
@@ -53,7 +58,13 @@ export function HttpLoaderFactory(http: HttpClient) {
     AppRoutingModule
   ],
   providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: storefrontBootstrapFactory,
+      deps: [TenantService, Router],
+      multi: true,
+    },
   ],
   bootstrap: [AppComponent]
 })

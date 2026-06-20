@@ -1,3 +1,46 @@
+.cart-summary-totals {
+  max-width: 360px;
+  margin-left: auto;
+  margin-bottom: 1rem;
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    font-size: 1rem;
+
+    strong {
+      font-size: 1.1rem;
+      color: var(--theme-deafult, #ffc107);
+    }
+
+    &--discount strong {
+      color: #16a34a;
+    }
+
+    &--total {
+      margin-top: 0.35rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--ml-cart-summary-border, #444);
+
+      span {
+        font-weight: 600;
+        font-size: 1.05rem;
+      }
+
+      strong {
+        font-size: 1.25rem;
+      }
+    }
+  }
+}
+
+.cart-coupon-applied {
+  color: var(--ml-sidebar-text-muted, #aaa);
+}
+
 .cart-section {
   .cart-meta {
     color: var(--ml-sidebar-text-muted);

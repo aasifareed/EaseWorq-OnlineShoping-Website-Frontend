@@ -5322,6 +5322,9 @@ ngx-loading-bar {
 }
 
 .product-filter-tags {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
     li {
         display: inline-flex;
         margin-bottom: 30px;
@@ -14295,6 +14298,10 @@ footer {
 .sec-position {
     position: relative;
     top: -80px;
+}
+
+#toast-container {
+    z-index: 1000000 !important;
 }
 
 #toast-container>div {

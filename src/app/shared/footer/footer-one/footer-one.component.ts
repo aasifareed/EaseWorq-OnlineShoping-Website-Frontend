@@ -48,10 +48,10 @@ export class FooterOneComponent implements OnInit, OnDestroy {
 
     if (this.storefrontSettings.snapshot) {
       this.storefront = this.storefrontSettings.snapshot;
-    } else {
-      this.storefrontSettings.loadStorefront().subscribe();
+      if (this.storefront?.tenantId) {
+        this.loadFooterPages();
+      }
     }
-    this.loadFooterPages();
   }
 
   ngOnDestroy(): void {

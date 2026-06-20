@@ -311,11 +311,11 @@
 <!--  logo section start-->
 <!-- <section class="section-b-space"> -->
   <div class="container">
-    <div class="row">
+    <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
       <div class="col-md-12">
         <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">TOP BRANDS
         </h2>
-        <app-logo [logos]="logo"></app-logo>
+        <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
       </div>
     </div>
   </div>

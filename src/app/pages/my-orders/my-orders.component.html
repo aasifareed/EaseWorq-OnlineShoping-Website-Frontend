@@ -1,152 +1,334 @@
-<app-breadcrumb [title]="'My Orders'" [breadcrumb]="'Orders'"></app-breadcrumb>
-
-<section class="section-b-space my-orders-page">
-  <div class="container">
-    <div *ngIf="!isLoggedIn" class="login-prompt theme-card text-center p-5">
-      <h3>Please log in</h3>
-      <p class="text-muted mb-4">Sign in with your email to see orders placed on this store.</p>
-      <button type="button" class="btn btn-solid" (click)="goToLogin()">Log In</button>
-    </div>
-
-    <div *ngIf="isLoggedIn">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">My Orders</h3>
-        <span class="text-muted" *ngIf="auth.getCustomerEmail()">{{ auth.getCustomerEmail() }}</span>
-      </div>
-
-      <div *ngIf="loading" class="text-center py-5">Loading orders…</div>
-
-      <div *ngIf="!loading && errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
-
-      <div *ngIf="!loading && !errorMessage && !orders.length" class="theme-card text-center p-5">
-        <p class="mb-0">You have not placed any orders yet.</p>
-      </div>
-
-      <div *ngIf="!loading && orders.length" class="table-responsive theme-card">
-        <table class="table table-hover mb-0 orders-table">
-          <thead>
-            <tr>
-              <th>Order #</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Total</th>
-              <th>Paid</th>
-              <th class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let order of orders">
-              <td class="fw-semibold">{{ order.onlineOrderNumber }}</td>
-              <td>{{ formatDate(order.orderDate) }}</td>
-              <td>
-                <span class="order-status-badge"
-                  [style.background-color]="order.orderStatusColorCode || '#6c757d'">
-                  {{ statusLabel(order) }}
-                </span>
-              </td>
-              <td>{{ order.totalAmount | number:'1.2-2' }}</td>
-              <td>{{ order.paidAmount | number:'1.2-2' }}</td>
-              <td class="text-end order-actions">
-                <button type="button" class="btn btn-sm btn-outline-secondary me-1"
-                  (click)="trackOrder(order)">
-                  Track Order
-                </button>
-                <button type="button" class="btn btn-sm btn-solid"
-                  (click)="showDetail(order)">
-                  Show Detail
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div *ngIf="!loading && totalCount > pageSize" class="d-flex justify-content-between align-items-center mt-4">
-        <span class="text-muted">
-          Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ (currentPage - 1) * pageSize + orders.length }} of {{ totalCount }}
-        </span>
-        <nav>
-          <ul class="pagination mb-0">
-            <li class="page-item" [class.disabled]="currentPage <= 1">
-              <button type="button" class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
-            </li>
-            <li class="page-item disabled">
-              <span class="page-link">{{ currentPage }} / {{ totalPages }}</span>
-            </li>
-            <li class="page-item" [class.disabled]="currentPage >= totalPages">
-              <button type="button" class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  </div>
-</section>
-
-<ng-template #orderDetailModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title" id="order-detail-modal-title">
-      Order {{ orderDetail?.onlineOrderNumber || 'Details' }}
-    </h5>
-    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
-  </div>
-  <div class="modal-body order-detail-modal-body">
-    <div *ngIf="detailLoading" class="text-center py-4">Loading order details…</div>
-    <div *ngIf="!detailLoading && detailError" class="alert alert-danger mb-0">{{ detailError }}</div>
-
-    <div *ngIf="!detailLoading && orderDetail && !detailError">
-      <p class="text-muted mb-3">
-        Placed on {{ formatShortDate(orderDetail.orderDate) }}
-        <span *ngIf="orderDetail.paymentMethodName"> · {{ orderDetail.paymentMethodName }}</span>
-      </p>
-
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-3">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th class="text-center">Qty</th>
-              <th class="text-end">Unit</th>
-              <th class="text-end">Line total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let line of orderDetail.products">
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  <img [src]="productImage(line.productImageUrl)" alt="" class="order-detail-thumb" />
-                  <span>{{ line.productName }}</span>
-                </div>
-              </td>
-              <td class="text-center">{{ line.quantity }}</td>
-              <td class="text-end">{{ line.unitPrice | number:'1.2-2' }}</td>
-              <td class="text-end">{{ line.lineTotal | number:'1.2-2' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <ul class="list-unstyled order-detail-totals mb-0">
-        <li class="d-flex justify-content-between">
-          <span>Subtotal</span>
-          <span>{{ orderDetail.subTotalAmount | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between">
-          <span>Shipping ({{ orderDetail.shippingMethodName }})</span>
-          <span>{{ orderDetail.shippingCharges | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between">
-          <span>Tax</span>
-          <span>{{ orderDetail.taxAmount | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 border-top">
-          <span>Total</span>
-          <span>{{ orderDetail.totalAmount | number:'1.2-2' }}</span>
-        </li>
-      </ul>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
-  </div>
-</ng-template>
+<app-breadcrumb [title]="'My Orders'" [breadcrumb]="'Orders'"></app-breadcrumb>
+
+<section class="section-b-space my-orders-page">
+  <div class="container">
+    <div *ngIf="!isLoggedIn" class="login-prompt orders-panel text-center p-5">
+      <h3>Please log in</h3>
+      <p class="orders-muted mb-4">Sign in with your email to see orders placed on this store.</p>
+      <button type="button" class="btn btn-solid" (click)="goToLogin()">Log In</button>
+    </div>
+
+    <div *ngIf="isLoggedIn">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 orders-page-header">
+        <h3 class="mb-0 orders-page-title">My Orders</h3>
+        <div class="orders-search-wrap">
+          <input
+            type="text"
+            class="form-control form-control-sm orders-search-input"
+            [formControl]="orderSearchControl"
+            placeholder="Search by order # or status"
+            aria-label="Search orders"
+          />
+        </div>
+        <span class="orders-muted" *ngIf="auth.getCustomerEmail()">{{ auth.getCustomerEmail() }}</span>
+      </div>
+
+      <div *ngIf="loading" class="text-center py-5 orders-muted">Loading orders…</div>
+
+      <div *ngIf="!loading && errorMessage" class="alert alert-danger orders-alert">{{ errorMessage }}</div>
+
+      <div *ngIf="!loading && !errorMessage && !orders.length" class="orders-panel text-center p-5">
+        <p class="mb-0 orders-muted">You have not placed any orders yet.</p>
+      </div>
+
+      <div *ngIf="!loading && orders.length" class="table-responsive orders-panel">
+        <table class="table mb-0 orders-table">
+          <thead>
+            <tr>
+              <th>Order #</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th class="text-end order-actions-col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of orders">
+              <td class="fw-semibold">{{ order.onlineOrderNumber }}</td>
+              <td>{{ formatDate(order.orderDate) }}</td>
+              <td>
+                <span
+                  class="order-status-badge"
+                  [style.background-color]="order.orderStatusColorCode || '#6c757d'">
+                  {{ statusLabel(order) }}
+                </span>
+              </td>
+              <td>{{ order.totalAmount | number:'1.2-2' }}</td>
+              <td>{{ order.paidAmount | number:'1.2-2' }}</td>
+              <td class="text-end order-actions">
+                <div ngbDropdown placement="bottom-end" container="body" class="order-actions-menu">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-order-more"
+                    ngbDropdownToggle
+                    aria-label="Order actions">
+                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                  </button>
+                  <div ngbDropdownMenu class="order-actions-dropdown shadow-lg">
+                    <button type="button" class="dropdown-item" (click)="showDetail(order)">
+                      <i class="fa fa-eye" aria-hidden="true"></i>
+                      <span>Show Detail</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="dropdown-item"
+                      [disabled]="isReceiptLoading(order.id)"
+                      (click)="downloadReceipt(order)">
+                      <i class="fa fa-download" aria-hidden="true"></i>
+                      <span>{{ isReceiptLoading(order.id) ? 'Preparing…' : 'Download Receipt' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="dropdown-item"
+                      [disabled]="isReceiptLoading(order.id)"
+                      (click)="previewReceipt(order)">
+                      <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                      <span>Preview Receipt</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="dropdown-item"
+                      (click)="trackOrder(order)">
+                      <i class="fa fa-history" aria-hidden="true"></i>
+                      <span>Track Order</span>
+                    </button>
+                    <button
+                      *ngIf="canRetryPayment(order)"
+                      type="button"
+                      class="dropdown-item dropdown-item-retry"
+                      [disabled]="isRetrying(order.id)"
+                      (click)="retryPayment(order)">
+                      <i class="fa fa-refresh" aria-hidden="true"></i>
+                      <span>{{ isRetrying(order.id) ? 'Redirecting…' : 'Retry Payment' }}</span>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!loading && totalCount > pageSize" class="d-flex justify-content-between align-items-center mt-4 orders-pagination">
+        <span class="orders-muted">
+          Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ (currentPage - 1) * pageSize + orders.length }} of {{ totalCount }}
+        </span>
+        <nav>
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage <= 1">
+              <button type="button" class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
+            </li>
+            <li class="page-item disabled">
+              <span class="page-link">{{ currentPage }} / {{ totalPages }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage >= totalPages">
+              <button type="button" class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+
+<ng-template #orderDetailModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" id="order-detail-modal-title">
+      Order {{ orderDetail?.onlineOrderNumber || 'Details' }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body order-detail-modal-body">
+    <div *ngIf="detailLoading" class="text-center py-4 orders-muted">Loading order details…</div>
+    <div *ngIf="!detailLoading && detailError" class="alert alert-danger mb-0">{{ detailError }}</div>
+
+    <div *ngIf="!detailLoading && orderDetail && !detailError">
+      <div class="order-detail-header mb-3">
+        <p class="orders-muted mb-2">
+          Placed on {{ formatShortDate(orderDetail.orderDate) }}
+        </p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span
+            class="order-status-badge"
+            [style.background-color]="orderDetail.orderStatusColorCode || '#6c757d'">
+            {{ orderDetail.orderStatusDisplayName || '—' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="order-detail-info-grid mb-4">
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Payment method</div>
+          <div class="order-detail-info-value">{{ orderDetail.paymentMethodName || '—' }}</div>
+        </div>
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Payment status</div>
+          <div class="order-detail-info-value">
+            {{ paymentStatusLabel(orderDetail.paymentStatus, orderDetail.paymentStatusName) }}
+          </div>
+        </div>
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Amount paid</div>
+          <div class="order-detail-info-value">{{ orderDetail.paidAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Remaining</div>
+          <div class="order-detail-info-value">{{ orderDetail.remainingAmount | number:'1.2-2' }}</div>
+        </div>
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Shipping method</div>
+          <div class="order-detail-info-value">{{ orderDetail.shippingMethodName || '—' }}</div>
+        </div>
+        <div class="order-detail-info-card">
+          <div class="order-detail-info-label">Delivery status</div>
+          <div class="order-detail-info-value">{{ deliveryStatusLabel(orderDetail.deliveryStatus) || '—' }}</div>
+        </div>
+      </div>
+
+      <div *ngIf="hasShipmentSection(orderDetail)" class="order-detail-shipment-section mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <h6 class="order-detail-section-title mb-0">Shipment</h6>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary"
+            *ngIf="canResyncDetailShipment()"
+            [disabled]="detailShipmentResyncLoading"
+            (click)="resyncDetailShipment()"
+          >
+            <i class="fa fa-refresh" [class.fa-spin]="detailShipmentResyncLoading"></i>
+            {{ detailShipmentResyncLoading ? 'Re-syncing…' : 'Re-sync tracking' }}
+          </button>
+        </div>
+        <div class="order-detail-shipment-grid">
+          <div>
+            <div class="order-detail-info-label">Tracking number</div>
+            <div class="order-detail-info-value">{{ orderDetail.shipment?.trackingNumber || '—' }}</div>
+          </div>
+          <div>
+            <div class="order-detail-info-label">Courier</div>
+            <div class="order-detail-info-value">{{ orderDetail.shipment?.courierName || '—' }}</div>
+          </div>
+          <div>
+            <div class="order-detail-info-label">Shipment status</div>
+            <div class="order-detail-info-value">
+              {{ orderDetail.shipment?.lastTrackingStatus || deliveryStatusLabel(orderDetail.shipment?.deliveryStatus) || '—' }}
+            </div>
+          </div>
+          <div>
+            <div class="order-detail-info-label">Last sync</div>
+            <div class="order-detail-info-value">{{ formatDate(orderDetail.shipment?.lastTrackingSyncAt || '') }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-3 orders-detail-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Unit</th>
+              <th class="text-end">Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of orderDetail.products">
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img [src]="productImage(line.productImageUrl)" alt="" class="order-detail-thumb" />
+                  <span>{{ line.productName }}</span>
+                </div>
+              </td>
+              <td class="text-center">{{ line.quantity }}</td>
+              <td class="text-end">{{ line.unitPrice | number:'1.2-2' }}</td>
+              <td class="text-end">{{ line.lineTotal | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="list-unstyled order-detail-totals mb-0">
+        <li class="d-flex justify-content-between">
+          <span>Subtotal</span>
+          <span>{{ orderDetail.subTotalAmount | number:'1.2-2' }}</span>
+        </li>
+        <li class="d-flex justify-content-between">
+          <span>Shipping ({{ orderDetail.shippingMethodName }})</span>
+          <span>{{ orderDetail.shippingCharges | number:'1.2-2' }}</span>
+        </li>
+        <li class="d-flex justify-content-between">
+          <span>Tax</span>
+          <span>{{ orderDetail.taxAmount | number:'1.2-2' }}</span>
+        </li>
+        <li *ngIf="(orderDetail.discountAmount || 0) > 0" class="d-flex justify-content-between">
+          <span>Discount</span>
+          <span>-{{ orderDetail.discountAmount | number:'1.2-2' }}</span>
+        </li>
+        <li class="d-flex justify-content-between">
+          <span>Paid</span>
+          <span>{{ orderDetail.paidAmount | number:'1.2-2' }}</span>
+        </li>
+        <li *ngIf="(orderDetail.remainingAmount || 0) > 0" class="d-flex justify-content-between">
+          <span>Remaining</span>
+          <span>{{ orderDetail.remainingAmount | number:'1.2-2' }}</span>
+        </li>
+        <li class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 order-detail-total-row">
+          <span>Total</span>
+          <span>{{ orderDetail.totalAmount | number:'1.2-2' }}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
+  </div>
+</ng-template>
+
+<ng-template #trackOrderModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" id="track-order-modal-title">
+      Track Order {{ trackingOrderNumber }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body order-tracking-modal-body">
+    <div *ngIf="trackingLoading" class="text-center py-4 orders-muted">Loading order status history…</div>
+    <div *ngIf="!trackingLoading && trackingError" class="alert alert-danger mb-0">{{ trackingError }}</div>
+
+    <div *ngIf="!trackingLoading && orderTimeline && !trackingError">
+      <div class="tracking-summary mb-4">
+        <div class="tracking-summary-label">Current status</div>
+        <div class="tracking-summary-value">
+          <span
+            class="order-status-badge"
+            [style.background-color]="orderTimeline.currentOrderStatusColorCode || '#6c757d'">
+            {{ orderTimeline.currentOrderStatusDisplayName || '—' }}
+          </span>
+        </div>
+      </div>
+
+      <h6 class="tracking-history-title mb-3">Order status</h6>
+      <div *ngIf="!orderTimeline.items?.length" class="orders-muted">No status updates yet.</div>
+      <div *ngIf="chronologicalTimelineItems.length" class="tracking-timeline-horizontal">
+        <ng-container *ngFor="let event of chronologicalTimelineItems; let last = last">
+          <div class="tracking-timeline-step">
+            <div class="tracking-timeline-step-card tracking-timeline-step-card--compact">
+              <span
+                *ngIf="event.orderStatusColorCode"
+                class="order-status-badge"
+                [style.background-color]="event.orderStatusColorCode">
+                {{ timelineStatusLabel(event) }}
+              </span>
+              <span *ngIf="!event.orderStatusColorCode" class="tracking-timeline-status">{{ timelineStatusLabel(event) }}</span>
+            </div>
+          </div>
+          <div *ngIf="!last" class="tracking-timeline-arrow" aria-hidden="true">→</div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
+  </div>
+</ng-template>

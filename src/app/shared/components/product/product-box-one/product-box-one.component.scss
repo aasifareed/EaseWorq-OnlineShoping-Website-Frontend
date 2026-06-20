@@ -206,3 +206,207 @@
   background: #8bc34a;
   border: 1px solid #8BC34A;
 }
+
+:host.product-box-one--list {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Shop list view — flex so price + button sit on far right */
+.shop-list-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 1rem 1.5rem;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  padding: 1rem 1.25rem;
+  background: var(--mc-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: 10px;
+  box-shadow: var(--mc-shadow);
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: var(--mc-hover);
+  }
+
+  .shop-list-card__image {
+    position: relative;
+    flex: 0 0 140px;
+    width: 140px;
+    height: 140px;
+    background: var(--mc-img-bg);
+    border: 1px solid var(--mc-border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+
+    a {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  &__ribbon {
+    top: 0 !important;
+    right: 0 !important;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mc-title);
+    text-decoration: none;
+    line-height: 1.45;
+
+    &:hover {
+      color: var(--theme-deafult, #ffc107);
+    }
+  }
+
+  .shop-list-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .shop-list-card__discount {
+    margin-bottom: 0 !important;
+  }
+
+  .shop-list-card__aside {
+    flex: 0 0 auto;
+    margin-left: auto !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: 180px;
+    padding-left: 0.5rem;
+    text-align: right;
+  }
+
+  .shop-list-card__prices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .shop-list-card__price-current {
+    font-size: 1.5rem !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    text-align: right !important;
+  }
+
+  .shop-list-card__price-old {
+    font-size: 0.875rem !important;
+    line-height: 1.2 !important;
+    text-align: right !important;
+  }
+
+  .shop-list-card__cart-btn {
+    width: auto !important;
+    min-width: 160px;
+    max-width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    margin: 0 !important;
+  }
+}
+
+.shop-list-stock-badge {
+  display: inline-flex;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &--in {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+  }
+
+  &--out {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+  }
+}
+
+@media (max-width: 991px) {
+  .shop-list-card {
+    flex-wrap: wrap;
+
+    .shop-list-card__image {
+      flex: 0 0 110px;
+      width: 110px;
+      height: 110px;
+    }
+
+    .shop-list-card__aside {
+      margin-left: auto !important;
+    }
+  }
+}
+
+@media (max-width: 575px) {
+  .shop-list-card {
+    flex-direction: column !important;
+    text-align: center;
+
+    .shop-list-card__image {
+      width: 100%;
+      max-width: 200px;
+      height: 160px;
+      margin: 0 auto;
+    }
+
+    .shop-list-card__body {
+      align-items: center;
+      text-align: center;
+      width: 100%;
+    }
+
+    .shop-list-card__aside {
+      margin-left: 0 !important;
+      align-items: center;
+      width: 100%;
+
+      .shop-list-card__prices {
+        align-items: center;
+      }
+    }
+
+    .shop-list-card__cart-btn {
+      width: 100% !important;
+    }
+  }
+}

@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength } from './checkout-validators';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { merge, Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, startWith, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from '../../shared/classes/product';
 import { ProductService } from '../../shared/services/product.service';
@@ -15,24 +16,45 @@ import {
   OnlineShopOrderService,
   OnlineShopPaymentMethod,
   OnlineShopShippingMethod,
+  CheckoutOrderAmounts,
   ONLINE_SHOP_PAYMENT_METHOD_LABELS,
   ONLINE_SHOP_SHIPPING_METHOD_LABELS,
   CheckoutFormValues,
   CreateOnlineShopSaleOrderResponse,
   CheckoutAddressFormValues
 } from '../../shared/services/online-shop-order.service';
+import {
+  AppliedShopCouponState,
+  CourierShippingOptionResult,
+  OnlineShopCheckoutService,
+  OnlineShopShippingRateResult
+} from '../../shared/services/online-shop-checkout.service';
+import { OnlineShopSettingsService } from '../../shared/services/online-shop-settings.service';
+import { OnlineShopStorefront } from '../../shared/models/online-shop-storefront.model';
 
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.scss']
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
+
+  /** Default storefront country until a country selector is added. */
+  private readonly defaultCountryCode = 'PK';
+
+  private readonly destroy$ = new Subject<void>();
+  private shippingRequestId = 0;
 
   public checkoutForm: UntypedFormGroup;
   public products: Product[] = [];
   public amount: any;
+  public cartSubtotal = 0;
   public loading = false;
+  public shippingLoading = false;
+  public shippingRate: OnlineShopShippingRateResult | null = null;
+  public selectedCourierOptionKey: string | null = null;
+  public appliedCoupon: AppliedShopCouponState | null = null;
+  public storefront: OnlineShopStorefront | null = null;
 
   public paymentMethod: OnlineShopPaymentMethod = OnlineShopPaymentMethod.GoPayFast;
   public shippingMethod: OnlineShopShippingMethod = OnlineShopShippingMethod.Shipping;
@@ -56,11 +78,13 @@ export class CheckoutComponent implements OnInit {
     private orderService: OrderService,
     private onlineShopOrder: OnlineShopOrderService,
     private auth: AuthService,
-    private payFast: PayFastPaymentService,
+        private payFast: PayFastPaymentService,
     private router: Router,
-    private toastr: ToastrService,
+  private toastr: ToastrService,
     private translate: TranslateService,
-  ) {
+    private onlineShopCheckout: OnlineShopCheckoutService,
+    private onlineShopSettings: OnlineShopSettingsService,
+  ) { 
     this.checkoutForm = this.fb.group({
       billing: this.createBillingAddressGroup(),
       shipping: this.createShippingAddressGroup(),
@@ -71,17 +95,163 @@ export class CheckoutComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.productService.cartItems.subscribe(response => this.products = response);
-    this.productService.cartTotalAmount().subscribe(amount => this.amount = amount);
+    // Fresh settings (not header menu) — includes collectShippingChargesOnCod.
+    this.onlineShopSettings.loadStorefront(true).subscribe((s) => {
+      this.storefront = s;
+      this.applyPaymentMethodDefaults();
+    });
+
+    this.productService.cartItems.subscribe(response => {
+      this.products = response;
+      this.refreshShippingRate();
+    });
+    this.productService.cartTotalAmount().subscribe(amount => {
+      this.amount = amount;
+      this.cartSubtotal = Number(amount) || 0;
+      this.refreshShippingRate();
+    });
+
+    this.productService.appliedCoupon$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((coupon) => {
+        this.appliedCoupon = coupon;
+      });
 
     this.checkoutForm.get('shipToDifferentAddress')?.valueChanges.subscribe((checked: boolean) => {
       this.setShippingValidators(!!checked);
       if (!checked) {
         this.shippingGroup.reset();
       }
+      this.refreshShippingRate();
     });
 
+    merge(
+      this.billingGroup.valueChanges.pipe(startWith(this.billingGroup.value)),
+      this.shippingGroup.valueChanges.pipe(startWith(this.shippingGroup.value))
+    )
+      .pipe(debounceTime(500), takeUntil(this.destroy$))
+      .subscribe(() => this.refreshShippingRate());
+
     this.prefillCheckoutCustomerDetails();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  courierOptionKey(option: CourierShippingOptionResult): string {
+    return `${option.courierCompany}|${option.courierServiceType}`;
+  }
+
+  onCourierOptionSelected(key: string): void {
+    this.selectedCourierOptionKey = key;
+    this.applySelectedCourierToRate();
+  }
+
+  isCourierOptionSelected(option: CourierShippingOptionResult): boolean {
+    return this.selectedCourierOptionKey === this.courierOptionKey(option);
+  }
+
+  serviceTypeLabel(serviceType: string): string {
+    const key = (serviceType ?? '').trim().toLowerCase();
+    const labels: Record<string, string> = {
+      overnight: 'Next-day delivery',
+      overland: 'Economy · 2–4 days',
+      detain: 'Standard delivery'
+    };
+    return labels[key] ?? serviceType;
+  }
+
+  courierAccentClass(company: string): string {
+    const key = (company ?? '').trim().toLowerCase().replace(/\s+/g, '-');
+    return `checkout-courier-card--${key || 'default'}`;
+  }
+
+  get shippingDestinationCity(): string {
+    const address = this.resolveShippingAddressForRate();
+    return address?.town?.trim() || 'your city';
+  }
+
+  get cartWeightKg(): number {
+    return this.onlineShopOrder.calculateCartWeightKg(this.products);
+  }
+
+  get selectedCourierOption(): CourierShippingOptionResult | null {
+    if (!this.selectedCourierOptionKey) {
+      return null;
+    }
+    return (
+      this.shippingCourierOptions.find(
+        (o) => this.courierOptionKey(o) === this.selectedCourierOptionKey
+      ) ?? null
+    );
+  }
+
+  onShippingMethodChange(method: OnlineShopShippingMethod): void {
+    this.shippingMethod = method;
+    if (method === OnlineShopShippingMethod.LocalPickup) {
+      this.clearShippingRate();
+      return;
+    }
+    this.refreshShippingRate();
+  }
+
+  get couponDiscount(): number {
+    return this.appliedCoupon?.result?.isValid ? this.appliedCoupon.result.discountAmount : 0;
+  }
+
+  get orderTotal(): number {
+    const shipping =
+      this.shippingMethod === OnlineShopShippingMethod.Shipping
+        ? this.shippingRate?.finalShippingAmount ?? 0
+        : 0;
+    const afterCoupon = this.appliedCoupon?.result?.isValid
+      ? this.appliedCoupon.result.payableAmountAfterDiscount
+      : this.cartSubtotal;
+    return Math.round((afterCoupon + shipping) * 100) / 100;
+  }
+
+  get showShippingBreakdown(): boolean {
+    return (
+      this.shippingMethod === OnlineShopShippingMethod.Shipping &&
+      !!this.shippingRate &&
+      !this.shippingLoading
+    );
+  }
+
+  /** COD with shipping collected online per store payment settings. */
+  get codCollectsShippingOnline(): boolean {
+    return !!(
+      this.storefront?.collectShippingChargesOnCod &&
+      this.storefront?.isCashOnDeliveryEnabled &&
+      this.storefront?.isGoPayFastEnabled &&
+      this.paymentMethod === OnlineShopPaymentMethod.CashOnDelivery &&
+      this.shippingMethod === OnlineShopShippingMethod.Shipping &&
+      (this.shippingRate?.finalShippingAmount ?? 0) > 0
+    );
+  }
+
+  get codRemainingOnDelivery(): number {
+    const shipping =
+      this.shippingMethod === OnlineShopShippingMethod.Shipping
+        ? this.shippingRate?.finalShippingAmount ?? 0
+        : 0;
+    return Math.max(0, Math.round((this.orderTotal - shipping) * 100) / 100);
+  }
+
+  get availablePaymentMethods(): OnlineShopPaymentMethod[] {
+    const methods: OnlineShopPaymentMethod[] = [];
+    if (this.storefront?.isCashOnDeliveryEnabled !== false) {
+      methods.push(OnlineShopPaymentMethod.CashOnDelivery);
+    }
+    if (this.storefront?.isGoPayFastEnabled) {
+      methods.push(OnlineShopPaymentMethod.GoPayFast);
+    }
+    if (!methods.length) {
+      methods.push(OnlineShopPaymentMethod.GoPayFast);
+    }
+    return methods;
   }
 
   /** Do not use checkoutForm.valid — disabled nested groups break it; validate billing + shipping explicitly. */
@@ -95,7 +265,20 @@ export class CheckoutComponent implements OnInit {
     if (this.shipToDifferentAddress && this.shippingGroup.invalid) {
       return false;
     }
+    if (this.shippingMethod === OnlineShopShippingMethod.Shipping) {
+      if (this.shippingLoading) {
+        return false;
+      }
+      const address = this.resolveShippingAddressForRate();
+      if (!this.isShippingAddressComplete(address)) {
+        return false;
+      }
+    }
     return true;
+  }
+
+  get shippingCourierOptions(): CourierShippingOptionResult[] {
+    return this.shippingRate?.availableOptions ?? [];
   }
 
   public get getTotal(): Observable<number> {
@@ -130,12 +313,32 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
+    if (
+      this.appliedCoupon?.couponCode &&
+      !this.appliedCoupon?.result?.isValid
+    ) {
+      this.toastr.warning('Please apply a valid coupon or remove it.');
+      return;
+    }
+
     this.loading = true;
     const formValue = this.buildCheckoutPayload();
+    const selectedCourier = this.selectedCourierOption;
+    const checkoutAmounts: CheckoutOrderAmounts = {
+      couponDiscountAmount: this.couponDiscount,
+      shippingCharges:
+        this.shippingMethod === OnlineShopShippingMethod.Shipping
+          ? this.shippingRate?.finalShippingAmount ?? 0
+          : 0,
+      selectedCourierCompany: selectedCourier?.courierCompany ?? this.shippingRate?.courierCompany ?? null,
+      selectedCourierServiceType: selectedCourier?.courierServiceType ?? this.shippingRate?.courierServiceType ?? null
+    };
     const orderRequest = this.onlineShopOrder.buildCreateOrderRequest(
       formValue,
       this.products,
-      this.paymentMethod
+      this.paymentMethod,
+      this.appliedCoupon,
+      checkoutAmounts
     );
 
     this.onlineShopOrder.createOrder(orderRequest).subscribe({
@@ -148,7 +351,17 @@ export class CheckoutComponent implements OnInit {
 
         this.onlineShopOrder.rememberPendingOrder(created);
 
-        if (this.paymentMethod === OnlineShopPaymentMethod.CashOnDelivery) {
+        const codShippingPrepay =
+          this.paymentMethod === OnlineShopPaymentMethod.CashOnDelivery &&
+          this.codCollectsShippingOnline;
+
+        const requiresOnlinePayment =
+          this.paymentMethod === OnlineShopPaymentMethod.GoPayFast ||
+          !!created.requiresOnlineShippingPayment ||
+          (created.amountDueNow != null && created.amountDueNow > 0) ||
+          codShippingPrepay;
+
+        if (!requiresOnlinePayment) {
           this.loading = false;
           this.persistCustomerProfileFromBilling(formValue.billing);
           this.clearCartAfterOrder();
@@ -157,23 +370,34 @@ export class CheckoutComponent implements OnInit {
         }
 
         const billing = formValue.billing;
+        const payAmount =
+          created.amountDueNow != null && created.amountDueNow > 0
+            ? created.amountDueNow
+            : codShippingPrepay
+              ? (this.shippingRate?.finalShippingAmount ?? 0)
+              : created.totalAmount;
         const payfastPayload: CreatePayFastCheckoutRequest = {
           orderId: created.onlineShopSaleOrderId,
           basketId: created.transactionReference || created.onlineShopSaleOrderId,
-          amount: created.totalAmount,
+          amount: payAmount,
           customerName: billing.customerName,
           customerEmail: billing.customerEmail,
           customerMobileNo: billing.customerMobileNo,
-          description: created.onlineOrderNumber
-            ? `Order ${created.onlineOrderNumber}`
-            : (formValue.description || 'Online shop order')
+          description: created.requiresOnlineShippingPayment
+            ? (created.onlineOrderNumber
+              ? `Shipping for order ${created.onlineOrderNumber}`
+              : 'COD shipping payment')
+            : (created.onlineOrderNumber
+              ? `Order ${created.onlineOrderNumber}`
+              : (formValue.description || 'Online shop order'))
         };
 
         this.payFast.createCheckout(payfastPayload).subscribe({
-          next: (res) => {
-            this.loading = false;
+      next: (res) => {
+        this.loading = false;
             this.persistCustomerProfileFromBilling(formValue.billing);
-            this.payFast.redirectToPayFast(res);
+            this.clearCartAfterOrder();
+        this.payFast.redirectToPayFast(res);
           },
           error: (err) => this.handleCheckoutError(err)
         });
@@ -276,8 +500,10 @@ export class CheckoutComponent implements OnInit {
   }
 
   private clearCartAfterOrder(): void {
-    this.productService.clearCart();
+    this.productService.clearCheckoutAfterOrder();
     this.products = [];
+    this.appliedCoupon = null;
+    this.shippingRate = null;
   }
 
   private handleCheckoutError(err: any): void {
@@ -355,6 +581,123 @@ export class CheckoutComponent implements OnInit {
 
     if (Object.keys(patch).length) {
       this.billingGroup.patchValue(patch);
+    }
+  }
+
+  private refreshShippingRate(): void {
+    if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+      return;
+    }
+
+    const address = this.resolveShippingAddressForRate();
+    if (!this.isShippingAddressComplete(address)) {
+      this.clearShippingRate();
+      return;
+    }
+
+    const requestId = ++this.shippingRequestId;
+    this.shippingLoading = true;
+
+    this.onlineShopCheckout
+      .getShippingRate({
+        countryCode: this.defaultCountryCode,
+        address: address.address.trim(),
+        city: address.town.trim(),
+        state: address.state.trim(),
+        postalCode: address.postalcode.trim(),
+        cartSubtotal: this.cartSubtotal,
+        cartWeight: this.onlineShopOrder.calculateCartWeightKg(this.products),
+        selectedCourierCompany: this.shippingRate?.courierCompany ?? null,
+        selectedCourierServiceType: this.shippingRate?.courierServiceType ?? null
+      })
+      .pipe(
+        catchError(() => of(null))
+      )
+      .subscribe((rate) => {
+        if (requestId !== this.shippingRequestId) {
+          return;
+        }
+        this.shippingLoading = false;
+
+        if (!rate || rate.ratesUnavailable) {
+          this.shippingRate = null;
+          this.selectedCourierOptionKey = null;
+          return;
+        }
+
+        this.shippingRate = rate;
+        this.syncCourierSelectionAfterRateLoad();
+      });
+  }
+
+  private syncCourierSelectionAfterRateLoad(): void {
+    const options = this.shippingCourierOptions;
+    if (!options.length) {
+      this.selectedCourierOptionKey = null;
+      return;
+    }
+
+    const previousKey = this.selectedCourierOptionKey;
+    if (previousKey && options.some((o) => this.courierOptionKey(o) === previousKey)) {
+      this.selectedCourierOptionKey = previousKey;
+    } else {
+      const recommended = options.find((o) => o.isRecommended) ?? options[0];
+      this.selectedCourierOptionKey = this.courierOptionKey(recommended);
+    }
+
+    this.applySelectedCourierToRate();
+  }
+
+  private applySelectedCourierToRate(): void {
+    if (!this.shippingRate || !this.selectedCourierOptionKey) {
+      return;
+    }
+
+    const selected = this.shippingCourierOptions.find(
+      (o) => this.courierOptionKey(o) === this.selectedCourierOptionKey
+    );
+    if (!selected) {
+      return;
+    }
+
+    this.shippingRate = {
+      ...this.shippingRate,
+      cargoOriginalAmount: selected.cargoOriginalAmount,
+      shippingDiscountAmount: selected.shippingDiscountAmount,
+      finalShippingAmount: selected.finalShippingAmount,
+      courierCompany: selected.courierCompany,
+      courierServiceType: selected.courierServiceType,
+      pickupLocationId: selected.pickupLocationId ?? this.shippingRate.pickupLocationId
+    };
+  }
+
+  private clearShippingRate(): void {
+    this.shippingRequestId++;
+    this.shippingRate = null;
+    this.shippingLoading = false;
+    this.selectedCourierOptionKey = null;
+  }
+
+  private resolveShippingAddressForRate(): CheckoutAddressFormValues {
+    if (this.shipToDifferentAddress) {
+      return this.shippingGroup.value as CheckoutAddressFormValues;
+    }
+    return this.billingGroup.value as CheckoutAddressFormValues;
+  }
+
+  private isShippingAddressComplete(address: CheckoutAddressFormValues): boolean {
+    return !!(
+      address?.address?.trim() &&
+      address?.town?.trim() &&
+      address?.state?.trim() &&
+      address?.postalcode?.trim()
+    );
+  }
+
+  private applyPaymentMethodDefaults(): void {
+    const methods = this.availablePaymentMethods;
+    if (!methods.includes(this.paymentMethod)) {
+      this.paymentMethod = methods[0];
     }
   }
 
