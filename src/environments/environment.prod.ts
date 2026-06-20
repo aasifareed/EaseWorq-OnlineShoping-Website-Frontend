@@ -3,9 +3,11 @@ export const environment = {
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
   baseUrl: '',
-  tenantId: 1,
+  devTenancyName: '',
+  tenantId: null as number | null,
   storeId: null as string | null,
   urls: {
+    Account_IsTenantAvailable: 'Account/IsTenantAvailable',
     OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:
       'OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop',
     OnlineShopAvailableProduct_GetProductDetailForOnlineShop:
@@ -13,6 +15,7 @@ export const environment = {
     OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop:
       'OnlineShopAvailableProduct/GetRelatedProductsForOnlineShop',
     OnlineShopBrand_GetBrandsListForOnline: 'OnlineShopBrand/GetBrandsListForOnline',
+    OnlineShopBrand_GetHomePopularBrandsForOnline: 'OnlineShopBrand/GetHomePopularBrandsForOnline',
     OnlineShopAvailableProduct_GetProductColorsListForOnline:
       'OnlineShopAvailableProduct/GetProductColorsListForOnline',
     OnlineShopAvailableProduct_GetProductSizesListForOnline:
@@ -21,10 +24,19 @@ export const environment = {
     OnlineShopWishlist_AddToWishlistForOnlineShop: 'OnlineShopWishlist/AddToWishlistForOnlineShop',
     OnlineShopWishlist_RemoveFromWishlistForOnlineShop:
       'OnlineShopWishlist/RemoveFromWishlistForOnlineShop',
+    OnlineShopCheckout_GetShippingRate: 'OnlineShopCheckout/GetShippingRate',
+    OnlineShopCheckout_ApplyCoupon: 'OnlineShopCheckout/ApplyCoupon',
     OnlineShopSaleOrder_CreateOnlineShopSaleOrder: 'OnlineShopSaleOrder/CreateOnlineShopSaleOrder',
     OnlineShopSaleOrder_GetForSuccessPage: 'OnlineShopSaleOrder/GetOnlineShopSaleOrderForSuccessPage',
     OnlineShopSaleOrder_GetMyOrders: 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrdersForCustomer',
     OnlineShopSaleOrder_GetMyOrderDetail: 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrderDetailForCustomer',
+    OnlineShopSaleOrder_GetMyOrderStatusTimeline: 'OnlineShopSaleOrder/GetMyOnlineShopOrderStatusTimelineForCustomer',
+    OnlineShopSaleOrder_GetOrderReceipt: 'OnlineShopSaleOrder/GetMyOrderReceiptHtml',
+    OnlineShopSaleOrder_DownloadOrderReceiptPdf: 'OnlineShopSaleOrder/DownloadMyOrderReceiptPdf',
+    OnlineShopSaleOrder_PreviewOrderReceiptPdf: 'OnlineShopSaleOrder/PreviewMyOrderReceiptPdf',
+    OnlineShopShipment_TrackOrder: 'OnlineShopShipment/TrackOrder',
+    OnlineShopShipment_SyncOrderTracking: 'OnlineShopShipment/SyncOrderTracking',
+    OnlineShopShipment_ResyncOrderTracking: 'OnlineShopShipment/ResyncOrderTracking',
     OnlinseShopUsers_SignupForOnlineShop: 'OnlinseShopUsers/SignupForOnlineShop',
     OnlinseShopUsers_ResetPasswordRequestForOnlineShop:
       'OnlinseShopUsers/ResetPasswordRequestForOnlineShop',
@@ -34,8 +46,14 @@ export const environment = {
     Page_GetActivePages: 'OnlineShopPage/GetActivePages',
     Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
     HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
+    Notification_GetAll: 'Notification/GetNotifications',
+    Notification_GetUnread: 'Notification/GetUnreadCustomerNotifications',
+    Notification_Update: 'Notification/UpdateNotification',
+    Notification_MarkAsRead: 'Notification/MarkCustomerNotificationAsRead',
     OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
     OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
+    OnlineShopSearch_GetSuggestions: 'OnlineShopSearch/GetSearchSuggestions',
+    OnlineShopTenant_GetTenantDetailsForWebsite: 'OnlineShopTenant/GetTenantDetailsForWebsite',
   },
   shop: {
     tenantId: '1',

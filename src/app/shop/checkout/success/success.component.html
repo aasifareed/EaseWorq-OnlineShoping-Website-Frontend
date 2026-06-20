@@ -66,6 +66,10 @@
                     <div class="total-sec">
                         <ul>
                             <li>Subtotal <span>{{ order.subTotalAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+                            <li *ngIf="order.discountAmount > 0" class="order-success-discount">
+                                Coupon discount
+                                <span>−{{ order.discountAmount | currency:productService?.Currency.currency:'symbol' }}</span>
+                            </li>
                             <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | currency:productService?.Currency.currency:'symbol' }}</span></li>
                             <li>Tax <span>{{ order.taxAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
                         </ul>

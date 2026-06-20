@@ -2,9 +2,26 @@
   <ng-container *ngFor="let logo of logos">
     <ng-template carouselSlide>
       <div class="product-image">
-        <a [routerLink]="'/home/fashion'">
-          <img [src]="logo.image" alt="logo" />
+        <a *ngIf="logo.id; else staticLogoLink"
+          [routerLink]="['/shop/collection/left/sidebar']"
+          [queryParams]="{ brand: logo.id }"
+          class="brand-logo-link">
+          <img *ngIf="!isPlaceholderImage(logo.image)"
+               [src]="logo.image"
+               [alt]="logo.name || 'brand'" />
+          <span *ngIf="isPlaceholderImage(logo.image)" class="brand-logo-fallback">
+            {{ logo.name }}
+          </span>
+          <span *ngIf="logo.name && !isPlaceholderImage(logo.image)" class="brand-logo-name">
+            {{ logo.name }}
+          </span>
         </a>
+        <ng-template #staticLogoLink>
+          <a [routerLink]="'/home/fashion'" class="brand-logo-link">
+            <img [src]="logo.image" [alt]="logo.name || 'logo'" />
+            <span *ngIf="logo.name" class="brand-logo-name">{{ logo.name }}</span>
+          </a>
+        </ng-template>
       </div>
     </ng-template>
   </ng-container>

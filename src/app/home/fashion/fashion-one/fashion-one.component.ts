@@ -3,7 +3,6 @@ import { ProductSlider } from '../../../shared/data/slider';
 import { Product } from '../../../shared/classes/product';
 import { ProductService } from '../../../shared/services/product.service';
 import { HomeCategorySliderView } from '../../../shared/models/home-category-slider.model';
-import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-fashion-one',
@@ -17,6 +16,8 @@ export class FashionOneComponent implements OnInit {
   public active: any;
   public categorySliders: HomeCategorySliderView[] = [];
   public loadingCategorySliders = true;
+  public popularBrandLogos: { id: string; name: string; image: string }[] = [];
+  public loadingPopularBrands = true;
 
   constructor(public productService: ProductService) {
     this.productService.getProducts.subscribe(response => {
@@ -81,42 +82,15 @@ export class FashionOneComponent implements OnInit {
     by: 'John Dio'
   }];
 
-  public logo = [{
-    image: 'https://microless.com/cdn/brands/1537eb5e996940fee59e6c8ff6619038.jpg',
-  }, {
-    image: 'https://microless.com/cdn/brands/f5d5620fadf9ce34c57d1460b0a79f45.jpg',
-  }, {
-    image: 'https://microless.com/cdn/brands/f66720f69165dd8b69e439898adb76b7.jpg',
-  }, {
-    image: 'https://microless.com/cdn/brands/lenovo.png',
-  }, {
-    image: 'https://microless.com/cdn/brands/ecb4d872605d44b0bbec96af20a49e4a.jpg',
-  }, {
-    image: 'https://microless.com/cdn/brands/a81b48490fb7d737446ca2959514ac4d.jpg',
-  }, {
-    image: 'https://microless.com/cdn/brands/razer.png',
-  },
-   {
-    image: 'https://microless.com/cdn/brands/samsung.png',
-  },
-   {
-    image: 'https://microless.com/cdn/brands/64484e27547b338983f00e7d270a6bf2.jpg',
-  },
-   {
-    image: 'https://microless.com/cdn/brands/f9b38108e142f20ed569481ddcec24f0.jpg',
-  },
-];
-
   ngOnInit(): void {
     this.loadCategorySliders();
+    this.loadPopularBrands();
   }
 
   private loadCategorySliders(): void {
-    const tenantId = Number(environment.tenantId ?? environment.shop?.tenantId ?? 1);
-    const storeId = String(environment.storeId ?? environment.shop?.storeId ?? '');
     this.loadingCategorySliders = true;
     this.productService
-      .getHomePopularCategoryProductSliders({ tenantId, storeId, productLimitPerCategory: 10 })
+      .getHomePopularCategoryProductSliders({ productLimitPerCategory: 10 })
       .subscribe({
         next: (sliders) => {
           this.categorySliders = (sliders || []).map((s) => ({
@@ -136,6 +110,20 @@ export class FashionOneComponent implements OnInit {
           this.loadingCategorySliders = false;
         }
       });
+  }
+
+  private loadPopularBrands(): void {
+    this.loadingPopularBrands = true;
+    this.productService.getHomePopularBrandsForOnline({ maxResultCount: 20 }).subscribe({
+      next: (brands) => {
+        this.popularBrandLogos = brands || [];
+        this.loadingPopularBrands = false;
+      },
+      error: () => {
+        this.popularBrandLogos = [];
+        this.loadingPopularBrands = false;
+      }
+    });
   }
 
   getCollectionProducts(collection: any[]) {

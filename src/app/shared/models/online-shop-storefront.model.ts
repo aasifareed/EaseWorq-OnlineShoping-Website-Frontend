@@ -32,6 +32,8 @@ export interface OnlineShopStorefront {
   estimatedDeliveryDays?: number;
   isSameDayDeliveryEnabled: boolean;
   isCashOnDeliveryEnabled: boolean;
+  /** When true, COD checkout collects shipping via PayFast before order confirmation. */
+  collectShippingChargesOnCod: boolean;
   isGoPayFastEnabled: boolean;
   receiptFooterText?: string;
   metaTitle?: string;

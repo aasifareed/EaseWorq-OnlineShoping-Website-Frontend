@@ -204,11 +204,19 @@
                     </div>
                 </div>
             </div>
-            <div class="d-flex justify-content-end g-2">
-                <h3>Total price :</h3>
-                <!-- <td> -->
-                <h3> {{ getTotal | async | currency:productService?.Currency.currency:'symbol'}}</h3>
-                <!-- </td> -->
+            <div class="cart-summary-totals text-end">
+                <div class="cart-summary-totals__row">
+                    <span>Subtotal</span>
+                    <strong>{{ cartSubtotal | currency:productService?.Currency.currency:'symbol' }}</strong>
+                </div>
+                <div class="cart-summary-totals__row cart-summary-totals__row--discount" *ngIf="couponDiscount > 0">
+                    <span>Coupon discount</span>
+                    <strong>−{{ couponDiscount | currency:productService?.Currency.currency:'symbol' }}</strong>
+                </div>
+                <div class="cart-summary-totals__row cart-summary-totals__row--total">
+                    <span>Total price</span>
+                    <strong>{{ cartPayableTotal | currency:productService?.Currency.currency:'symbol' }}</strong>
+                </div>
             </div>
         </div>
 
@@ -229,9 +237,19 @@
                     <div class="collapse coupon-collapse mt-2" id="couponCollapse">
                         <div class="input-group">
                             <input type="text" class="form-control form-control-sm cart-promo-input"
-                                placeholder="Enter code" />
-                            <button class="btn btn-primary btn-sm px-3">Apply</button>
+                                placeholder="Enter code"
+                                [(ngModel)]="couponCodeInput"
+                                [disabled]="couponApplying" />
+                            <button type="button" class="btn btn-primary btn-sm px-3"
+                                (click)="applyCoupon()"
+                                [disabled]="couponApplying">
+                                {{ couponApplying ? '…' : 'Apply' }}
+                            </button>
                         </div>
+                        <p class="cart-coupon-applied small mb-0 mt-2" *ngIf="appliedCoupon?.result?.isValid">
+                            {{ appliedCoupon?.result?.couponTitle || appliedCoupon?.couponCode }} applied.
+                            <a href="javascript:void(0)" (click)="clearCoupon()">Remove</a>
+                        </p>
                     </div>
                 </div>
 

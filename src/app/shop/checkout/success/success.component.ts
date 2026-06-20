@@ -31,7 +31,7 @@ export class SuccessComponent implements OnInit {
       return;
     }
 
-    this.productService.clearCart();
+    this.productService.clearCheckoutAfterOrder();
     sessionStorage.removeItem('pending_online_shop_order_id');
     sessionStorage.removeItem('pending_online_shop_order_number');
 

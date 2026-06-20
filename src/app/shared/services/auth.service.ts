@@ -4,12 +4,15 @@ import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { ShopContextService } from './shop-context.service';
+import { TenantService } from './tenant.service';
 
 export interface ShopAuthSession {
   accessToken: string;
   encryptedAccessToken?: string;
   expireInSeconds?: number;
-  userId?: number;
+  /** Stored as string — ABP user ids exceed JS Number.MAX_SAFE_INTEGER. */
+  userId?: string;
   onlineStoreId?: string;
 }
 
@@ -40,6 +43,7 @@ export interface ShopCustomerProfile {
 })
 export class AuthService {
   private static readonly TOKEN_KEY = 'shop_auth_token';
+  private static readonly ENCRYPTED_TOKEN_KEY = 'shop_auth_encrypted_token';
   private static readonly USER_ID_KEY = 'shop_auth_user_id';
   private static readonly EMAIL_KEY = 'shop_customer_email';
   private static readonly PROFILE_KEY = 'shop_customer_profile';
@@ -47,7 +51,12 @@ export class AuthService {
   private static readonly TENANT_KEY = 'shop_tenant_id';
   private static readonly TENANCY_NAME_KEY = 'shop_tenancy_name';
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private shopContext: ShopContextService,
+    private tenantService: TenantService,
+  ) {}
 
   private apiRoot(): string {
     const b = environment.baseUrl || '';
@@ -55,23 +64,18 @@ export class AuthService {
   }
 
   get tenantId(): number {
-    const fromStorage = localStorage.getItem(AuthService.TENANT_KEY);
-    if (fromStorage) {
-      return +fromStorage;
-    }
-    return +(environment.shop?.tenantId ?? 1);
+    return this.tenantService.snapshot?.tenantId ?? this.shopContext.resolveTenantId();
   }
 
   get storeId(): string {
-    return localStorage.getItem(AuthService.STORE_KEY)
-      || environment.shop?.storeId
-      || 'd4d292f5-de72-4742-b728-ea34a1706191';
+    return this.tenantService.snapshot?.storeId ?? this.shopContext.resolveStoreId();
   }
 
   get tenancyName(): string {
-    return localStorage.getItem(AuthService.TENANCY_NAME_KEY)
-      || environment.shop?.tenancyName
-      || 'AK Mobile Shop';
+    return this.tenantService.snapshot?.tenancyName
+      || this.shopContext.getTenancyName()
+      || environment.devTenancyName
+      || '';
   }
 
   isLoggedIn(): boolean {
@@ -85,9 +89,16 @@ export class AuthService {
     return localStorage.getItem(AuthService.TOKEN_KEY);
   }
 
-  getUserId(): number | null {
-    const raw = localStorage.getItem(AuthService.USER_ID_KEY);
-    return raw ? +raw : null;
+  getEncryptedToken(): string | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    return localStorage.getItem(AuthService.ENCRYPTED_TOKEN_KEY);
+  }
+
+  getUserId(): string | null {
+    const raw = localStorage.getItem(AuthService.USER_ID_KEY)?.trim();
+    return raw || null;
   }
 
   getCustomerEmail(): string | null {
@@ -115,6 +126,49 @@ export class AuthService {
     return null;
   }
 
+  private decodeJwtPayload(token: string): Record<string, unknown> {
+    const base64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+    if (!base64) {
+      return {};
+    }
+    return JSON.parse(atob(base64)) as Record<string, unknown>;
+  }
+
+  /** JWT sub/nameidentifier is a string and preserves large ABP user ids. */
+  getUserIdFromAccessToken(token?: string | null): string | null {
+    const rawToken = token ?? this.getToken();
+    if (!rawToken) {
+      return null;
+    }
+
+    try {
+      const payload = this.decodeJwtPayload(rawToken);
+      const id =
+        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+        ?? payload.sub
+        ?? payload.nameid
+        ?? payload.userId
+        ?? payload.UserId;
+
+      const normalized = id != null ? String(id).trim() : '';
+      return /^\d+$/.test(normalized) ? normalized : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Re-sync localStorage user id from JWT (fixes precision loss from API numeric userId). */
+  syncUserIdFromToken(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+
+    const fromToken = this.getUserIdFromAccessToken();
+    if (fromToken) {
+      localStorage.setItem(AuthService.USER_ID_KEY, fromToken);
+    }
+  }
+
   private getEmailFromAccessToken(): string | null {
     const token = this.getToken();
     if (!token) {
@@ -122,11 +176,7 @@ export class AuthService {
     }
 
     try {
-      const base64 = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
-      if (!base64) {
-        return null;
-      }
-      const payload = JSON.parse(atob(base64));
+      const payload = this.decodeJwtPayload(token);
       const email =
         payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
         ?? payload.email
@@ -297,10 +347,18 @@ export class AuthService {
     return this.http.post<any>(`${this.apiRoot()}api/TokenAuth/AuthenticateForOnlineShop`, body).pipe(
       map((resp) => {
         const data = resp?.result ?? resp;
-        if (!data?.accessToken) {
+        const accessToken = data?.accessToken ?? data?.AccessToken;
+        const session: ShopAuthSession = {
+          accessToken,
+          encryptedAccessToken: data?.encryptedAccessToken ?? data?.EncryptedAccessToken,
+          expireInSeconds: data?.expireInSeconds ?? data?.ExpireInSeconds,
+          userId: this.getUserIdFromAccessToken(accessToken),
+          onlineStoreId: data?.onlineStoreId ?? data?.OnlineStoreId
+        };
+        if (!session.accessToken) {
           throw { error: { message: data?.message || 'Login failed. Please check your credentials.' } };
         }
-        return data as ShopAuthSession;
+        return session;
       }),
       tap((session) => this.persistSession(session, email.trim())),
       switchMap((session) =>
@@ -348,11 +406,15 @@ export class AuthService {
 
   persistSession(session: ShopAuthSession, customerEmail?: string): void {
     localStorage.setItem(AuthService.TOKEN_KEY, session.accessToken);
+    if (session.encryptedAccessToken) {
+      localStorage.setItem(AuthService.ENCRYPTED_TOKEN_KEY, session.encryptedAccessToken);
+    }
     if (customerEmail) {
       localStorage.setItem(AuthService.EMAIL_KEY, customerEmail);
     }
-    if (session.userId != null) {
-      localStorage.setItem(AuthService.USER_ID_KEY, String(session.userId));
+    const userId = session.userId ?? this.getUserIdFromAccessToken(session.accessToken);
+    if (userId) {
+      localStorage.setItem(AuthService.USER_ID_KEY, userId);
     }
     if (session.onlineStoreId) {
       localStorage.setItem(AuthService.STORE_KEY, String(session.onlineStoreId));
@@ -365,13 +427,21 @@ export class AuthService {
   }
 
   seedShopContextFromEnvironment(): void {
-    localStorage.setItem(AuthService.STORE_KEY, environment.shop?.storeId || this.storeId);
-    localStorage.setItem(AuthService.TENANT_KEY, String(environment.shop?.tenantId ?? 1));
-    localStorage.setItem(AuthService.TENANCY_NAME_KEY, environment.shop?.tenancyName || 'AK Mobile Shop');
+    if (this.tenantService.snapshot?.resolved) {
+      if (this.isLoggedIn()) {
+        this.syncUserIdFromToken();
+      }
+      return;
+    }
+
+    if (this.isLoggedIn()) {
+      this.syncUserIdFromToken();
+    }
   }
 
   logout(navigateToLogin = false): void {
     localStorage.removeItem(AuthService.TOKEN_KEY);
+    localStorage.removeItem(AuthService.ENCRYPTED_TOKEN_KEY);
     localStorage.removeItem(AuthService.USER_ID_KEY);
     localStorage.removeItem(AuthService.EMAIL_KEY);
     localStorage.removeItem(AuthService.PROFILE_KEY);

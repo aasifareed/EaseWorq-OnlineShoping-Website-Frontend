@@ -11,8 +11,8 @@ import {
 } from '../models/online-shop-header-menu.model';
 import { Menu } from './nav.service';
 import { Product } from '../classes/product';
-import { AuthService } from './auth.service';
 import { ProductService } from './product.service';
+import { TenantService } from './tenant.service';
 
 const MAX_POPULAR_PRODUCTS = 20;
 
@@ -22,17 +22,21 @@ const MAX_POPULAR_PRODUCTS = 20;
 export class OnlineShopHeaderMenuService {
   constructor(
     private http: HttpClient,
-    private auth: AuthService,
+    private tenantService: TenantService,
     private productService: ProductService,
   ) {}
 
   loadHeaderMenuItems(): Observable<Menu[]> {
-    return forkJoin({
-      header: this.fetchHeaderMenu(),
-      categories: this.fetchCategoryTree(),
-    }).pipe(
-      switchMap(({ header, categories }) => this.buildMenuItems(header.dropdowns, categories)),
-      catchError(() => of([])),
+    return this.tenantService.whenReady().pipe(
+      switchMap(() =>
+        forkJoin({
+          header: this.fetchHeaderMenu(),
+          categories: this.fetchCategoryTree(),
+        }).pipe(
+          switchMap(({ header, categories }) => this.buildMenuItems(header.dropdowns, categories)),
+          catchError(() => of([])),
+        ),
+      ),
     );
   }
 
@@ -47,7 +51,7 @@ export class OnlineShopHeaderMenuService {
 
   private fetchCategoryTree(): Observable<CategoryTreeNode[]> {
     const tenantId = this.resolveTenantId();
-    const storeId = environment.storeId ?? environment.shop?.storeId ?? '';
+    const storeId = this.resolveStoreId();
     const url = `${this.apiUrl(
       environment.urls.OnlineShopProductGroup_GetHierarchyForOnline,
     )}?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
@@ -82,8 +86,8 @@ export class OnlineShopHeaderMenuService {
           const groupId = dropdown.productGroupId!;
           const node = this.findCategoryById(categoryTree, groupId);
           const categoryLabel = this.toDisplayName(
-            dropdown.categoryName,
             node?.title,
+            dropdown.categoryName,
             `Category ${dropdown.slot}`,
           );
           const title = categoryLabel.toUpperCase();
@@ -226,7 +230,7 @@ export class OnlineShopHeaderMenuService {
 
   private fetchProductsForCategory(categoryId: string): Observable<Product[]> {
     const tenantId = this.resolveTenantId();
-    const storeId = environment.storeId ?? environment.shop?.storeId ?? '';
+    const storeId = this.resolveStoreId();
     const path = `${environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop}?TenantId=${tenantId}&StoreId=${encodeURIComponent(
       storeId,
     )}&CategoryId=${encodeURIComponent(categoryId)}&maxResultCount=${MAX_POPULAR_PRODUCTS}&skipCount=0&ShopSortBy=ascending`;
@@ -306,7 +310,11 @@ export class OnlineShopHeaderMenuService {
   }
 
   private resolveTenantId(): number {
-    return this.auth.tenantId || environment.tenantId || 1;
+    return this.tenantService.snapshot?.tenantId ?? 0;
+  }
+
+  private resolveStoreId(): string {
+    return this.tenantService.snapshot?.storeId ?? '';
   }
 
   private apiUrl(path: string): string {

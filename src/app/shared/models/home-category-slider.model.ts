@@ -24,6 +24,9 @@ export interface AvailableProductInventoryDtoForOnlineShop {
   productTaxesId?: string[];
   pictureUrl?: string;
   pictureUrls?: string[];
+  productUnitStock?: number;
+  productQuantityPerUnit?: number;
+  isAvailable?: boolean;
 }
 
 export interface HomeCategorySliderDto {

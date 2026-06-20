@@ -40,6 +40,7 @@ import { WishlistComponent } from './wishlist/wishlist.component';
 import { CompareComponent } from './compare/compare.component';
 import { CheckoutComponent } from './checkout/checkout.component';
 import { SuccessComponent } from './checkout/success/success.component';
+import { FailureComponent } from './checkout/failure/failure.component';
 
 import {RouterModule} from '@angular/router';
 
@@ -72,6 +73,7 @@ import {RouterModule} from '@angular/router';
     CompareComponent,
     CheckoutComponent,
     SuccessComponent,
+    FailureComponent,
   ],
   imports: [
     CommonModule,

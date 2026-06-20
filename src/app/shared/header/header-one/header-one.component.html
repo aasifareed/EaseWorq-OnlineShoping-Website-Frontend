@@ -169,11 +169,113 @@
         </div>
 
         <div class="col px-lg-5">
-          <div class="search-wrapper d-flex">
-            <input type="text" class="form-control" placeholder="What are you looking for?">
-            <button class="btn btn-warning">
+          <div class="header-search search-wrapper d-flex position-relative">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="What are you looking for?"
+              [(ngModel)]="searchText"
+              (input)="onSearchInput()"
+              (keydown)="onSearchKeydown($event)"
+              autocomplete="off"
+              aria-label="Search products and categories"
+            />
+            <button type="button" class="btn btn-warning header-search-submit" (click)="submitSearch()" aria-label="Search">
               <i class="fa fa-search"></i>
             </button>
+
+            <div
+              class="header-search-dropdown"
+              [class.header-search-dropdown--dark]="isDarkMode"
+              *ngIf="searchDropdownOpen && searchText.trim().length >= 2"
+            >
+              <div class="header-search-dropdown__loading" *ngIf="searchLoading">Searching…</div>
+
+              <ng-container *ngIf="!searchLoading">
+                <div class="header-search-dropdown__empty" *ngIf="!hasSearchResults">
+                  No results found
+                </div>
+
+                <div class="header-search-dropdown__section" *ngIf="searchSuggestions.products.length">
+                  <div class="header-search-dropdown__title">Products</div>
+                  <div
+                    class="header-search-dropdown__product-row"
+                    *ngFor="let item of searchSuggestions.products"
+                  >
+                    <button
+                      type="button"
+                      class="header-search-dropdown__item header-search-dropdown__item-main"
+                      (click)="selectProductSuggestion(item)"
+                    >
+                      <span class="header-search-dropdown__item-inner">
+                        <img [src]="resolveSuggestionImage(item.imageUrl)" [alt]="item.name" class="header-search-dropdown__thumb" />
+                        <span class="header-search-dropdown__body">
+                          <span class="header-search-dropdown__name" [title]="item.name">{{ item.name }}</span>
+                          <span class="header-search-dropdown__desc" *ngIf="item.description" [title]="item.description">
+                            {{ item.description }}
+                          </span>
+                          <span class="header-search-dropdown__meta">
+                            <span *ngIf="item.categoryName">{{ item.categoryName }}</span>
+                            <span *ngIf="item.categoryName && formatSuggestionPrice(item.price)"> · </span>
+                            <span *ngIf="formatSuggestionPrice(item.price)" class="header-search-dropdown__price">
+                              {{ formatSuggestionPrice(item.price) }}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                    <div class="header-search-dropdown__actions">
+                      <button
+                        type="button"
+                        class="header-search-dropdown__related-btn"
+                        title="Show related products"
+                        [attr.aria-label]="'Related products for ' + item.name"
+                        (click)="openRelatedProducts(item, $event)"
+                      >
+                        <i class="fa fa-th-large" aria-hidden="true"></i>
+                        <span class="header-search-dropdown__related-btn-label">Related</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="header-search-dropdown__cart-btn"
+                        [class.header-search-dropdown__cart-btn--disabled]="isSuggestionOutOfStock(item)"
+                        [class.header-search-dropdown__cart-btn--added]="isSuggestionJustAdded(item)"
+                        [class.header-search-dropdown__cart-btn--max]="hasSuggestionReachedStockLimit(item)"
+                        [attr.aria-label]="getSuggestionCartBtnLabel(item) + ' ' + item.name"
+                        (click)="addSuggestionToCart(item, $event)"
+                      >
+                        <i class="fa"
+                           [ngClass]="isSuggestionJustAdded(item) ? 'fa-check' : (hasSuggestionReachedStockLimit(item) ? 'fa-exclamation-circle' : 'fa-shopping-cart')"
+                           aria-hidden="true"></i>
+                        <span class="header-search-dropdown__cart-btn-label">{{ getSuggestionCartBtnLabel(item) }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="header-search-dropdown__section" *ngIf="searchSuggestions.categories.length">
+                  <div class="header-search-dropdown__title">Categories</div>
+                  <button
+                    type="button"
+                    class="header-search-dropdown__item"
+                    *ngFor="let item of searchSuggestions.categories"
+                    (click)="selectCategorySuggestion(item)"
+                  >
+                    <span class="header-search-dropdown__item-inner">
+                      <span class="header-search-dropdown__icon"><i class="fa fa-folder-open-o"></i></span>
+                      <span class="header-search-dropdown__body">
+                        <span class="header-search-dropdown__name" [title]="resolveCategoryDisplayName(item)">
+                          {{ resolveCategoryDisplayName(item) }}
+                        </span>
+                        <span class="header-search-dropdown__meta" *ngIf="resolveCategoryMeta(item) as meta">
+                          {{ meta }}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </ng-container>
+            </div>
           </div>
         </div>
 
@@ -201,6 +303,59 @@
             <div  [routerLink]="['/shop/wishlist']" class="px-3 text-center border-end border-secondary-subtle pointer">
               <i class="fa fa-heart-o fs-5 header-action-icon"></i>
               <span class="d-block label header-action-label">WISHLIST</span>
+            </div>
+
+            <div
+              *ngIf="isLoggedIn"
+              class="px-3 text-center border-end border-secondary-subtle header-notifications"
+              ngbDropdown
+              placement="bottom-end">
+              <div class="badge-top-container position-relative">
+                <span
+                  *ngIf="signalRService.unreadCount > 0"
+                  class="badge p-0 position-absolute bg-danger rounded-circle header-notify-badge">
+                  {{ signalRService.unreadCount > 99 ? '99+' : signalRService.unreadCount }}
+                </span>
+                <i ngbDropdownToggle class="fa fa-bell-o fs-5 header-action-icon" role="button" tabindex="0"></i>
+                <span class="d-block label header-action-label">ALERTS</span>
+              </div>
+              <div ngbDropdownMenu class="notification-dropdown shadow-lg">
+                <div class="notification-dropdown-header">
+                  <span class="notification-dropdown-title">Alerts</span>
+                  <span
+                    *ngIf="signalRService.unreadCount > 0"
+                    class="notification-dropdown-count">
+                    {{ signalRService.unreadCount }} new
+                  </span>
+                </div>
+                <div class="notification-dropdown-body">
+                  <div class="notification-empty" *ngIf="!signalRService.signalrNotifications.length">
+                    <i class="fa fa-bell-o" aria-hidden="true"></i>
+                    <span>No new notifications</span>
+                  </div>
+                  <div
+                    class="notification-item"
+                    *ngFor="let item of signalRService.signalrNotifications"
+                    (click)="readNotification(item)"
+                    [class.notification-item--unread]="!item.isRead">
+                    <div class="notification-icon">
+                      <i class="fa {{ item.icon }} notification-icon-symbol notification-icon-symbol--{{ item.status }}" aria-hidden="true"></i>
+                    </div>
+                    <div class="notification-details">
+                      <div class="notification-meta">
+                        <span class="notification-title">{{ item.title }}</span>
+                        <span class="notification-time">{{ item.time | relativeTime }}</span>
+                      </div>
+                      <p class="notification-text">{{ item.text }}</p>
+                      <span
+                        *ngIf="item.badge"
+                        class="notification-status notification-status--{{ item.status }}">
+                        {{ item.badge }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <a class="px-3 text-center header-cart-link text-decoration-none" [routerLink]="['/shop/cart']"
@@ -265,7 +420,8 @@
         <app-menu></app-menu>
       </div>
 
-      <a [routerLink]="['/pages/my-orders']" class="nav-orders-link ms-auto px-4 text-dark fw-bold text-decoration-none">
+      <a [routerLink]="['/pages/my-orders']" class="nav-orders-link ms-auto px-4 text-dark fw-bold text-decoration-none d-flex align-items-center">
+        <i class="fa fa-list-alt me-2" aria-hidden="true"></i>
         ORDERS
       </a>
     </div>

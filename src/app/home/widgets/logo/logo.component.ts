@@ -17,4 +17,14 @@ export class LogoComponent implements OnInit {
 
   public LogoSliderConfig: any = LogoSlider;
 
+  isPlaceholderImage(imageUrl?: string): boolean {
+    if (!imageUrl) {
+      return true;
+    }
+    const normalized = imageUrl.toLowerCase();
+    return normalized.includes('default-image')
+      || normalized.includes('defaultattachments')
+      || normalized.includes('placeholder');
+  }
+
 }

@@ -47,6 +47,13 @@ export class PayFastPaymentService {
     );
   }
 
+  retryCheckout(orderId: string): Observable<PayFastCheckoutResponse> {
+    const url = `${this.apiRoot()}api/services/app/OnlineShopPayment/RetryCheckout`;
+    return this.http.post<AbpAjaxResponse<PayFastCheckoutResponse> | PayFastCheckoutResponse>(url, { orderId }).pipe(
+      map((body) => this.normalizeCheckoutResponse(body))
+    );
+  }
+
   /**
    * POST browser form to PayFast hosted page (formUrl) with hidden fields.
    * Accepts either flat `{ formUrl, fields }` or ABP `{ result: { formUrl, fields } }`.

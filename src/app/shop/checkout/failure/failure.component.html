@@ -1,0 +1,144 @@
+<app-breadcrumb [title]="'Payment failed'" [breadcrumb]="'Payment failed'" *ngIf="!loading && (order || notFound)"></app-breadcrumb>
+
+<section class="p-0" *ngIf="loading">
+  <div class="container py-5 text-center payment-failure-page">
+    <p>Loading payment details…</p>
+  </div>
+</section>
+
+<section class="p-0 payment-failure-page" *ngIf="!loading && loadError && !order">
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="failure-hero failure-hero--notfound">
+          <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+          <h2>{{ notFound ? 'Payment session not found' : 'Order not found' }}</h2>
+          <p *ngIf="notFound">We could not match this payment return to an order. Your cart items may still be available.</p>
+          <p *ngIf="!notFound">The order linked to this payment could not be loaded.</p>
+          <div class="failure-actions">
+            <a [routerLink]="'/shop/collection/left/sidebar'" class="btn btn-solid">Continue shopping</a>
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">My orders</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-b-space light-layout payment-failure-page" *ngIf="!loading && order">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="failure-hero">
+          <i class="fa fa-times-circle" aria-hidden="true"></i>
+          <h2>Payment failed</h2>
+          <p>Your order was created but the online payment did not complete.</p>
+          <p>Order #: <strong>{{ order.onlineOrderNumber }}</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-b-space payment-failure-page" *ngIf="!loading && order">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-12">
+        <div class="failure-error-card">
+          <h3>Payment error</h3>
+          <p class="failure-error-message">{{ order.gatewayResponseMessage || 'Payment was not completed.' }}</p>
+          <ul class="failure-error-meta" *ngIf="order.gatewayResponseCode || order.paymentFailedAt">
+            <li *ngIf="order.gatewayResponseCode">
+              <span>Response code</span>
+              <strong>{{ order.gatewayResponseCode }}</strong>
+            </li>
+            <li *ngIf="order.paymentFailedAt">
+              <span>Attempted at</span>
+              <strong>{{ formatDateTime(order.paymentFailedAt) }}</strong>
+            </li>
+            <li *ngIf="order.amountDueNow > 0">
+              <span>Amount due</span>
+              <strong>{{ order.amountDueNow | currency:productService?.Currency.currency:'symbol' }}</strong>
+            </li>
+          </ul>
+          <div class="failure-actions" *ngIf="order.canRetryPayment">
+            <button type="button" class="btn btn-solid" [disabled]="retrying" (click)="retryPayment()">
+              {{ retrying ? 'Redirecting to PayFast…' : 'Try payment again' }}
+            </button>
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">View my orders</a>
+          </div>
+          <div class="failure-actions" *ngIf="!order.canRetryPayment">
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-solid">View my orders</a>
+            <a [routerLink]="'/shop/collection/left/sidebar'" class="btn btn-outline-light ms-2">Continue shopping</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="product-order failure-order-card">
+          <h3>Order details</h3>
+          <div class="row product-order-detail" *ngFor="let line of order.products">
+            <div class="col-3">
+              <img [src]="productImage(line.productImageUrl)" alt="" class="img-fluid">
+            </div>
+            <div class="col-3 order_detail">
+              <div>
+                <h4>product name</h4>
+                <h5>{{ line.productName }}</h5>
+              </div>
+            </div>
+            <div class="col-3 order_detail">
+              <div>
+                <h4>quantity</h4>
+                <h5>{{ line.quantity }}</h5>
+              </div>
+            </div>
+            <div class="col-3 order_detail">
+              <div>
+                <h4>price</h4>
+                <h5>{{ line.lineTotal | currency:productService?.Currency.currency:'symbol' }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="total-sec">
+            <ul>
+              <li>Subtotal <span>{{ order.subTotalAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+              <li *ngIf="order.discountAmount > 0" class="order-success-discount">
+                Coupon discount
+                <span>−{{ order.discountAmount | currency:productService?.Currency.currency:'symbol' }}</span>
+              </li>
+              <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | currency:productService?.Currency.currency:'symbol' }}</span></li>
+              <li>Tax <span>{{ order.taxAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+            </ul>
+          </div>
+          <div class="final-total">
+            <h3>total <span>{{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</span></h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="row order-success-sec failure-summary-card">
+          <div class="col-sm-6">
+            <h4>summary</h4>
+            <ul class="order-detail">
+              <li>order ID: {{ order.onlineOrderNumber }}</li>
+              <li>Order Date: {{ formatDate(order.orderDate) }}</li>
+              <li>Order Total: {{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</li>
+              <li>Payment: {{ order.paymentMethodName }}</li>
+            </ul>
+          </div>
+          <div class="col-sm-6" *ngIf="order.shippingAddress as ship">
+            <h4>shipping address</h4>
+            <ul class="order-detail">
+              <li>{{ ship.customerName }}</li>
+              <li>{{ ship.address }}</li>
+              <li>{{ ship.townCity }}, {{ ship.stateCounty }} {{ ship.postalCode }}</li>
+              <li>Contact No. {{ ship.phone }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -7,6 +7,8 @@ import { Product } from "../../shared/classes/product";
 import { AuthService } from '../../shared/services/auth.service';
 import { OnlineShopSettingsService } from '../../shared/services/online-shop-settings.service';
 import { OnlineShopStorefront } from '../../shared/models/online-shop-storefront.model';
+import { AppliedShopCouponState } from '../../shared/services/online-shop-checkout.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-cart',
@@ -17,6 +19,10 @@ export class CartComponent implements OnInit, OnDestroy {
 
   public products: Product[] = [];
   public storefront: OnlineShopStorefront | null = null;
+  public cartSubtotal = 0;
+  public couponCodeInput = '';
+  public appliedCoupon: AppliedShopCouponState | null = null;
+  public couponApplying = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -25,8 +31,20 @@ export class CartComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private storefrontSettings: OnlineShopSettingsService,
+    private toastr: ToastrService,
   ) {
-    this.productService.cartItems.subscribe(response => this.products = response);
+    this.productService.cartItems.pipe(takeUntil(this.destroy$)).subscribe((response) => {
+      this.products = response;
+    });
+    this.productService.cartTotalAmount().pipe(takeUntil(this.destroy$)).subscribe((amount) => {
+      this.cartSubtotal = Number(amount) || 0;
+    });
+    this.productService.appliedCoupon$.pipe(takeUntil(this.destroy$)).subscribe((coupon) => {
+      this.appliedCoupon = coupon;
+      if (coupon?.couponCode) {
+        this.couponCodeInput = coupon.couponCode;
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -38,8 +56,6 @@ export class CartComponent implements OnInit, OnDestroy {
 
     if (this.storefrontSettings.snapshot) {
       this.storefront = this.storefrontSettings.snapshot;
-    } else {
-      this.storefrontSettings.loadStorefront().subscribe();
     }
   }
 
@@ -58,6 +74,50 @@ export class CartComponent implements OnInit, OnDestroy {
 
   public get getTotal(): Observable<number> {
     return this.productService.cartTotalAmount();
+  }
+
+  get couponDiscount(): number {
+    return this.appliedCoupon?.result?.isValid ? this.appliedCoupon.result.discountAmount : 0;
+  }
+
+  get cartPayableTotal(): number {
+    if (this.appliedCoupon?.result?.isValid) {
+      return this.appliedCoupon.result.payableAmountAfterDiscount;
+    }
+    return this.cartSubtotal;
+  }
+
+  applyCoupon(): void {
+    const code = this.couponCodeInput.trim();
+    if (!code) {
+      this.toastr.warning('Enter a coupon code.');
+      return;
+    }
+    this.couponApplying = true;
+    this.productService.applyCouponCode(code).subscribe({
+      next: (result) => {
+        this.couponApplying = false;
+        if (result.isValid) {
+          this.toastr.success(result.message || 'Coupon applied.');
+        } else {
+          this.toastr.error(result.message || 'Invalid coupon.');
+        }
+      },
+      error: (err) => {
+        this.couponApplying = false;
+        const msg =
+          err?.error?.error?.message ||
+          err?.error?.message ||
+          err?.message ||
+          'Could not apply coupon.';
+        this.toastr.error(msg);
+      }
+    });
+  }
+
+  clearCoupon(): void {
+    this.couponCodeInput = '';
+    this.productService.clearAppliedCoupon();
   }
 
   // Increament

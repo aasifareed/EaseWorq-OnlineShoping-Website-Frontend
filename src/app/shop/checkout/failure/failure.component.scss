@@ -1,0 +1,115 @@
+.payment-failure-page {
+  color: var(--ml-surface-text, #ffffff);
+
+  .failure-hero {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+
+    i {
+      font-size: 3rem;
+      color: #ef5350;
+      margin-bottom: 0.75rem;
+    }
+
+    h2 {
+      color: var(--ml-page-title, #ffffff);
+      margin-bottom: 0.5rem;
+      text-transform: capitalize;
+    }
+
+    p {
+      color: var(--ml-surface-text-muted, #cccccc);
+      margin-bottom: 0.35rem;
+    }
+
+    &--notfound i {
+      color: #ffcc00;
+    }
+  }
+
+  .failure-error-card,
+  .failure-order-card,
+  .failure-summary-card {
+    background: var(--ml-surface-bg, #303030);
+    border: 1px solid var(--ml-page-heading-border, rgba(255, 255, 255, 0.1));
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+
+  .failure-error-card {
+    h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+      color: var(--ml-page-title, #ffffff);
+    }
+  }
+
+  .failure-error-message {
+    color: #ffb4ab;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+
+  .failure-error-meta {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+    border-top: 1px solid var(--ml-page-heading-border, rgba(255, 255, 255, 0.1));
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--ml-page-heading-border, rgba(255, 255, 255, 0.1));
+      color: var(--ml-surface-text-muted, #cccccc);
+      font-size: 0.9rem;
+
+      strong {
+        color: var(--ml-surface-text, #ffffff);
+      }
+    }
+  }
+
+  .failure-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .btn-outline-light {
+    border-color: var(--ml-page-heading-border, rgba(255, 255, 255, 0.25));
+    color: var(--ml-surface-text, #ffffff);
+
+    &:hover {
+      background: var(--ml-header-top-hover-bg, rgba(255, 255, 255, 0.08));
+      color: var(--ml-surface-text, #ffffff);
+    }
+  }
+
+  .order-detail li,
+  .order_detail h4,
+  .order_detail h5,
+  .product-order h3,
+  .order-success-sec h4 {
+    color: var(--ml-surface-text, #ffffff);
+  }
+
+  .total-sec li,
+  .final-total h3 {
+    color: var(--ml-surface-text, #ffffff);
+  }
+}
+
+li {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+.total-sec .order-success-discount span {
+  color: #16a34a;
+}

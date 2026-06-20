@@ -53,6 +53,8 @@ import { TapToTopComponent } from './components/tap-to-top/tap-to-top.component'
 
 // Pipes
 import { DiscountPipe } from './pipes/discount.pipe';
+import { RelativeTimePipe } from './pipes/relative-time.pipe';
+import { ExcerptPipe } from './pipes/excerpt.pipe';
 import { TopCategoriesSliderComponent } from './components/top-categories-slider/top-categories-slider.component';
 
 @NgModule({
@@ -88,6 +90,8 @@ import { TopCategoriesSliderComponent } from './components/top-categories-slider
     LayoutBoxComponent,
     TapToTopComponent,
     DiscountPipe,
+    RelativeTimePipe,
+    ExcerptPipe,
     TopCategoriesSliderComponent,
   ],
   imports: [

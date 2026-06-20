@@ -154,46 +154,166 @@
                                     <ul class="qty" *ngIf="!products.length">
                                         <li class="empty-checkout">There are no products in cart</li>
                                     </ul>
-                                    <ul class="sub-total">
-                                        <li>
-                                            Subtotal
-                                            <span class="count">{{ getTotal | async |
+                                    <ul class="sub-total checkout-totals">
+                                        <li class="checkout-total-row">
+                                            <span class="checkout-total-row__label">Subtotal</span>
+                                            <span class="count checkout-total-row__value">{{ cartSubtotal |
                                                 currency:productService?.Currency.currency:'symbol' }}</span>
                                         </li>
-                                        <li *ngIf="products.length">
-                                            Shipping
-                                            <div class="shipping">
-                                                <div class="shopping-option" *ngFor="let method of shippingMethodOptions">
+                                        <li class="checkout-total-row" *ngIf="couponDiscount > 0">
+                                            <span class="checkout-total-row__label">Coupon discount</span>
+                                            <span class="count checkout-total-row__value checkout-discount">−{{ couponDiscount |
+                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                        </li>
+                                        <li *ngIf="products.length" class="checkout-total-row checkout-shipping-block">
+                                            <span class="checkout-total-row__label">Shipping</span>
+                                            <div class="checkout-shipping-block__body">
+                                                <div class="shopping-option checkout-shipping-option"
+                                                    *ngFor="let method of shippingMethodOptions">
                                                     <input type="radio" name="shippingMethod" [id]="'shipping-' + method"
-                                                        [value]="method" [(ngModel)]="shippingMethod"
+                                                        [value]="method" [ngModel]="shippingMethod"
+                                                        (ngModelChange)="onShippingMethodChange($event)"
                                                         [ngModelOptions]="{standalone: true}">
-                                                    <label [for]="'shipping-' + method">{{ shippingMethodLabels[method] }}</label>
+                                                    <label [for]="'shipping-' + method" class="checkout-shipping-option__label">
+                                                        {{ shippingMethodLabels[method] }}
+                                                    </label>
+                                                    <span class="checkout-shipping-option__amount count"
+                                                        *ngIf="method === OnlineShopShippingMethod.LocalPickup && shippingMethod === OnlineShopShippingMethod.LocalPickup">
+                                                        {{ 0 | currency:productService?.Currency.currency:'symbol' }}
+                                                    </span>
                                                 </div>
+                                                <p class="checkout-shipping-hint text-muted mb-0"
+                                                    *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && shippingLoading">
+                                                    Calculating shipping…
+                                                </p>
                                             </div>
                                         </li>
                                     </ul>
-                                    <ul class="total">
-                                        <li>
-                                            Total
-                                            <span class="count">{{ getTotal | async |
+
+                                    <div class="checkout-courier-panel-wrap"
+                                        *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                        <div class="checkout-courier-panel">
+                                                <div class="checkout-courier-panel__header">
+                                                    <div class="checkout-courier-panel__title-wrap">
+                                                        <h4 class="checkout-courier-panel__title">Choose your courier</h4>
+                                                        <span class="checkout-courier-panel__count">
+                                                            {{ shippingCourierOptions.length }} options
+                                                        </span>
+                                                    </div>
+                                                    <p class="checkout-courier-panel__meta">
+                                                        <span class="checkout-courier-meta-item">
+                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                                            {{ shippingDestinationCity }}
+                                                        </span>
+                                                        <span class="checkout-courier-meta-item">
+                                                            <i class="fa fa-balance-scale" aria-hidden="true"></i>
+                                                            ~{{ cartWeightKg }} kg
+                                                        </span>
+                                                        <span class="checkout-courier-meta-item" *ngIf="shippingRate?.courierProvider">
+                                                            <i class="fa fa-truck" aria-hidden="true"></i>
+                                                            via {{ shippingRate.courierProvider }}
+                                                        </span>
+                                                    </p>
+                                                </div>
+
+                                                <div class="checkout-courier-grid" role="radiogroup"
+                                                    aria-label="Courier delivery options">
+                                                    <button type="button"
+                                                        class="checkout-courier-card"
+                                                        [ngClass]="courierAccentClass(option.courierCompany)"
+                                                        [class.checkout-courier-card--selected]="isCourierOptionSelected(option)"
+                                                        *ngFor="let option of shippingCourierOptions"
+                                                        (click)="onCourierOptionSelected(courierOptionKey(option))"
+                                                        [attr.aria-checked]="isCourierOptionSelected(option)"
+                                                        role="radio">
+                                                        <span class="checkout-courier-card__top">
+                                                            <span class="checkout-courier-card__check" aria-hidden="true">
+                                                                <i class="fa fa-check"></i>
+                                                            </span>
+                                                            <span class="checkout-courier-card__badge"
+                                                                *ngIf="option.isRecommended">Best value</span>
+                                                        </span>
+                                                        <span class="checkout-courier-card__body">
+                                                            <span class="checkout-courier-card__company">{{ option.courierCompany }}</span>
+                                                            <span class="checkout-courier-card__service">
+                                                                {{ serviceTypeLabel(option.courierServiceType) }}
+                                                            </span>
+                                                        </span>
+                                                        <span class="checkout-courier-card__footer">
+                                                            <span class="checkout-courier-card__was"
+                                                                *ngIf="(option.shippingDiscountAmount || 0) > 0">
+                                                                {{ option.cargoOriginalAmount |
+                                                                    currency:productService?.Currency.currency:'symbol' }}
+                                                            </span>
+                                                            <span class="checkout-courier-card__price">
+                                                                {{ option.finalShippingAmount |
+                                                                    currency:productService?.Currency.currency:'symbol' }}
+                                                            </span>
+                                                        </span>
+                                                    </button>
+                                                </div>
+
+                                                <p class="checkout-courier-panel__hint"
+                                                    *ngIf="selectedCourierOption">
+                                                    Selected:
+                                                    <strong>{{ selectedCourierOption.courierCompany }}</strong>
+                                                    · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
+                                                    · {{ selectedCourierOption.finalShippingAmount |
+                                                        currency:productService?.Currency.currency:'symbol' }}
+                                                </p>
+                                        </div>
+                                    </div>
+
+                                    <ul class="sub-total checkout-totals checkout-totals--footer"
+                                        *ngIf="showShippingBreakdown">
+                                        <li class="checkout-total-row" *ngIf="(shippingRate?.shippingDiscountAmount || 0) > 0">
+                                            <span class="checkout-total-row__label">Shipping discount</span>
+                                            <span class="count checkout-total-row__value checkout-discount">−{{ shippingRate?.shippingDiscountAmount |
+                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                        </li>
+                                        <li class="checkout-total-row">
+                                            <span class="checkout-total-row__label">Delivery charges</span>
+                                            <span class="count checkout-total-row__value">{{ shippingRate?.finalShippingAmount |
                                                 currency:productService?.Currency.currency:'symbol' }}</span>
                                         </li>
                                     </ul>
+
+                                    <ul class="total checkout-order-total">
+                                        <li class="checkout-total-row">
+                                            <span class="checkout-total-row__label">Total</span>
+                                            <span class="count checkout-total-row__value">{{ orderTotal |
+                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="checkout-cod-shipping-notice alert alert-info"
+                                    *ngIf="codCollectsShippingOnline" role="status">
+                                    <strong>Cash on delivery:</strong>
+                                    Pay shipping
+                                    <strong>{{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                    now via PayFast. The remaining
+                                    <strong>{{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                    is collected when your order is delivered.
                                 </div>
 
                                 <div class="payment-box" *ngIf="products.length">
                                     <div class="upper-box">
                                         <div class="payment-options">
                                             <ul>
-                                                <li *ngFor="let method of paymentMethodOptions">
+                                                <li *ngFor="let method of availablePaymentMethods">
                                                     <div class="radio-option">
                                                         <input type="radio" name="paymentMethod" [id]="'payment-' + method"
                                                             [value]="method" [(ngModel)]="paymentMethod"
                                                             [ngModelOptions]="{standalone: true}">
                                                         <label [for]="'payment-' + method">
                                                             {{ paymentMethodLabels[method] }}
-                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.CashOnDelivery">
+                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.CashOnDelivery && !codCollectsShippingOnline">
                                                                 Pay when your order is delivered.
+                                                            </span>
+                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.CashOnDelivery && codCollectsShippingOnline">
+                                                                Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}).
+                                                                Remaining {{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }} on delivery.
                                                             </span>
                                                             <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.GoPayFast">
                                                                 You will be redirected to PayFast.
@@ -208,7 +328,7 @@
                                         <button type="button" class="btn-solid btn"
                                             [disabled]="!canPlaceOrder"
                                             (click)="placeOrder()">
-                                            {{ loading ? 'Processing...' : 'Place Order' }}
+                                            {{ loading ? 'Processing...' : (codCollectsShippingOnline ? 'Pay Shipping & Place Order' : 'Place Order') }}
                                         </button>
                                     </div>
                                 </div>

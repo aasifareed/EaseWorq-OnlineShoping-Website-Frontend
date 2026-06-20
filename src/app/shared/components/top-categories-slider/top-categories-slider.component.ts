@@ -54,13 +54,9 @@ export class TopCategoriesSliderComponent implements OnInit {
   }
 
   private loadCategories(): void {
-    const tenantId = Number(environment.tenantId ?? environment.shop?.tenantId ?? 1);
-    const storeId = String(environment.storeId ?? environment.shop?.storeId ?? '');
     this.loading = true;
     this.productService
       .getProductGroupsListForOnline({
-        tenantId,
-        storeId,
         categoryFilter: this.categoryFilter
       })
       .subscribe({
