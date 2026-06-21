@@ -25,6 +25,7 @@ export interface AvailableProductInventoryDtoForOnlineShop {
   pictureUrl?: string;
   pictureUrls?: string[];
   productUnitStock?: number;
+  productTotalQuantity?: number;
   productQuantityPerUnit?: number;
   isAvailable?: boolean;
 }

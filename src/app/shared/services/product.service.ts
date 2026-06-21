@@ -718,7 +718,7 @@ private apiRoot(): string {
     openCart: boolean,
   ): boolean {
     const imageUrl = this.normalizeImageUrl(item.pictureUrl || item.imageUrl || '') || this.defaultProductImage;
-    const stock = item.productUnitStock ?? item.stock;
+    const stock = this.resolveProductStock(item);
     const name = item.productName || item.name || 'Product';
 
     if (item.isAvailable === false || (stock != null && Number(stock) <= 0)) {
@@ -1228,7 +1228,10 @@ private apiRoot(): string {
     if (isAvailable === false) {
       return 0;
     }
-    const stock = item?.productUnitStock ?? item?.ProductUnitStock ?? item?.stock ?? item?.Stock;
+    const stock =
+      item?.productTotalQuantity ?? item?.ProductTotalQuantity
+      ?? item?.productUnitStock ?? item?.ProductUnitStock
+      ?? item?.stock ?? item?.Stock;
     const parsed = Number(stock);
     return Number.isFinite(parsed) ? parsed : 0;
   }
@@ -1314,10 +1317,16 @@ private apiRoot(): string {
       productTaxesId: (p.productTaxesId ?? p.ProductTaxesId) as string[] | undefined,
       pictureUrl: (p.pictureUrl ?? p.PictureUrl) as string | undefined,
       pictureUrls: (p.pictureUrls ?? p.PictureUrls) as string[] | undefined,
-      productUnitStock:
-        p.productUnitStock != null || p.ProductUnitStock != null
-          ? Number(p.productUnitStock ?? p.ProductUnitStock)
+      productTotalQuantity:
+        p.productTotalQuantity != null || p.ProductTotalQuantity != null
+          ? Number(p.productTotalQuantity ?? p.ProductTotalQuantity)
           : undefined,
+      productUnitStock:
+        p.productTotalQuantity != null || p.ProductTotalQuantity != null
+          ? Number(p.productTotalQuantity ?? p.ProductTotalQuantity)
+          : p.productUnitStock != null || p.ProductUnitStock != null
+            ? Number(p.productUnitStock ?? p.ProductUnitStock)
+            : undefined,
       productQuantityPerUnit:
         p.productQuantityPerUnit != null || p.ProductQuantityPerUnit != null
           ? Number(p.productQuantityPerUnit ?? p.ProductQuantityPerUnit)

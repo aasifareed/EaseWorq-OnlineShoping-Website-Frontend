@@ -302,7 +302,10 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   }
 
   private suggestionStock(item: SearchProductSuggestion): number {
-    return Number(item.productUnitStock ?? item.stock);
+    const raw =
+      (item as any).productTotalQuantity ?? (item as any).ProductTotalQuantity
+      ?? item.productUnitStock ?? item.stock;
+    return Number(raw);
   }
 
   isSuggestionOutOfStock(item: SearchProductSuggestion): boolean {

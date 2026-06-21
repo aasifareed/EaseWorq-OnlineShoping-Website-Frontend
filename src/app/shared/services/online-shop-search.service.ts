@@ -86,10 +86,13 @@ export class OnlineShopSearchService {
         const productName = String(p.productName ?? p.ProductName ?? p.name ?? p.Name ?? '').trim();
         const pictureUrl = (p.pictureUrl ?? p.PictureUrl ?? p.imageUrl ?? p.ImageUrl) as string | undefined;
         const actualSellPrice = (p.actualSellPrice ?? p.ActualSellPrice ?? p.price ?? p.Price) as number | undefined;
-        const productUnitStock =
-          (p.productUnitStock ?? p.ProductUnitStock ?? p.stock ?? p.Stock) != null
-            ? Number(p.productUnitStock ?? p.ProductUnitStock ?? p.stock ?? p.Stock)
-            : undefined;
+        const productUnitStock = (() => {
+          const raw =
+            p.productTotalQuantity ?? p.ProductTotalQuantity
+            ?? p.productUnitStock ?? p.ProductUnitStock
+            ?? p.stock ?? p.Stock;
+          return raw != null ? Number(raw) : undefined;
+        })();
 
         return {
           id: productInventoryId,
