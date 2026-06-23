@@ -200,7 +200,7 @@ export let ProductSlider: any = {
     loop: false,
     dots: false,
     navSpeed: 300,
-    autoHeight:true,
+    autoHeight: false,
     responsive: {
         991: {
             items: 5

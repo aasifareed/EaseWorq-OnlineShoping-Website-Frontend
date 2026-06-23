@@ -25,6 +25,10 @@ export interface SignupPayload {
   password: string;
   storeId: string;
   tenantId: number;
+  address?: string;
+  townCity?: string;
+  stateCounty?: string;
+  postalCode?: string;
 }
 
 /** Checkout billing fields persisted after login / signup / previous orders. */

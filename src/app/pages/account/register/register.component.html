@@ -42,6 +42,71 @@
                                        placeholder="Confirm password" autocomplete="new-password">
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="address">Address</label>
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="address" formControlName="address"
+                                           placeholder="Street address" autocomplete="off"
+                                           (keydown)="handleKeyDown($event, 'address')"
+                                           (blur)="onAutocompleteBlur('address')">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'address' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'address')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="town">Town/City</label>
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="town" formControlName="town"
+                                           placeholder="Town/City" autocomplete="off"
+                                           (keydown)="handleKeyDown($event, 'town')"
+                                           (blur)="onAutocompleteBlur('town')">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'town' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'town')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="state">State / County</label>
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="state" formControlName="state"
+                                           placeholder="State / County" autocomplete="off"
+                                           (keydown)="handleKeyDown($event, 'state')"
+                                           (blur)="onAutocompleteBlur('state')">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'state' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'state')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="postalcode">Postal Code</label>
+                                <input type="text" class="form-control" id="postalcode" formControlName="postalcode"
+                                       placeholder="Postal Code">
+                            </div>
+                        </div>
                         <small class="text-danger d-block mb-2" *ngIf="registerForm.errors?.['mismatch'] && registerForm.touched">
                             Passwords do not match.
                         </small>

@@ -1444,19 +1444,56 @@ body {
         }
     }
     .login-page {
+        h3 {
+            color: $white-2;
+        }
+
         .theme-card {
-            border-color: $dark-border;
+            background-color: $dark-top;
+            border: 1px solid $dark-border;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            color: $white-5;
+
             .theme-form {
-                input {
-                    border-color: $dark-border;
-                }
                 label {
-                    color: $dark-span;
+                    color: $white-2;
+                    font-weight: 600;
+                }
+
+                input.form-control {
+                    color: $white-1;
+                    background-color: $dark-body;
+                    border-color: $dark-border;
+
+                    &::placeholder {
+                        color: $dark-span;
+                    }
+
+                    &:focus {
+                        color: $white-1;
+                        background-color: $dark-body;
+                        border-color: $theme-deafult;
+                        box-shadow: 0 0 0 0.15rem rgba(255, 193, 7, 0.15);
+                    }
+                }
+
+                a {
+                    color: $theme-deafult;
+                    font-weight: 600;
+
+                    &:hover {
+                        opacity: 0.85;
+                    }
                 }
             }
         }
+
         .authentication-right {
-            h6,
+            h6 {
+                color: $white-2;
+                font-weight: 700;
+            }
+
             p {
                 color: $white-5;
             }
@@ -1789,14 +1826,37 @@ body {
         border-color: $dark-border;
     }
     .register-page {
+        h3 {
+            color: $white-2;
+        }
+
         .theme-card {
-            border-color: $dark-border;
+            background-color: $dark-top;
+            border: 1px solid $dark-border;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            color: $white-5;
+
             .theme-form {
-                input {
-                    border-color: $dark-border;
-                }
                 label {
-                    color: $dark-span;
+                    color: $white-2;
+                    font-weight: 600;
+                }
+
+                input.form-control {
+                    color: $white-1;
+                    background-color: $dark-body;
+                    border-color: $dark-border;
+
+                    &::placeholder {
+                        color: $dark-span;
+                    }
+
+                    &:focus {
+                        color: $white-1;
+                        background-color: $dark-body;
+                        border-color: $theme-deafult;
+                        box-shadow: 0 0 0 0.15rem rgba(255, 193, 7, 0.15);
+                    }
                 }
             }
         }

@@ -1,12 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ProductService } from "../../shared/services/product.service";
 import { Product } from "../../shared/classes/product";
 import { AuthService } from '../../shared/services/auth.service';
-import { OnlineShopSettingsService } from '../../shared/services/online-shop-settings.service';
-import { OnlineShopStorefront } from '../../shared/models/online-shop-storefront.model';
 import { AppliedShopCouponState } from '../../shared/services/online-shop-checkout.service';
 import { ToastrService } from 'ngx-toastr';
 
@@ -15,10 +13,9 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss']
 })
-export class CartComponent implements OnInit, OnDestroy {
+export class CartComponent implements OnDestroy {
 
   public products: Product[] = [];
-  public storefront: OnlineShopStorefront | null = null;
   public cartSubtotal = 0;
   public couponCodeInput = '';
   public appliedCoupon: AppliedShopCouponState | null = null;
@@ -30,7 +27,6 @@ export class CartComponent implements OnInit, OnDestroy {
     public productService: ProductService,
     private auth: AuthService,
     private router: Router,
-    private storefrontSettings: OnlineShopSettingsService,
     private toastr: ToastrService,
   ) {
     this.productService.cartItems.pipe(takeUntil(this.destroy$)).subscribe((response) => {
@@ -47,29 +43,9 @@ export class CartComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
-    this.storefrontSettings.storefront$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((storefront) => {
-        this.storefront = storefront;
-      });
-
-    if (this.storefrontSettings.snapshot) {
-      this.storefront = this.storefrontSettings.snapshot;
-    }
-  }
-
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  get storeName(): string {
-    return (
-      this.storefront?.storeName?.trim()
-      || this.auth.tenancyName
-      || 'Store'
-    );
   }
 
   public get getTotal(): Observable<number> {

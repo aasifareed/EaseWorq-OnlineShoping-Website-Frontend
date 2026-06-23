@@ -1,0 +1,120 @@
+$breadcrumb-accent: var(--theme-deafult, #ffc107);
+$breadcrumb-light-bg: #f6f7f9;
+$breadcrumb-dark-bg: #232323;
+$breadcrumb-dark-border: #404040;
+
+:host {
+  display: block;
+}
+
+:host .breadcrumb-section {
+  background-color: $breadcrumb-light-bg;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.1rem 0;
+
+  .row {
+    min-height: 2.75rem;
+  }
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.3;
+      color: #1f2937;
+    }
+  }
+
+  .theme-breadcrumb {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+
+    .breadcrumb-item {
+      display: inline-flex;
+      align-items: center;
+      color: #6b7280;
+
+      + .breadcrumb-item {
+        padding-left: 0;
+
+        &::before {
+          content: '/';
+          display: inline-block;
+          padding: 0 0.45rem;
+          color: #9ca3af;
+          font-weight: 500;
+          float: none;
+        }
+      }
+
+      a {
+        color: #4b5563;
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: $breadcrumb-accent;
+        }
+      }
+
+      &.active {
+        color: $breadcrumb-accent;
+      }
+    }
+  }
+}
+
+:host-context(body.dark) .breadcrumb-section {
+  background-color: $breadcrumb-dark-bg;
+  border-bottom: 1px solid $breadcrumb-dark-border;
+
+  .page-title h2 {
+    color: #f3f4f6;
+  }
+
+  .breadcrumb {
+    .breadcrumb-item {
+      color: #9ca3af;
+
+      + .breadcrumb-item::before {
+        color: #6b7280;
+      }
+
+      a {
+        color: #d1d5db;
+
+        &:hover {
+          color: $breadcrumb-accent;
+        }
+      }
+
+      &.active {
+        color: $breadcrumb-accent;
+      }
+    }
+  }
+}

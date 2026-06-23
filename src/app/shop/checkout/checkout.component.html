@@ -39,24 +39,60 @@
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                     <div class="field-label">Address</div>
-                                    <input type="text" name="address" formControlName="address"
-                                        (blur)="trimField('billing','address')" placeholder="Street address" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" name="address" formControlName="address"
+                                            (blur)="onAutocompleteBlur('billing', 'address'); trimField('billing','address')" placeholder="Street address" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'billing', 'address')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('billing', 'address') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'billing', 'address')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('billing.address').touched && control('billing.address').errors?.required"
                                         class="text text-danger">Address is required.</div>
                                     <div *ngIf="control('billing.address').touched && control('billing.address').errors?.maxlength"
-                                        class="text text-danger">Maximum 50 characters allowed.</div>
+                                        class="text text-danger">Maximum 100 characters allowed.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                     <div class="field-label">Town/City</div>
-                                    <input type="text" name="town" formControlName="town"
-                                        (blur)="trimField('billing','town')" placeholder="" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" name="town" formControlName="town"
+                                            (blur)="onAutocompleteBlur('billing', 'town'); trimField('billing','town')" placeholder="Town/City" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'billing', 'town')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('billing', 'town') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'billing', 'town')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('billing.town').touched && control('billing.town').errors?.required"
                                         class="text text-danger">Town/City is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">State / County</div>
-                                    <input type="text" name="state" formControlName="state"
-                                        (blur)="trimField('billing','state')" placeholder="" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" name="state" formControlName="state"
+                                            (blur)="onAutocompleteBlur('billing', 'state'); trimField('billing','state')" placeholder="State / County" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'billing', 'state')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('billing', 'state') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'billing', 'state')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('billing.state').touched && control('billing.state').errors?.required"
                                         class="text text-danger">State is required.</div>
                                 </div>
@@ -101,22 +137,58 @@
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                     <div class="field-label">Address</div>
-                                    <input type="text" formControlName="address"
-                                        (blur)="trimField('shipping','address')" placeholder="Street address" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" formControlName="address"
+                                            (blur)="onAutocompleteBlur('shipping', 'address'); trimField('shipping','address')" placeholder="Street address" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'shipping', 'address')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('shipping', 'address') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'shipping', 'address')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('shipping.address').touched && control('shipping.address').errors?.required"
                                         class="text text-danger">Address is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                     <div class="field-label">Town/City</div>
-                                    <input type="text" formControlName="town"
-                                        (blur)="trimField('shipping','town')" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" formControlName="town"
+                                            (blur)="onAutocompleteBlur('shipping', 'town'); trimField('shipping','town')" placeholder="Town/City" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'shipping', 'town')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('shipping', 'town') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'shipping', 'town')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('shipping.town').touched && control('shipping.town').errors?.required"
                                         class="text text-danger">Town/City is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">State / County</div>
-                                    <input type="text" formControlName="state"
-                                        (blur)="trimField('shipping','state')" autocomplete="off">
+                                    <div class="address-autocomplete-wrap">
+                                        <input type="text" formControlName="state"
+                                            (blur)="onAutocompleteBlur('shipping', 'state'); trimField('shipping','state')" placeholder="State / County" autocomplete="off"
+                                            (keydown)="handleKeyDown($event, 'shipping', 'state')">
+                                        <ul class="google-address-suggestions"
+                                            *ngIf="isAutocompleteActive('shipping', 'state') && (googleAddressService.suggestions$ | async)?.length">
+                                            <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                                (mousedown)="$event.preventDefault()"
+                                                (click)="onPlaceSelected(suggestion, 'shipping', 'state')"
+                                                [class.highlighted]="i === highlightedIndex">
+                                                {{ suggestion.description }}
+                                            </li>
+                                        </ul>
+                                    </div>
                                     <div *ngIf="control('shipping.state').touched && control('shipping.state').errors?.required"
                                         class="text text-danger">State is required.</div>
                                 </div>
@@ -154,7 +226,7 @@
                                     <ul class="qty" *ngIf="!products.length">
                                         <li class="empty-checkout">There are no products in cart</li>
                                     </ul>
-                                    <ul class="sub-total checkout-totals">
+                                    <ul class="sub-total checkout-totals checkout-totals--summary">
                                         <li class="checkout-total-row">
                                             <span class="checkout-total-row__label">Subtotal</span>
                                             <span class="count checkout-total-row__value">{{ cartSubtotal |
@@ -165,59 +237,70 @@
                                             <span class="count checkout-total-row__value checkout-discount">−{{ couponDiscount |
                                                 currency:productService?.Currency.currency:'symbol' }}</span>
                                         </li>
-                                        <li *ngIf="products.length" class="checkout-total-row checkout-shipping-block">
-                                            <span class="checkout-total-row__label">Shipping</span>
-                                            <div class="checkout-shipping-block__body">
-                                                <div class="shopping-option checkout-shipping-option"
-                                                    *ngFor="let method of shippingMethodOptions">
-                                                    <input type="radio" name="shippingMethod" [id]="'shipping-' + method"
-                                                        [value]="method" [ngModel]="shippingMethod"
-                                                        (ngModelChange)="onShippingMethodChange($event)"
-                                                        [ngModelOptions]="{standalone: true}">
-                                                    <label [for]="'shipping-' + method" class="checkout-shipping-option__label">
-                                                        {{ shippingMethodLabels[method] }}
-                                                    </label>
-                                                    <span class="checkout-shipping-option__amount count"
-                                                        *ngIf="method === OnlineShopShippingMethod.LocalPickup && shippingMethod === OnlineShopShippingMethod.LocalPickup">
-                                                        {{ 0 | currency:productService?.Currency.currency:'symbol' }}
-                                                    </span>
-                                                </div>
-                                                <p class="checkout-shipping-hint text-muted mb-0"
-                                                    *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && shippingLoading">
-                                                    Calculating shipping…
-                                                </p>
-                                            </div>
-                                        </li>
                                     </ul>
 
-                                    <div class="checkout-courier-panel-wrap"
-                                        *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                        <div class="checkout-courier-panel">
-                                                <div class="checkout-courier-panel__header">
-                                                    <div class="checkout-courier-panel__title-wrap">
-                                                        <h4 class="checkout-courier-panel__title">Choose your courier</h4>
-                                                        <span class="checkout-courier-panel__count">
-                                                            {{ shippingCourierOptions.length }} options
-                                                        </span>
-                                                    </div>
-                                                    <p class="checkout-courier-panel__meta">
-                                                        <span class="checkout-courier-meta-item">
-                                                            <i class="fa fa-map-marker" aria-hidden="true"></i>
-                                                            {{ shippingDestinationCity }}
-                                                        </span>
-                                                        <span class="checkout-courier-meta-item">
-                                                            <i class="fa fa-balance-scale" aria-hidden="true"></i>
-                                                            ~{{ cartWeightKg }} kg
-                                                        </span>
-                                                        <span class="checkout-courier-meta-item" *ngIf="shippingRate?.courierProvider">
-                                                            <i class="fa fa-truck" aria-hidden="true"></i>
-                                                            via {{ shippingRate.courierProvider }}
-                                                        </span>
-                                                    </p>
+                                    <div class="checkout-delivery-section" *ngIf="products.length">
+                                        <div class="checkout-chip-section checkout-shipping-row">
+                                            <div class="checkout-chip-section__label">Shipping</div>
+                                            <div class="checkout-chip-group checkout-chip-group--spread"
+                                                role="radiogroup" aria-label="Delivery method">
+                                                <label *ngFor="let method of shippingMethodOptions" class="checkout-chip"
+                                                    [class.checkout-chip--selected]="shippingMethod === method"
+                                                    [for]="'shipping-' + method">
+                                                    <input type="radio" class="checkout-chip__input" name="shippingMethod"
+                                                        [id]="'shipping-' + method" [value]="method"
+                                                        [ngModel]="shippingMethod"
+                                                        (ngModelChange)="onShippingMethodChange($event)"
+                                                        [ngModelOptions]="{standalone: true}">
+                                                    <span class="checkout-chip__text">{{ shippingMethodLabels[method] }}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <p class="checkout-shipping-hint text-muted"
+                                            *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && shippingLoading">
+                                            Calculating shipping…
+                                        </p>
+
+                                        <div class="checkout-courier-panel"
+                                            *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && (shippingLoading || showShippingBreakdown || shippingCourierOptions.length)">
+                                            <div class="checkout-courier-panel__header">
+                                                <div class="checkout-courier-panel__title-wrap">
+                                                    <h4 class="checkout-courier-panel__title">Choose your courier</h4>
+                                                    <span class="checkout-courier-panel__count"
+                                                        *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                                        {{ shippingCourierOptions.length }} options
+                                                    </span>
                                                 </div>
+                                                <button type="button" class="checkout-courier-panel__toggle"
+                                                    (click)="toggleCourierPanel()"
+                                                    [attr.aria-expanded]="courierPanelExpanded"
+                                                    [attr.aria-label]="courierPanelExpanded ? 'Minimize courier options' : 'Expand courier options'">
+                                                    <i class="fa" [ngClass]="courierPanelExpanded ? 'fa-minus' : 'fa-plus'"
+                                                        aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="checkout-courier-panel__body" *ngIf="courierPanelExpanded">
+                                                <p class="checkout-courier-panel__meta"
+                                                    *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                                    <span class="checkout-courier-meta-item">
+                                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                                        {{ shippingDestinationCity }}
+                                                    </span>
+                                                    <span class="checkout-courier-meta-item">
+                                                        <i class="fa fa-balance-scale" aria-hidden="true"></i>
+                                                        ~{{ cartWeightKg }} kg
+                                                    </span>
+                                                    <span class="checkout-courier-meta-item" *ngIf="shippingRate?.courierProvider">
+                                                        <i class="fa fa-truck" aria-hidden="true"></i>
+                                                        via {{ shippingRate.courierProvider }}
+                                                    </span>
+                                                </p>
 
                                                 <div class="checkout-courier-grid" role="radiogroup"
-                                                    aria-label="Courier delivery options">
+                                                    aria-label="Courier delivery options"
+                                                    *ngIf="showShippingBreakdown && shippingCourierOptions.length">
                                                     <button type="button"
                                                         class="checkout-courier-card"
                                                         [ngClass]="courierAccentClass(option.courierCompany)"
@@ -254,82 +337,86 @@
                                                 </div>
 
                                                 <p class="checkout-courier-panel__hint"
-                                                    *ngIf="selectedCourierOption">
+                                                    *ngIf="selectedCourierOption && showShippingBreakdown">
                                                     Selected:
                                                     <strong>{{ selectedCourierOption.courierCompany }}</strong>
                                                     · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
                                                     · {{ selectedCourierOption.finalShippingAmount |
                                                         currency:productService?.Currency.currency:'symbol' }}
                                                 </p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <ul class="sub-total checkout-totals checkout-totals--footer"
-                                        *ngIf="showShippingBreakdown">
-                                        <li class="checkout-total-row" *ngIf="(shippingRate?.shippingDiscountAmount || 0) > 0">
-                                            <span class="checkout-total-row__label">Shipping discount</span>
-                                            <span class="count checkout-total-row__value checkout-discount">−{{ shippingRate?.shippingDiscountAmount |
-                                                currency:productService?.Currency.currency:'symbol' }}</span>
-                                        </li>
-                                        <li class="checkout-total-row">
-                                            <span class="checkout-total-row__label">Delivery charges</span>
-                                            <span class="count checkout-total-row__value">{{ shippingRate?.finalShippingAmount |
-                                                currency:productService?.Currency.currency:'symbol' }}</span>
-                                        </li>
-                                    </ul>
+                                        <ul class="checkout-delivery-section__charges" *ngIf="showShippingBreakdown">
+                                            <li class="checkout-total-row"
+                                                *ngIf="(shippingRate?.shippingDiscountAmount || 0) > 0">
+                                                <span class="checkout-total-row__label">Shipping discount</span>
+                                                <span class="count checkout-total-row__value checkout-discount">−{{ shippingRate?.shippingDiscountAmount |
+                                                    currency:productService?.Currency.currency:'symbol' }}</span>
+                                            </li>
+                                            <li class="checkout-total-row">
+                                                <span class="checkout-total-row__label">Delivery charges</span>
+                                                <span class="count checkout-total-row__value">{{ shippingRate?.finalShippingAmount |
+                                                    currency:productService?.Currency.currency:'symbol' }}</span>
+                                            </li>
+                                        </ul>
+                                    </div>
 
                                     <ul class="total checkout-order-total">
-                                        <li class="checkout-total-row">
-                                            <span class="checkout-total-row__label">Total</span>
-                                            <span class="count checkout-total-row__value">{{ orderTotal |
+                                        <li class="checkout-total-row checkout-order-total__row">
+                                            <span class="checkout-total-row__label checkout-order-total__label">Total</span>
+                                            <span class="count checkout-total-row__value checkout-order-total__value">{{ orderTotal |
                                                 currency:productService?.Currency.currency:'symbol' }}</span>
                                         </li>
                                     </ul>
-                                </div>
 
-                                <div class="checkout-cod-shipping-notice alert alert-info"
-                                    *ngIf="codCollectsShippingOnline" role="status">
-                                    <strong>Cash on delivery:</strong>
-                                    Pay shipping
-                                    <strong>{{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}</strong>
-                                    now via PayFast. The remaining
-                                    <strong>{{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }}</strong>
-                                    is collected when your order is delivered.
-                                </div>
-
-                                <div class="payment-box" *ngIf="products.length">
-                                    <div class="upper-box">
-                                        <div class="payment-options">
-                                            <ul>
-                                                <li *ngFor="let method of availablePaymentMethods">
-                                                    <div class="radio-option">
-                                                        <input type="radio" name="paymentMethod" [id]="'payment-' + method"
-                                                            [value]="method" [(ngModel)]="paymentMethod"
-                                                            [ngModelOptions]="{standalone: true}">
-                                                        <label [for]="'payment-' + method">
-                                                            {{ paymentMethodLabels[method] }}
-                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.CashOnDelivery && !codCollectsShippingOnline">
-                                                                Pay when your order is delivered.
-                                                            </span>
-                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.CashOnDelivery && codCollectsShippingOnline">
-                                                                Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}).
-                                                                Remaining {{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }} on delivery.
-                                                            </span>
-                                                            <span class="small-text" *ngIf="method === OnlineShopPaymentMethod.GoPayFast">
-                                                                You will be redirected to PayFast.
-                                                            </span>
-                                                        </label>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                    <div class="checkout-cod-shipping-notice alert alert-info"
+                                        *ngIf="codCollectsShippingOnline" role="status">
+                                        <strong>Cash on delivery:</strong>
+                                        Pay shipping
+                                        <strong>{{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                        now via PayFast. The remaining
+                                        <strong>{{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                        is collected when your order is delivered.
                                     </div>
-                                    <div class="text-end">
-                                        <button type="button" class="btn-solid btn"
-                                            [disabled]="!canPlaceOrder"
-                                            (click)="placeOrder()">
-                                            {{ loading ? 'Processing...' : (codCollectsShippingOnline ? 'Pay Shipping & Place Order' : 'Place Order') }}
-                                        </button>
+
+                                    <div class="payment-box checkout-payment-box" *ngIf="products.length">
+                                        <div class="checkout-chip-section checkout-payment-row">
+                                            <div class="checkout-chip-section__label">Payment</div>
+                                            <div class="checkout-chip-group checkout-chip-group--spread"
+                                                role="radiogroup" aria-label="Payment method">
+                                                <label *ngFor="let method of availablePaymentMethods" class="checkout-chip"
+                                                    [class.checkout-chip--selected]="paymentMethod === method"
+                                                    [for]="'payment-' + method">
+                                                    <input type="radio" class="checkout-chip__input" name="paymentMethod"
+                                                        [id]="'payment-' + method" [value]="method"
+                                                        [(ngModel)]="paymentMethod"
+                                                        [ngModelOptions]="{standalone: true}">
+                                                    <span class="checkout-chip__text">{{ paymentMethodLabels[method] }}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <p class="checkout-payment-hint"
+                                            *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && !codCollectsShippingOnline">
+                                            Pay when your order is delivered.
+                                        </p>
+                                        <p class="checkout-payment-hint"
+                                            *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && codCollectsShippingOnline">
+                                            Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}).
+                                            Remaining {{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }} on delivery.
+                                        </p>
+                                        <p class="checkout-payment-hint"
+                                            *ngIf="paymentMethod === OnlineShopPaymentMethod.GoPayFast">
+                                            You will be redirected to PayFast.
+                                        </p>
+                                        <div class="checkout-place-order-separator"></div>
+                                        <div class="text-end checkout-place-order-wrap">
+                                            <button type="button" class="btn-solid btn"
+                                                [disabled]="!canPlaceOrder"
+                                                (click)="placeOrder()">
+                                                {{ loading ? 'Processing...' : (codCollectsShippingOnline ? 'Pay Shipping & Place Order' : 'Place Order') }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

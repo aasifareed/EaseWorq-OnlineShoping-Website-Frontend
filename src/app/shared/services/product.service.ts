@@ -1021,9 +1021,9 @@ private apiRoot(): string {
         const storeId = input.storeId ?? ctx.storeId;
         let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
         if (input.categoryFilter === 'popular') {
-          q += '&OnlyPopular=true';
+          q += '&onlyPopular=true';
         } else if (input.categoryFilter === 'nonPopular') {
-          q += '&ExcludePopular=true';
+          q += '&excludePopular=true';
         }
         const path = environment.urls.OnlineShopProductGroup_GetProductGroupsListForOnline;
         return this.getProductsFromAPI(`${path}${q}`).pipe(

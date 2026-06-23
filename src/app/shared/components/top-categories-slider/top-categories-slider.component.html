@@ -1,4 +1,4 @@
-<section class="py-4">
+<section class="py-4" *ngIf="!loading && categories.length">
   <div class="container-fluid px-3">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -6,9 +6,7 @@
       <h3 class="title-border" [class.text-center]="gridMode" *ngIf="gridMode">{{ sectionTitle }}</h3>
     </div>
 
-    <p *ngIf="loading" class="text-center py-3 mb-0">Loading categories…</p>
-
-    <owl-carousel-o [options]="categorySliderConfig" *ngIf="!gridMode && !loading && categories.length">
+    <owl-carousel-o [options]="categorySliderConfig" *ngIf="!gridMode">
       <ng-container *ngFor="let category of categories">
         <ng-template carouselSlide>
           <a
@@ -26,7 +24,7 @@
       </ng-container>
     </owl-carousel-o>
 
-    <div class="row g-3" *ngIf="gridMode && !loading && categories.length">
+    <div class="row g-3" *ngIf="gridMode">
       <div class="col-6 col-md-4 col-lg-3" *ngFor="let category of categories">
         <a
           [routerLink]="['/shop/collection/left/sidebar']"

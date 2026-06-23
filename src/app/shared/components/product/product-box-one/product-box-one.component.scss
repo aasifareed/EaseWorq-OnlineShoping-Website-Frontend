@@ -21,19 +21,35 @@
     position: relative !important;
     background: var(--mc-img-bg) !important;
     width: 100% !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   .mc-card__img-clip {
     overflow: hidden !important;
-    padding: 20px !important;
+    height: 220px !important;
+    max-height: 220px !important;
+    padding: 16px !important;
     background: var(--mc-img-bg);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .mc-card__img-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .mc-card__img {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 187px !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     object-fit: contain !important;
     box-sizing: border-box !important;
     transition: transform .35s ease !important;
@@ -110,7 +126,7 @@
     margin: 0 0 10px !important;
     line-height: 1.45 !important;
     display: -webkit-box !important;
-    -webkit-line-clamp: 3 !important;
+    -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
     overflow: hidden !important;
     flex: 1 !important;
