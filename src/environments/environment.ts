@@ -8,9 +8,9 @@ export const environment = {
   paypal_token: 'PAYPAL_TOKEN',
   // baseUrl: 'https://pos-api.qa-behzitech.store/',
   baseUrl: 'https://localhost:44374/',
-  /** Subdomain tenancy name used when running on localhost in development. */
-  devTenancyName: 'beta-ak-mobile-shop',
-  /** Fixed tenant id used when running locally in development (mirrors admin panel). */
+  /** Domain sent to WebsiteTenantResolver when running on localhost in development. */
+  devHostName: 'sastakhareedo.com',
+  /** Optional fallback tenant id for local tooling only. */
   devTenantId: 1,
   /** Optional fallback only — resolved at runtime from subdomain + APIs. */
   tenantId: null as number | null,
@@ -26,6 +26,7 @@ export const environment = {
 //   },
    urls: {
 Account_IsTenantAvailable: 'Account/IsTenantAvailable',
+WebsiteTenantResolver_ResolveTenantByDomain: 'WebsiteTenantResolver/ResolveTenantByDomain',
 Notification_GetAll: 'Notification/GetNotifications',
 Notification_GetUnread: 'Notification/GetUnreadCustomerNotifications',
 Notification_Update: 'Notification/UpdateNotification',
@@ -69,6 +70,7 @@ Page_GetActivePages: 'OnlineShopPage/GetActivePages',
 Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
 HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
 OnlineShopHomeBanner_GetForStorefront: 'OnlineShopHomeBanner/GetHomeBannersForStorefront',
+OnlineShopStoreLogo_GetForStorefront: 'OnlineShopStoreLogo/GetLogoForStorefront',
 OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
 OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
 OnlineShopSearch_GetSuggestions: 'OnlineShopSearch/GetSearchSuggestions',

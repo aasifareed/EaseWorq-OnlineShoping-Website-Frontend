@@ -3,13 +3,14 @@ export const environment = {
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
   baseUrl: '',
-  devTenancyName: '',
-  tenantId: null as number | null,
+  devHostName: '',
+  devTenantId: null as number | null,
   storeId: null as string | null,
   googleMapsApiKey: 'AIzaSyDyeIndELQj_horM-429SavXuMHojQ62P0',
   googleClientId: '463817211807-kd2tc0n3us50bc4qt5srp9jvr7qoa4oi.apps.googleusercontent.com',
   urls: {
     Account_IsTenantAvailable: 'Account/IsTenantAvailable',
+    WebsiteTenantResolver_ResolveTenantByDomain: 'WebsiteTenantResolver/ResolveTenantByDomain',
     OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:
       'OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop',
     OnlineShopAvailableProduct_GetProductDetailForOnlineShop:
@@ -49,6 +50,7 @@ export const environment = {
     Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
     HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
     OnlineShopHomeBanner_GetForStorefront: 'OnlineShopHomeBanner/GetHomeBannersForStorefront',
+    OnlineShopStoreLogo_GetForStorefront: 'OnlineShopStoreLogo/GetLogoForStorefront',
     Notification_GetAll: 'Notification/GetNotifications',
     Notification_GetUnread: 'Notification/GetUnreadCustomerNotifications',
     Notification_Update: 'Notification/UpdateNotification',

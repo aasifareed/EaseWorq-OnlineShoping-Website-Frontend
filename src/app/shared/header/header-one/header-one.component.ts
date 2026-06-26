@@ -26,6 +26,7 @@ import {
   SearchProductSuggestion,
   SearchSuggestionsResult,
 } from '../../services/online-shop-search.service';
+import { StoreLogoService } from '../../services/store-logo.service';
 
 @Component({
   selector: 'app-header-one',
@@ -39,6 +40,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   @Input() sticky: boolean = false;
 
   public storefront: OnlineShopStorefront | null = null;
+  storeLogoUrl: string | null = null;
   readonly cartCount$: Observable<number>;
   isDarkMode = true;
 
@@ -63,6 +65,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     private storefrontSettings: OnlineShopSettingsService,
     private themeService: ThemeService,
     private searchService: OnlineShopSearchService,
+    private storeLogoService: StoreLogoService,
     private elementRef: ElementRef<HTMLElement>,
     @Inject(PLATFORM_ID) platformId: object,
   ) {
@@ -181,6 +184,13 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
       this.storefront = this.storefrontSettings.snapshot;
       this.productService.applyStoreCurrency(this.storefrontSettings.snapshot);
     }
+
+    this.storeLogoUrl = this.storeLogoService.getCachedLogo();
+    this.storeLogoService.logoUrl$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((logoUrl) => {
+        this.storeLogoUrl = logoUrl;
+      });
 
     this.productService.cartItems
       .pipe(takeUntil(this.destroy$))

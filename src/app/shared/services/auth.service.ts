@@ -78,7 +78,7 @@ export class AuthService {
   get tenancyName(): string {
     return this.tenantService.snapshot?.tenancyName
       || this.shopContext.getTenancyName()
-      || environment.devTenancyName
+      || environment.shop?.tenancyName
       || '';
   }
 

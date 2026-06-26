@@ -428,6 +428,20 @@
       text-transform: uppercase;
     }
 
+    .store-logo-img {
+      display: block;
+      max-height: 48px;
+      max-width: 220px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .brand-logo-link {
+      display: inline-flex;
+      align-items: center;
+    }
+
     .search-wrapper {
       input {
         flex: 1 1 auto;
