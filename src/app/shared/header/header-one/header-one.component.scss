@@ -448,11 +448,11 @@
         min-width: 0;
         background: var(--ml-header-search-bg);
         border: none;
-        color: var(--ml-header-search-text);
+        color: var(--ml-header-search-text, #333333);
         font-size: 13px;
         height: 38px;
         border-radius: 0;
-        &::placeholder { color: var(--ml-header-search-placeholder); }
+        &::placeholder { color: var(--ml-header-search-placeholder, #888888); opacity: 1; }
       }
       > .header-search-submit {
         flex: 0 0 50px;

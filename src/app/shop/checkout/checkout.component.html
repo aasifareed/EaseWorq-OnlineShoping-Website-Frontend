@@ -11,7 +11,7 @@
                             </div>
                             <div class="row check-out" formGroupName="billing">
                                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                    <div class="field-label">Customer Name</div>
+                                    <div class="field-label">Customer Name <span class="required-mark">*</span></div>
                                     <input type="text" name="customerName" formControlName="customerName"
                                         (blur)="trimField('billing','customerName')" placeholder="" autocomplete="off">
                                     <div *ngIf="control('billing.customerName').touched && control('billing.customerName').errors?.required"
@@ -20,7 +20,7 @@
                                         class="text text-danger">Enter a valid name (letters only).</div>
                                 </div>
                                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                    <div class="field-label">Phone</div>
+                                    <div class="field-label">Phone <span class="required-mark">*</span></div>
                                     <input type="text" name="customerMobileNo" formControlName="customerMobileNo"
                                         (blur)="trimField('billing','customerMobileNo')" placeholder="" autocomplete="off">
                                     <div *ngIf="control('billing.customerMobileNo').touched && control('billing.customerMobileNo').errors?.required"
@@ -29,7 +29,7 @@
                                         class="text text-danger">Phone must contain digits only.</div>
                                 </div>
                                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                    <div class="field-label">Email Address</div>
+                                    <div class="field-label">Email Address <span class="required-mark">*</span></div>
                                     <input type="text" name="customerEmail" formControlName="customerEmail"
                                         (blur)="trimField('billing','customerEmail')" placeholder="" autocomplete="off">
                                     <div *ngIf="control('billing.customerEmail').touched && control('billing.customerEmail').errors?.required"
@@ -38,10 +38,10 @@
                                         class="text text-danger">Invalid email.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                    <div class="field-label">Address</div>
+                                    <div class="field-label">Address <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="address" formControlName="address"
-                                            (blur)="onAutocompleteBlur('billing', 'address'); trimField('billing','address')" placeholder="Street address" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('billing', 'address', $event); trimField('billing','address')" placeholder="Street address" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'billing', 'address')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('billing', 'address') && (googleAddressService.suggestions$ | async)?.length">
@@ -59,10 +59,10 @@
                                         class="text text-danger">Maximum 100 characters allowed.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                    <div class="field-label">Town/City</div>
+                                    <div class="field-label">Town/City <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="town" formControlName="town"
-                                            (blur)="onAutocompleteBlur('billing', 'town'); trimField('billing','town')" placeholder="Town/City" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('billing', 'town', $event); trimField('billing','town')" placeholder="Town/City" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'billing', 'town')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('billing', 'town') && (googleAddressService.suggestions$ | async)?.length">
@@ -78,10 +78,10 @@
                                         class="text text-danger">Town/City is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
-                                    <div class="field-label">State / County</div>
+                                    <div class="field-label">State / County <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="state" formControlName="state"
-                                            (blur)="onAutocompleteBlur('billing', 'state'); trimField('billing','state')" placeholder="State / County" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('billing', 'state', $event); trimField('billing','state')" placeholder="State / County" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'billing', 'state')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('billing', 'state') && (googleAddressService.suggestions$ | async)?.length">
@@ -97,7 +97,7 @@
                                         class="text text-danger">State is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
-                                    <div class="field-label">Postal Code</div>
+                                    <div class="field-label">Postal Code <span class="required-mark">*</span></div>
                                     <input type="text" name="postalcode" formControlName="postalcode"
                                         (blur)="trimField('billing','postalcode')" placeholder="" autocomplete="off">
                                     <div *ngIf="control('billing.postalcode').touched && control('billing.postalcode').errors?.required"
@@ -118,7 +118,7 @@
                             </div>
                             <div class="row check-out" formGroupName="shipping" *ngIf="shipToDifferentAddress">
                                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                    <div class="field-label">Receiver Name</div>
+                                    <div class="field-label">Receiver Name <span class="required-mark">*</span></div>
                                     <input type="text" formControlName="customerName"
                                         (blur)="trimField('shipping','customerName')" autocomplete="off">
                                     <div *ngIf="control('shipping.customerName').touched && control('shipping.customerName').errors?.required"
@@ -127,7 +127,7 @@
                                         class="text text-danger">Enter a valid name (letters only).</div>
                                 </div>
                                 <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                    <div class="field-label">Phone</div>
+                                    <div class="field-label">Phone <span class="required-mark">*</span></div>
                                     <input type="text" formControlName="customerMobileNo"
                                         (blur)="trimField('shipping','customerMobileNo')" autocomplete="off">
                                     <div *ngIf="control('shipping.customerMobileNo').touched && control('shipping.customerMobileNo').errors?.required"
@@ -136,10 +136,10 @@
                                         class="text text-danger">Phone must contain digits only.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                    <div class="field-label">Address</div>
+                                    <div class="field-label">Address <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" formControlName="address"
-                                            (blur)="onAutocompleteBlur('shipping', 'address'); trimField('shipping','address')" placeholder="Street address" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('shipping', 'address', $event); trimField('shipping','address')" placeholder="Street address" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'shipping', 'address')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('shipping', 'address') && (googleAddressService.suggestions$ | async)?.length">
@@ -155,10 +155,10 @@
                                         class="text text-danger">Address is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                    <div class="field-label">Town/City</div>
+                                    <div class="field-label">Town/City <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" formControlName="town"
-                                            (blur)="onAutocompleteBlur('shipping', 'town'); trimField('shipping','town')" placeholder="Town/City" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('shipping', 'town', $event); trimField('shipping','town')" placeholder="Town/City" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'shipping', 'town')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('shipping', 'town') && (googleAddressService.suggestions$ | async)?.length">
@@ -174,10 +174,10 @@
                                         class="text text-danger">Town/City is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
-                                    <div class="field-label">State / County</div>
+                                    <div class="field-label">State / County <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" formControlName="state"
-                                            (blur)="onAutocompleteBlur('shipping', 'state'); trimField('shipping','state')" placeholder="State / County" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('shipping', 'state', $event); trimField('shipping','state')" placeholder="State / County" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'shipping', 'state')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('shipping', 'state') && (googleAddressService.suggestions$ | async)?.length">
@@ -193,7 +193,7 @@
                                         class="text text-danger">State is required.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
-                                    <div class="field-label">Postal Code</div>
+                                    <div class="field-label">Postal Code <span class="required-mark">*</span></div>
                                     <input type="text" formControlName="postalcode"
                                         (blur)="trimField('shipping','postalcode')" autocomplete="off">
                                     <div *ngIf="control('shipping.postalcode').touched && control('shipping.postalcode').errors?.required"

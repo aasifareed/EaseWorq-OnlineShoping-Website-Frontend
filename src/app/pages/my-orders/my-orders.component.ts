@@ -291,7 +291,18 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.orderTimeline?.items?.length) {
       return [];
     }
-    return [...this.orderTimeline.items].reverse();
+    const chronological = [...this.orderTimeline.items].reverse();
+    // Collapse consecutive repeated statuses so each status appears only once
+    // when it actually changes (avoids duplicate steps on the tracking screen).
+    return chronological.filter((item, index) => {
+      if (index === 0) {
+        return true;
+      }
+      const prev = chronological[index - 1];
+      const key = (item.orderStatusDisplayName ?? '').trim().toLowerCase();
+      const prevKey = (prev.orderStatusDisplayName ?? '').trim().toLowerCase();
+      return key !== prevKey;
+    });
   }
 
   deliveryStatusLabel(status?: string | number | null): string | null {

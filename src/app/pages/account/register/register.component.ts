@@ -30,6 +30,8 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = false;
   highlightedIndex = -1;
   activeAutocompleteField: GoogleAddressFieldMode | null = null;
+  /** True while a Google place selection is resolving, so blur won't clear a city mid-pick. */
+  private placeSelectionInFlight = false;
   private readonly destroy$ = new Subject<void>();
   private readonly lastSelectedValues: Record<GoogleAddressFieldMode, string> = {
     address: '',
@@ -85,16 +87,53 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeSuggestions();
   }
 
-  onAutocompleteBlur(field: GoogleAddressFieldMode): void {
+  onAutocompleteBlur(field: GoogleAddressFieldMode, event?: FocusEvent): void {
+    const sourceWrap =
+      event?.target instanceof HTMLElement
+        ? event.target.closest('.address-autocomplete-wrap')
+        : null;
+
     window.setTimeout(() => {
       const active = document.activeElement;
-      if (active instanceof HTMLElement && active.closest('.address-autocomplete-wrap')) {
-        return;
+      if (active instanceof HTMLElement) {
+        const activeWrap = active.closest('.address-autocomplete-wrap');
+        // Only skip when focus stayed inside the same field's wrap (e.g. clicking a suggestion).
+        if (sourceWrap && activeWrap && activeWrap === sourceWrap) {
+          return;
+        }
       }
       if (this.activeAutocompleteField === field) {
         this.closeSuggestions();
       }
+      // City must be picked from a Google suggestion; if it was typed manually and not
+      // confirmed, clear it (and its postal code, which belongs to that city).
+      if (field === 'town') {
+        this.enforceTownSelected();
+      }
     }, 0);
+  }
+
+  private enforceTownSelected(): void {
+    if (this.placeSelectionInFlight) {
+      return;
+    }
+
+    const townCtrl = this.registerForm.get('town');
+    const town = (townCtrl?.value ?? '').toString().trim();
+    if (!town) {
+      return;
+    }
+
+    const confirmed = (this.lastSelectedValues.town ?? '').trim();
+    if (town.toLowerCase() === confirmed.toLowerCase()) {
+      return;
+    }
+
+    this.googleAddressService.isAddressSelect = true;
+    this.registerForm.patchValue({ town: '', postalcode: '' });
+    townCtrl?.markAsTouched();
+    this.lastSelectedValues.town = '';
+    this.googleAddressService.clearSuggestions();
   }
 
   private closeSuggestions(): void {
@@ -127,13 +166,16 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
     prediction: google.maps.places.AutocompletePrediction,
     field: GoogleAddressFieldMode
   ): void {
+    this.placeSelectionInFlight = true;
     this.googleAddressService.selectAddress2(prediction, (place) => {
       const current = this.registerForm.value;
       const parsed = parseGooglePlaceAddress(place, field, {
         address: current.address,
         town: current.town,
         state: current.state,
-        postalcode: current.postalcode
+        // When the city/address changes, the postal code must reflect the new selection.
+        // Don't carry over the previous city's postal code; only keep it for state changes.
+        postalcode: field === 'state' ? current.postalcode : ''
       }, prediction.description);
 
       this.lastSelectedValues.address = parsed.address;
@@ -149,6 +191,7 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.activeAutocompleteField = null;
       this.highlightedIndex = -1;
+      this.placeSelectionInFlight = false;
     });
   }
 

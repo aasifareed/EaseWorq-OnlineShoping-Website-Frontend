@@ -9,7 +9,8 @@ export const environment = {
   // baseUrl: 'https://pos-api.qa-behzitech.store/',
   baseUrl: 'https://localhost:44374/',
   /** Domain sent to WebsiteTenantResolver when running on localhost in development. */
-  devHostName: 'sastakhareedo.com',
+  devHostName: 'https://sastakhareedo.com',
+  // devHostName: 'https://sastakhareedo.com',
   /** Optional fallback tenant id for local tooling only. */
   devTenantId: 1,
   /** Optional fallback only — resolved at runtime from subdomain + APIs. */

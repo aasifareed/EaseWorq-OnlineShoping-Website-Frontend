@@ -116,7 +116,7 @@ export class FashionOneComponent implements OnInit {
   private loadCategorySliders(): void {
     this.loadingCategorySliders = true;
     this.productService
-      .getHomePopularCategoryProductSliders({ productLimitPerCategory: 10 })
+      .getHomePopularCategoryProductSliders({ productLimitPerCategory: 5 })
       .subscribe({
         next: (sliders) => {
           this.categorySliders = (sliders || []).map((s) => ({

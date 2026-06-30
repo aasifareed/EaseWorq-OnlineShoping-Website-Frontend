@@ -33,6 +33,8 @@ interface ResolveTenantByDomainApiResult {
   ResolvedDomain?: string;
   isCustomDomain?: boolean;
   IsCustomDomain?: boolean;
+  storeId?: string;
+  StoreId?: string;
 }
 
 export interface TenantResolution {
@@ -40,6 +42,7 @@ export interface TenantResolution {
   tenancyName: string;
   resolvedDomain?: string;
   isCustomDomain: boolean;
+  storeId?: string | null;
 }
 
 export interface TenantStoreDetails {
@@ -141,6 +144,7 @@ export class TenantService {
           tenancyName,
           resolvedDomain: (result.resolvedDomain ?? result.ResolvedDomain) as string | undefined,
           isCustomDomain: !!(result.isCustomDomain ?? result.IsCustomDomain),
+          storeId: normalizeStoreGuid(result.storeId ?? result.StoreId),
         };
       }),
       catchError(() => of(null)),
@@ -189,39 +193,36 @@ export class TenantService {
         return false;
       }
 
-      let tenancyName: string | null = null;
-      let tenantId: number | null = null;
-
-      const hasCachedTenant =
-        !!this.shopContext.getTenancyName() && !!this.shopContext.getTenantId();
-
-      const resolution$ = hasCachedTenant
-        ? of({
-            tenantId: this.shopContext.getTenantId() as number,
-            tenancyName: this.shopContext.getTenancyName() as string,
-            isCustomDomain: false,
-          } satisfies TenantResolution)
-        : this.resolveTenantByDomain(hostName);
-
-      const resolution = await firstValueFrom(resolution$);
+      // Always resolve via the domain so the TenantDomains table stays the single source of
+      // truth (host -> TenantDomains -> AbpTenants -> store). Caching is layered on after this.
+      const resolution = await firstValueFrom(this.resolveTenantByDomain(hostName));
       if (!resolution) {
         void router.navigateByUrl('/site-not-available');
         return false;
       }
 
-      tenancyName = resolution.tenancyName;
-      tenantId = resolution.tenantId;
+      const tenancyName = resolution.tenancyName;
+      let tenantId = resolution.tenantId;
 
-      const tenantDetails = await firstValueFrom(this.fetchTenantStoreDetails(tenantId));
-      if (!tenantDetails?.storeId) {
+      // The resolver already returns the store id for the tenant. Only fall back to the
+      // legacy per-tenant lookup if the resolver could not include it.
+      let resolvedStoreId = normalizeStoreGuid(resolution.storeId);
+      if (!resolvedStoreId) {
+        const tenantDetails = await firstValueFrom(this.fetchTenantStoreDetails(tenantId));
+        if (tenantDetails) {
+          tenantId = tenantDetails.tenantId;
+          resolvedStoreId = tenantDetails.storeId;
+        }
+      }
+
+      if (!resolvedStoreId) {
         void router.navigateByUrl('/site-not-available');
         return false;
       }
 
-      tenantId = tenantDetails.tenantId;
       this.shopContext.setTenancyName(tenancyName);
       this.shopContext.setTenantId(tenantId);
-      this.shopContext.setStoreId(tenantDetails.storeId);
+      this.shopContext.setStoreId(resolvedStoreId);
 
       const storefront = await firstValueFrom(this.storefrontSettings.loadStorefront(true));
       if (!storefront?.isOnlineShopEnabled) {
@@ -231,7 +232,7 @@ export class TenantService {
 
       const storeId =
         normalizeStoreGuid(storefront.storeId) ??
-        tenantDetails.storeId;
+        resolvedStoreId;
 
       const resolvedStorefront = { ...storefront, storeId, tenantId };
       this.shopContext.applyStorefront(resolvedStorefront, tenancyName);

@@ -59,6 +59,51 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
     }
   }
 
+  /* Product rows share the same right-hand value column as the totals */
+  .qty {
+    width: 100%;
+    padding-right: 0;
+
+    > li {
+      display: grid !important;
+      grid-template-columns: 1fr $checkout-value-col;
+      align-items: start;
+      column-gap: 1.25rem;
+      width: 100% !important;
+      float: none !important;
+      clear: both;
+
+      span {
+        float: none !important;
+        width: 100% !important;
+        min-width: 0;
+        text-align: right;
+        justify-self: end;
+        grid-column: 2;
+        padding-right: 0.15rem;
+      }
+    }
+  }
+
+  /* "Product | Total" header aligns the Total label above the price column */
+  .title-box > div {
+    display: grid !important;
+    grid-template-columns: 1fr $checkout-value-col;
+    align-items: center;
+    column-gap: 1.25rem;
+    width: 100%;
+
+    span {
+      grid-column: 2;
+      float: none !important;
+      width: 100% !important;
+      min-width: 0;
+      text-align: right;
+      justify-self: end;
+      padding-right: 0.15rem;
+    }
+  }
+
   .checkout-total-row__label {
     grid-column: 1;
     font-weight: 600;
@@ -122,6 +167,17 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
 
       &:last-child {
         margin-bottom: 0;
+      }
+
+      .count,
+      .checkout-total-row__value {
+        grid-column: 2;
+        float: none !important;
+        width: 100% !important;
+        min-width: 0;
+        text-align: right;
+        justify-self: end;
+        padding-right: 0.15rem;
       }
     }
   }
@@ -245,6 +301,7 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
       border-radius: 999px;
       border: 2px solid $checkout-card-border;
       background: $checkout-card-bg;
+      color: #ffffff;
       font-size: 0.88rem;
       font-weight: 600;
       line-height: 1.25;
@@ -262,6 +319,27 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
       background: $checkout-accent-soft;
       color: $checkout-accent;
       box-shadow: 0 0 0 1px rgba(240, 180, 41, 0.35);
+    }
+  }
+
+  /* Light theme: chips need solid surface colors so the text stays readable */
+  body:not(.dark) & .checkout-chip {
+    .checkout-chip__text {
+      border-color: var(--ml-surface-border, #e5e5ea);
+      background: var(--ml-surface-bg, #ffffff);
+      color: var(--ml-surface-text, #333333);
+    }
+
+    &:hover .checkout-chip__text {
+      border-color: rgba(240, 180, 41, 0.85);
+      background: var(--ml-surface-bg, #ffffff);
+      color: var(--ml-surface-text, #333333);
+    }
+
+    &--selected .checkout-chip__text {
+      border-color: $checkout-accent;
+      background: $checkout-accent-soft;
+      color: #8a5a00;
     }
   }
 
@@ -584,6 +662,12 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 0.9rem;
   }
+}
+
+.required-mark {
+  color: #dc3545;
+  font-weight: 700;
+  margin-left: 2px;
 }
 
 @media (max-width: 380px) {

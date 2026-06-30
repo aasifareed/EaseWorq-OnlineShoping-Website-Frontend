@@ -1,48 +1,73 @@
 .product-image {
     text-align: center;
     line-height: normal;
-    height: auto;
     margin: 0 auto;
     max-width: 220px;
     overflow: hidden;
     position: relative;
-    padding: 10px;
+    padding: 0;
     background: #fff;
+    border-radius: 8px;
     margin-right: 12px !important;
 }
 
 .brand-logo-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 110px;
+    display: block;
     text-decoration: none;
     color: inherit;
 }
 
-img {
+/* Fixed, uniform tile: every brand image fills the same shape/size, regardless
+   of its original resolution (square vs rectangular). */
+.brand-logo-media {
+    position: relative;
     width: 100%;
-    max-width: 90px;
-    max-height: 90px;
+    height: 120px;
+    overflow: hidden;
 }
 
-.brand-logo-name {
+.brand-logo-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
     display: block;
-    font-size: 12px;
-    font-weight: 600;
+}
+
+/* Brand name overlay — appears centered on hover over the image. */
+.brand-logo-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.brand-logo-link:hover .brand-logo-overlay,
+.brand-logo-link:focus .brand-logo-overlay {
+    opacity: 1;
+}
+
+.brand-logo-overlay__text {
+    font-size: 13px;
+    font-weight: 700;
     line-height: 1.3;
     text-transform: uppercase;
-    color: #222;
+    text-align: center;
+    color: #fff;
     word-break: break-word;
 }
 
+/* No image: show the brand name in the same fixed tile size. */
 .brand-logo-fallback {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 70px;
+    height: 120px;
     width: 100%;
     padding: 8px;
     font-size: 13px;
