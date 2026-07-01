@@ -1,30 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  HostListener,
+  ElementRef
+} from '@angular/core';
 import { AbstractControl, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
+import { trimMaxLength, trimRequired } from '../../../shop/checkout/checkout-validators';
+import { GoogleAddressService } from '../../../shared/services/address-autocomplete/google-address.service';
+import {
+  GoogleAddressFieldMode,
+  parseGooglePlaceAddress
+} from '../../../shared/services/address-autocomplete/google-address.util';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
 
   registerForm: UntypedFormGroup;
   loading = false;
+  highlightedIndex = -1;
+  activeAutocompleteField: GoogleAddressFieldMode | null = null;
+  /** True while a Google place selection is resolving, so blur won't clear a city mid-pick. */
+  private placeSelectionInFlight = false;
+  private readonly destroy$ = new Subject<void>();
+  private readonly lastSelectedValues: Record<GoogleAddressFieldMode, string> = {
+    address: '',
+    town: '',
+    state: ''
+  };
 
   constructor(
     private fb: UntypedFormBuilder,
     private auth: AuthService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    public googleAddressService: GoogleAddressService,
+    private elementRef: ElementRef
   ) {
     this.registerForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
+      address: ['', [trimRequired(), trimMaxLength(100)]],
+      town: ['', trimRequired()],
+      state: ['', trimRequired()],
+      postalcode: ['', trimRequired()],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
@@ -32,6 +63,148 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.auth.seedShopContextFromEnvironment();
+  }
+
+  ngAfterViewInit(): void {
+    this.setupFieldAutocomplete('address');
+    this.setupFieldAutocomplete('town');
+    this.setupFieldAutocomplete('state');
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: EventTarget | null): void {
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    if (target.closest('.address-autocomplete-wrap')) {
+      return;
+    }
+    this.closeSuggestions();
+  }
+
+  onAutocompleteBlur(field: GoogleAddressFieldMode, event?: FocusEvent): void {
+    const sourceWrap =
+      event?.target instanceof HTMLElement
+        ? event.target.closest('.address-autocomplete-wrap')
+        : null;
+
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) {
+        const activeWrap = active.closest('.address-autocomplete-wrap');
+        // Only skip when focus stayed inside the same field's wrap (e.g. clicking a suggestion).
+        if (sourceWrap && activeWrap && activeWrap === sourceWrap) {
+          return;
+        }
+      }
+      if (this.activeAutocompleteField === field) {
+        this.closeSuggestions();
+      }
+      // City must be picked from a Google suggestion; if it was typed manually and not
+      // confirmed, clear it (and its postal code, which belongs to that city).
+      if (field === 'town') {
+        this.enforceTownSelected();
+      }
+    }, 0);
+  }
+
+  private enforceTownSelected(): void {
+    if (this.placeSelectionInFlight) {
+      return;
+    }
+
+    const townCtrl = this.registerForm.get('town');
+    const town = (townCtrl?.value ?? '').toString().trim();
+    if (!town) {
+      return;
+    }
+
+    const confirmed = (this.lastSelectedValues.town ?? '').trim();
+    if (town.toLowerCase() === confirmed.toLowerCase()) {
+      return;
+    }
+
+    this.googleAddressService.isAddressSelect = true;
+    this.registerForm.patchValue({ town: '', postalcode: '' });
+    townCtrl?.markAsTouched();
+    this.lastSelectedValues.town = '';
+    this.googleAddressService.clearSuggestions();
+  }
+
+  private closeSuggestions(): void {
+    this.googleAddressService.clearSuggestions();
+    this.highlightedIndex = -1;
+    this.activeAutocompleteField = null;
+  }
+
+  handleKeyDown(event: KeyboardEvent, field: GoogleAddressFieldMode): void {
+    this.activeAutocompleteField = field;
+    const suggestions = this.googleAddressService.suggestions$.getValue() || [];
+    if (suggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      this.highlightedIndex = (this.highlightedIndex + 1) % suggestions.length;
+      event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
+      this.highlightedIndex = (this.highlightedIndex - 1 + suggestions.length) % suggestions.length;
+      event.preventDefault();
+    } else if (event.key === 'Enter' && this.highlightedIndex >= 0) {
+      this.onPlaceSelected(suggestions[this.highlightedIndex], field);
+      this.highlightedIndex = -1;
+      event.preventDefault();
+    }
+  }
+
+  onPlaceSelected(
+    prediction: google.maps.places.AutocompletePrediction,
+    field: GoogleAddressFieldMode
+  ): void {
+    this.placeSelectionInFlight = true;
+    this.googleAddressService.selectAddress2(prediction, (place) => {
+      const current = this.registerForm.value;
+      const parsed = parseGooglePlaceAddress(place, field, {
+        address: current.address,
+        town: current.town,
+        state: current.state,
+        // When the city/address changes, the postal code must reflect the new selection.
+        // Don't carry over the previous city's postal code; only keep it for state changes.
+        postalcode: field === 'state' ? current.postalcode : ''
+      }, prediction.description);
+
+      this.lastSelectedValues.address = parsed.address;
+      this.lastSelectedValues.town = parsed.town;
+      this.lastSelectedValues.state = parsed.state;
+
+      this.registerForm.patchValue({
+        address: parsed.address,
+        town: parsed.town,
+        state: parsed.state,
+        postalcode: parsed.postalcode
+      }, { emitEvent: false });
+
+      this.activeAutocompleteField = null;
+      this.highlightedIndex = -1;
+      this.placeSelectionInFlight = false;
+    });
+  }
+
+  private setupFieldAutocomplete(field: GoogleAddressFieldMode): void {
+    this.registerForm.get(field)?.valueChanges
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe((value: string) => {
+        if (!this.googleAddressService.isAddressSelect && value !== this.lastSelectedValues[field]) {
+          this.activeAutocompleteField = field;
+          void this.googleAddressService.getPlacePredictions(value, field);
+        }
+        this.googleAddressService.isAddressSelect = false;
+      });
   }
 
   passwordMatchValidator(group: AbstractControl): { mismatch: boolean } | null {
@@ -58,14 +231,22 @@ export class RegisterComponent implements OnInit {
       phoneNumber: v.phone?.trim() || '',
       password: v.password,
       storeId: this.auth.storeId,
-      tenantId: this.auth.tenantId
+      tenantId: this.auth.tenantId,
+      address: v.address?.trim() || '',
+      townCity: v.town?.trim() || '',
+      stateCounty: v.state?.trim() || '',
+      postalCode: v.postalcode?.trim() || ''
     }).subscribe({
       next: (msg) => {
         this.loading = false;
         this.auth.saveCustomerProfile({
           customerName: `${v.firstName.trim()} ${v.lastName.trim()}`.trim(),
           customerEmail: email,
-          customerMobileNo: v.phone?.trim() || undefined
+          customerMobileNo: v.phone?.trim() || undefined,
+          address: v.address?.trim() || undefined,
+          town: v.town?.trim() || undefined,
+          state: v.state?.trim() || undefined,
+          postalcode: v.postalcode?.trim() || undefined
         });
         this.toastr.success(msg);
         this.router.navigate(['/pages/login']);

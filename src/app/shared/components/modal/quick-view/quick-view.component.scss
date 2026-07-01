@@ -4,6 +4,16 @@
   background: unset !important;
 }
 
+::ng-deep .Quickview .product-image-gallery {
+  display: flex;
+  flex-direction: column;
+}
+
+::ng-deep .Quickview .product-image-gallery .gallery-main.is-single {
+  height: 100%;
+  flex: 1 1 auto;
+}
+
 ::ng-deep .Quickview .quick-view-modal .quick-view-actions {
   display: flex;
   flex-wrap: wrap;

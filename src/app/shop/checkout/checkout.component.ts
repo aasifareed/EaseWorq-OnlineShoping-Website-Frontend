@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength } from './checkout-validators';
 import { Router } from '@angular/router';
@@ -31,19 +31,37 @@ import {
 } from '../../shared/services/online-shop-checkout.service';
 import { OnlineShopSettingsService } from '../../shared/services/online-shop-settings.service';
 import { OnlineShopStorefront } from '../../shared/models/online-shop-storefront.model';
+import { GoogleAddressService } from '../../shared/services/address-autocomplete/google-address.service';
+import {
+  GoogleAddressFieldMode,
+  parseGooglePlaceAddress
+} from '../../shared/services/address-autocomplete/google-address.util';
+
+type CheckoutAddressGroup = 'billing' | 'shipping';
+type CheckoutAutocompleteKey = `${CheckoutAddressGroup}.${GoogleAddressFieldMode}`;
 
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.scss']
 })
-export class CheckoutComponent implements OnInit, OnDestroy {
+export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Default storefront country until a country selector is added. */
   private readonly defaultCountryCode = 'PK';
 
   private readonly destroy$ = new Subject<void>();
   private shippingRequestId = 0;
+  private lastSelectedValues: Record<CheckoutAddressGroup, Record<GoogleAddressFieldMode, string>> = {
+    billing: { address: '', town: '', state: '' },
+    shipping: { address: '', town: '', state: '' }
+  };
+
+  activeAutocompleteKey: CheckoutAutocompleteKey | null = null;
+  highlightedIndex = -1;
+  courierPanelExpanded = true;
+  /** True while a Google place selection is resolving, so blur won't clear a city mid-pick. */
+  private placeSelectionInFlight = false;
 
   public checkoutForm: UntypedFormGroup;
   public products: Product[] = [];
@@ -84,7 +102,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private translate: TranslateService,
     private onlineShopCheckout: OnlineShopCheckoutService,
     private onlineShopSettings: OnlineShopSettingsService,
-  ) { 
+    public googleAddressService: GoogleAddressService,
+    private elementRef: ElementRef,
+  ) {
     this.checkoutForm = this.fb.group({
       billing: this.createBillingAddressGroup(),
       shipping: this.createShippingAddressGroup(),
@@ -135,6 +155,142 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.prefillCheckoutCustomerDetails();
   }
 
+  ngAfterViewInit(): void {
+    this.setupAddressAutocomplete('billing', this.billingGroup);
+    this.setupAddressAutocomplete('shipping', this.shippingGroup);
+  }
+
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: EventTarget | null): void {
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    if (target.closest('.address-autocomplete-wrap')) {
+      return;
+    }
+    this.closeSuggestions();
+  }
+
+  onAutocompleteBlur(group: CheckoutAddressGroup, field: GoogleAddressFieldMode, event?: FocusEvent): void {
+    const key = `${group}.${field}`;
+    const sourceWrap =
+      event?.target instanceof HTMLElement
+        ? event.target.closest('.address-autocomplete-wrap')
+        : null;
+
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) {
+        const activeWrap = active.closest('.address-autocomplete-wrap');
+        if (sourceWrap && activeWrap && activeWrap === sourceWrap) {
+          return;
+        }
+      }
+      if (this.activeAutocompleteKey === key) {
+        this.closeSuggestions();
+      }
+      // City must be picked from a Google suggestion; if it was typed manually and not
+      // confirmed, clear it (and its postal code, which belongs to that city).
+      if (field === 'town') {
+        this.enforceTownSelected(group);
+      }
+    }, 0);
+  }
+
+  private enforceTownSelected(group: CheckoutAddressGroup): void {
+    if (this.placeSelectionInFlight) {
+      return;
+    }
+
+    const formGroup = group === 'billing' ? this.billingGroup : this.shippingGroup;
+    const townCtrl = formGroup.get('town');
+    const town = (townCtrl?.value ?? '').toString().trim();
+    if (!town) {
+      return;
+    }
+
+    const confirmed = (this.lastSelectedValues[group].town ?? '').trim();
+    if (town.toLowerCase() === confirmed.toLowerCase()) {
+      return;
+    }
+
+    this.googleAddressService.isAddressSelect = true;
+    formGroup.patchValue({ town: '', postalcode: '' });
+    townCtrl?.markAsTouched();
+    this.lastSelectedValues[group].town = '';
+    this.googleAddressService.clearSuggestions();
+  }
+
+  private closeSuggestions(): void {
+    this.googleAddressService.clearSuggestions();
+    this.highlightedIndex = -1;
+    this.activeAutocompleteKey = null;
+  }
+
+  isAutocompleteActive(group: CheckoutAddressGroup, field: GoogleAddressFieldMode): boolean {
+    return this.activeAutocompleteKey === `${group}.${field}`;
+  }
+
+  handleKeyDown(
+    event: KeyboardEvent,
+    group: CheckoutAddressGroup,
+    field: GoogleAddressFieldMode
+  ): void {
+    this.activeAutocompleteKey = `${group}.${field}`;
+    const suggestions = this.googleAddressService.suggestions$.getValue() || [];
+
+    if (suggestions.length === 0) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      this.highlightedIndex = (this.highlightedIndex + 1) % suggestions.length;
+      event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
+      this.highlightedIndex = (this.highlightedIndex - 1 + suggestions.length) % suggestions.length;
+      event.preventDefault();
+    } else if (event.key === 'Enter' && this.highlightedIndex >= 0) {
+      this.onPlaceSelected(suggestions[this.highlightedIndex], group, field);
+      this.highlightedIndex = -1;
+      event.preventDefault();
+    }
+  }
+
+  onPlaceSelected(
+    prediction: google.maps.places.AutocompletePrediction,
+    group: CheckoutAddressGroup,
+    field: GoogleAddressFieldMode
+  ): void {
+    this.placeSelectionInFlight = true;
+    this.googleAddressService.selectAddress2(prediction, (place) => {
+      const formGroup = group === 'billing' ? this.billingGroup : this.shippingGroup;
+      const current = formGroup.value as CheckoutAddressFormValues;
+      const parsed = parseGooglePlaceAddress(place, field, {
+        address: current.address,
+        town: current.town,
+        state: current.state,
+        // When the city/address changes, the postal code must reflect the new selection.
+        // Don't carry over the previous city's postal code; only keep it for state changes.
+        postalcode: field === 'state' ? current.postalcode : ''
+      }, prediction.description);
+
+      this.lastSelectedValues[group].address = parsed.address;
+      this.lastSelectedValues[group].town = parsed.town;
+      this.lastSelectedValues[group].state = parsed.state;
+
+      formGroup.patchValue({
+        address: parsed.address,
+        town: parsed.town,
+        state: parsed.state,
+        postalcode: parsed.postalcode
+      });
+
+      this.activeAutocompleteKey = null;
+      this.highlightedIndex = -1;
+      this.placeSelectionInFlight = false;
+    });
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -147,6 +303,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   onCourierOptionSelected(key: string): void {
     this.selectedCourierOptionKey = key;
     this.applySelectedCourierToRate();
+  }
+
+  toggleCourierPanel(): void {
+    this.courierPanelExpanded = !this.courierPanelExpanded;
   }
 
   isCourierOptionSelected(option: CourierShippingOptionResult): boolean {
@@ -426,7 +586,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       customerName: ['', [trimRequired(), trimPersonName()]],
       customerMobileNo: ['', [trimRequired(), trimDigitsOnly()]],
       customerEmail: ['', [trimRequired(), this.trimEmailValidator]],
-      address: ['', [trimRequired(), trimMaxLength(50)]],
+      address: ['', [trimRequired(), trimMaxLength(100)]],
       town: ['', trimRequired()],
       state: ['', trimRequired()],
       postalcode: ['', trimRequired()]
@@ -459,7 +619,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       ? {
           customerName: [trimRequired(), trimPersonName()],
           customerMobileNo: [trimRequired(), trimDigitsOnly()],
-          address: [trimRequired(), trimMaxLength(50)],
+          address: [trimRequired(), trimMaxLength(100)],
           town: [trimRequired()],
           state: [trimRequired()],
           postalcode: [trimRequired()]
@@ -580,7 +740,25 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     if (Object.keys(patch).length) {
-      this.billingGroup.patchValue(patch);
+      this.googleAddressService.isAddressSelect = true;
+      if (patch.address?.trim()) {
+        this.lastSelectedValues.billing.address = patch.address.trim();
+      }
+      if (patch.town?.trim()) {
+        this.lastSelectedValues.billing.town = patch.town.trim();
+      }
+      if (patch.state?.trim()) {
+        this.lastSelectedValues.billing.state = patch.state.trim();
+      }
+      this.googleAddressService.clearSuggestions();
+      this.activeAutocompleteKey = null;
+      this.highlightedIndex = -1;
+      this.billingGroup.patchValue(patch, { emitEvent: false });
+      this.googleAddressService.isAddressSelect = false;
+
+      if (patch.address || patch.town || patch.state || patch.postalcode) {
+        this.refreshShippingRate();
+      }
     }
   }
 
@@ -710,6 +888,23 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       town: billing.town,
       state: billing.state,
       postalcode: billing.postalcode
+    });
+  }
+
+  private setupAddressAutocomplete(
+    groupName: CheckoutAddressGroup,
+    group: UntypedFormGroup
+  ): void {
+    (['address', 'town', 'state'] as GoogleAddressFieldMode[]).forEach((field) => {
+      group.get(field)?.valueChanges
+        .pipe(debounceTime(300), takeUntil(this.destroy$))
+        .subscribe((value: string) => {
+          if (!this.googleAddressService.isAddressSelect && value !== this.lastSelectedValues[groupName][field]) {
+            this.activeAutocompleteKey = `${groupName}.${field}`;
+            void this.googleAddressService.getPlacePredictions(value, field);
+          }
+          this.googleAddressService.isAddressSelect = false;
+        });
     });
   }
 }

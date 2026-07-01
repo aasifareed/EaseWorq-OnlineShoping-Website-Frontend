@@ -11,7 +11,12 @@
     border-radius: 20px;
     background: var(--ml-header-search-bg, #f1f3f4);
     border: 1px solid var(--ml-surface-border, #e5e5ea);
-    color: var(--ml-surface-text, #333333);
+    color: var(--ml-header-search-text, #333333);
+
+    &::placeholder {
+      color: var(--ml-header-search-placeholder, #888888);
+      opacity: 1;
+    }
   }
 
   .orders-page-title {
@@ -473,4 +478,45 @@ body.dark {
       color: var(--ml-surface-text, #ffffff);
     }
   }
+}
+
+/* The order actions dropdown is rendered with container="body", so it lives
+   outside this component's scope. These global rules ensure the icon/text
+   spacing and colors stay correct wherever the menu is portaled. */
+::ng-deep .order-actions-dropdown {
+  min-width: 190px;
+  padding: 0.35rem 0;
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.875rem;
+
+    i {
+      flex: 0 0 16px;
+      width: 16px;
+      text-align: center;
+      opacity: 0.85;
+    }
+
+    span {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+/* The detail/tracking modals are portaled to the body, so the status chip
+   loses the component-scoped padding. Restore proper spacing globally. */
+::ng-deep .my-orders-detail-modal .order-status-badge,
+::ng-deep .my-orders-tracking-modal .order-status-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
 }

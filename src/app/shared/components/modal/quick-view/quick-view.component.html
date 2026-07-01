@@ -7,6 +7,7 @@
             <div class="row">
                 <div class="col-lg-6 col-xs-12 product-image-gallery">
                     <div class="gallery-main"
+                         [class.is-single]="!hasMultipleImages"
                          (touchstart)="onGalleryTouchStart($event)"
                          (touchend)="onGalleryTouchEnd($event)">
                         <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage()" aria-label="Previous image">

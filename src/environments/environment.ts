@@ -6,15 +6,20 @@ export const environment = {
   production: false,
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
+  // baseUrl: 'https://pos-api.qa-behzitech.store/',
   baseUrl: 'https://localhost:44374/',
-  /** Subdomain tenancy name used when running on localhost in development. */
-  devTenancyName: 'beta-ak-mobile-shop',
-  /** Fixed tenant id used when running locally in development (mirrors admin panel). */
+  /** Domain sent to WebsiteTenantResolver when running on localhost in development. */
+  devHostName: 'https://sastakhareedo.com',
+  // devHostName: 'https://sastakhareedo.com',
+  /** Optional fallback tenant id for local tooling only. */
   devTenantId: 1,
   /** Optional fallback only — resolved at runtime from subdomain + APIs. */
   tenantId: null as number | null,
   /** Optional fallback only — resolved from GetForStorefront when omitted. */
   storeId: null as string | null,
+  /** Google Maps JavaScript API key (Places Autocomplete). */
+  googleMapsApiKey: 'AIzaSyDyeIndELQj_horM-429SavXuMHojQ62P0',
+  googleClientId: '463817211807-kd2tc0n3us50bc4qt5srp9jvr7qoa4oi.apps.googleusercontent.com',
   // baseUrl: 'https://q1dcwl9z-44374.inc1.devtunnels.ms',
 
 //   urls: {
@@ -22,6 +27,7 @@ export const environment = {
 //   },
    urls: {
 Account_IsTenantAvailable: 'Account/IsTenantAvailable',
+WebsiteTenantResolver_ResolveTenantByDomain: 'WebsiteTenantResolver/ResolveTenantByDomain',
 Notification_GetAll: 'Notification/GetNotifications',
 Notification_GetUnread: 'Notification/GetUnreadCustomerNotifications',
 Notification_Update: 'Notification/UpdateNotification',
@@ -64,6 +70,8 @@ Page_GetBySlug: 'OnlineShopPage/GetBySlug',
 Page_GetActivePages: 'OnlineShopPage/GetActivePages',
 Settings_GetForStorefront: 'OnlineShopSettings/GetForStorefront',
 HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
+OnlineShopHomeBanner_GetForStorefront: 'OnlineShopHomeBanner/GetHomeBannersForStorefront',
+OnlineShopStoreLogo_GetForStorefront: 'OnlineShopStoreLogo/GetLogoForStorefront',
 OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',
 OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
 OnlineShopSearch_GetSuggestions: 'OnlineShopSearch/GetSearchSuggestions',

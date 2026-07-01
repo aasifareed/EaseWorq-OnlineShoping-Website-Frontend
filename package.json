@@ -76,6 +76,7 @@
     "@angular/compiler-cli": "^17.0.4",
     "@angular/language-service": "^17.0.4",
     "@types/express": "^4.17.13",
+    "@types/google.maps": "^3.65.2",
     "@types/hammerjs": "^2.0.41",
     "@types/jasmine": "~4.0.3",
     "@types/jasminewd2": "~2.0.10",

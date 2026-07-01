@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ProductSlider } from '../../../shared/data/slider';
 import { Product } from '../../../shared/classes/product';
 import { ProductService } from '../../../shared/services/product.service';
+import { HomeBannerService } from '../../../shared/services/home-banner.service';
 import { HomeCategorySliderView } from '../../../shared/models/home-category-slider.model';
 
 @Component({
@@ -18,8 +19,30 @@ export class FashionOneComponent implements OnInit {
   public loadingCategorySliders = true;
   public popularBrandLogos: { id: string; name: string; image: string }[] = [];
   public loadingPopularBrands = true;
+  public loadingHomeBanners = true;
 
-  constructor(public productService: ProductService) {
+  private readonly defaultSliders = [{
+    image: 'https://microless.com/cdn/banners/microless-cases-sales-pc.jpg'
+  },
+  {
+    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
+  },
+  {
+    image: 'https://microless.com/cdn/banners/3d-printer-pc.jpg'
+  },
+  {
+    image: 'https://microless.com/cdn/banners/wacom-pc.jpg'
+  },
+  {
+    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
+  }];
+
+  public sliders = [...this.defaultSliders];
+
+  constructor(
+    public productService: ProductService,
+    private homeBannerService: HomeBannerService
+  ) {
     this.productService.getProducts.subscribe(response => {
       this.products = response.filter(item => item.type == 'fashion');
       this.products.filter((item) => {
@@ -32,23 +55,6 @@ export class FashionOneComponent implements OnInit {
   }
 
   public ProductSliderConfig: any = ProductSlider;
-
-  public sliders = [{
-    image: 'https://microless.com/cdn/banners/microless-cases-sales-pc.jpg'
-  },
-   {
-    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
-  },
-   {
-    image: 'https://microless.com/cdn/banners/3d-printer-pc.jpg'
-  },
-   {
-    image: 'https://microless.com/cdn/banners/wacom-pc.jpg'
-  },
-   {
-    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
-  },
-]
 
   public collections = [{
     image: 'assets/images/collection/fashion/1.jpg',
@@ -83,14 +89,34 @@ export class FashionOneComponent implements OnInit {
   }];
 
   ngOnInit(): void {
+    this.loadHomeBanners();
     this.loadCategorySliders();
     this.loadPopularBrands();
+  }
+
+  private loadHomeBanners(): void {
+    this.loadingHomeBanners = true;
+    this.sliders = [...this.defaultSliders];
+    this.homeBannerService.getHomeBanners().subscribe({
+      next: (banners) => {
+        if (banners?.length) {
+          this.sliders = banners.map((b) => ({
+            image: b.image
+          }));
+        }
+        this.loadingHomeBanners = false;
+      },
+      error: () => {
+        this.sliders = [...this.defaultSliders];
+        this.loadingHomeBanners = false;
+      }
+    });
   }
 
   private loadCategorySliders(): void {
     this.loadingCategorySliders = true;
     this.productService
-      .getHomePopularCategoryProductSliders({ productLimitPerCategory: 10 })
+      .getHomePopularCategoryProductSliders({ productLimitPerCategory: 5 })
       .subscribe({
         next: (sliders) => {
           this.categorySliders = (sliders || []).map((s) => ({
@@ -110,6 +136,12 @@ export class FashionOneComponent implements OnInit {
           this.loadingCategorySliders = false;
         }
       });
+  }
+
+  get popularSliderCategoryIds(): string[] {
+    return this.categorySliders
+      .map((slider) => slider.categoryId)
+      .filter((id): id is string => !!id);
   }
 
   private loadPopularBrands(): void {

@@ -162,8 +162,14 @@
       <div class="row align-items-center gx-0">
         <div class="col-auto">
           <div class="brand-logo py-2">
-            <a [routerLink]="['/home/fashion']" class="text-decoration-none">
-              <span class="logo-main">{{ storeName }}</span>
+            <a [routerLink]="['/home/fashion']" class="text-decoration-none brand-logo-link">
+              <img
+                *ngIf="storeLogoUrl"
+                [src]="storeLogoUrl"
+                [alt]="storeName"
+                class="store-logo-img"
+              />
+              <span *ngIf="!storeLogoUrl" class="logo-main">{{ storeName }}</span>
             </a>
           </div>
         </div>

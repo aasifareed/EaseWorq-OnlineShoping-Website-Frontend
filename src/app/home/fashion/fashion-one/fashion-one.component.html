@@ -221,8 +221,10 @@
 
     </div>
     <app-top-categories-slider
+      *ngIf="!loadingCategorySliders"
       [title]="'EXPLORE OTHER CATEGORIES'"
-      [categoryFilter]="'nonPopular'">
+      [categoryFilter]="'nonPopular'"
+      [excludeCategoryIds]="popularSliderCategoryIds">
     </app-top-categories-slider>
   </div>
 </section>

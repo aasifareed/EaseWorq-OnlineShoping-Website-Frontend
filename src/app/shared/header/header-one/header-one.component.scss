@@ -428,17 +428,31 @@
       text-transform: uppercase;
     }
 
+    .store-logo-img {
+      display: block;
+      max-height: 48px;
+      max-width: 220px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .brand-logo-link {
+      display: inline-flex;
+      align-items: center;
+    }
+
     .search-wrapper {
       input {
         flex: 1 1 auto;
         min-width: 0;
         background: var(--ml-header-search-bg);
         border: none;
-        color: var(--ml-header-search-text);
+        color: var(--ml-header-search-text, #333333);
         font-size: 13px;
         height: 38px;
         border-radius: 0;
-        &::placeholder { color: var(--ml-header-search-placeholder); }
+        &::placeholder { color: var(--ml-header-search-placeholder, #888888); opacity: 1; }
       }
       > .header-search-submit {
         flex: 0 0 50px;

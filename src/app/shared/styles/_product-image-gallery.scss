@@ -14,6 +14,26 @@
     user-select: none;
   }
 
+  /* Single image: drop the dark letterbox frame and let the image fill the whole area */
+  .gallery-main.is-single {
+    height: 100%;
+    min-height: 320px;
+    max-height: none;
+    background: transparent;
+    border: none;
+
+    .gallery-zoom-stage {
+      height: 100%;
+    }
+
+    .gallery-main-img {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      object-fit: cover;
+    }
+  }
+
   .gallery-zoom-stage {
     width: 100%;
     height: 100%;
@@ -26,11 +46,12 @@
 
   .gallery-main-img {
     display: block;
+    width: 100%;
+    height: 100%;
     max-width: 100%;
     max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     transition: transform 0.15s ease-out;
     will-change: transform;
     pointer-events: none;
@@ -83,10 +104,10 @@
     flex: 0 0 72px;
     width: 72px;
     height: 72px;
-    padding: 4px;
+    padding: 0;
     margin: 0;
     border: 2px solid rgba(255, 255, 255, 0.15);
-    background: #141414;
+    background: #ffffff;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -101,11 +122,12 @@
 
     img {
       display: block;
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain;
+      object-fit: cover;
+      object-position: center;
       pointer-events: none;
     }
   }

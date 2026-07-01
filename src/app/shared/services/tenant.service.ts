@@ -6,18 +6,9 @@ import { catchError, filter, map, take } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ShopContext } from '../models/shop-context.model';
 import { OnlineShopSettingsService } from './online-shop-settings.service';
+import { StoreLogoService } from './store-logo.service';
 import { ShopContextService } from './shop-context.service';
 import { isValidStoreGuid, normalizeStoreGuid } from '../utils/shop-context.util';
-
-interface IsTenantAvailableResult {
-  tenantId?: number;
-  TenantId?: number;
-}
-
-interface AbpTenantResponse {
-  success?: boolean;
-  result?: IsTenantAvailableResult;
-}
 
 interface TenantDetailsForWebsiteResult {
   tenantId?: number;
@@ -31,10 +22,35 @@ interface AbpResultResponse<T> {
   result?: T;
 }
 
+interface ResolveTenantByDomainApiResult {
+  state?: number;
+  State?: number;
+  tenantId?: number;
+  TenantId?: number;
+  tenancyName?: string;
+  TenancyName?: string;
+  resolvedDomain?: string;
+  ResolvedDomain?: string;
+  isCustomDomain?: boolean;
+  IsCustomDomain?: boolean;
+  storeId?: string;
+  StoreId?: string;
+}
+
+export interface TenantResolution {
+  tenantId: number;
+  tenancyName: string;
+  resolvedDomain?: string;
+  isCustomDomain: boolean;
+  storeId?: string | null;
+}
+
 export interface TenantStoreDetails {
   tenantId: number;
   storeId: string;
 }
+
+const TENANT_RESOLUTION_AVAILABLE = 1;
 
 @Injectable({
   providedIn: 'root',
@@ -44,7 +60,6 @@ export class TenantService {
   private readonly loadingSubject = new BehaviorSubject<boolean>(true);
   private initializePromise: Promise<boolean> | null = null;
 
-  /** Single observable stream for resolved tenant/store context. */
   readonly shopContext$ = this.contextSubject.asObservable();
   readonly loading$ = this.loadingSubject.asObservable();
 
@@ -52,6 +67,7 @@ export class TenantService {
     private http: HttpClient,
     private shopContext: ShopContextService,
     private storefrontSettings: OnlineShopSettingsService,
+    private storeLogoService: StoreLogoService,
   ) {}
 
   get snapshot(): ShopContext | null {
@@ -62,7 +78,6 @@ export class TenantService {
     return this.loadingSubject.value;
   }
 
-  /** Emits once when tenant/store context is fully resolved (or immediately if already ready). */
   whenReady(): Observable<ShopContext> {
     const current = this.snapshot;
     if (current?.resolved && isValidStoreGuid(current.storeId)) {
@@ -75,7 +90,6 @@ export class TenantService {
     );
   }
 
-  /** APP_INITIALIZER entry point — resolves tenant, loads storefront settings, persists context. */
   initialize(router: Router): Promise<boolean> {
     if (!this.initializePromise) {
       this.initializePromise = this.runInitialize(router);
@@ -83,57 +97,64 @@ export class TenantService {
     return this.initializePromise;
   }
 
-  resolveTenancyNameFromHost(): string | null {
+  resolveHostName(): string | null {
     if (typeof window === 'undefined') {
       return null;
     }
 
     if (!environment.production && this.isLocalDevHost()) {
-      return environment.devTenancyName?.trim() || null;
+      return environment.devHostName?.trim() || window.location.hostname?.trim() || null;
     }
 
-    const hostname = window.location.hostname.toLowerCase();
-
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return environment.devTenancyName?.trim() || null;
-    }
-
-    const parts = hostname.split('.').filter(Boolean);
-    if (parts.length < 2) {
-      return null;
-    }
-
-    let subdomain = parts[0];
-    if (subdomain === 'www') {
-      subdomain = parts.length >= 3 ? parts[1] : '';
-    }
-
-    return subdomain?.trim() || null;
+    return window.location.hostname?.trim() || null;
   }
 
-  checkTenantAvailability(tenancyName: string): Observable<boolean> {
-    const url = `${this.apiRoot()}api/services/app/${environment.urls.Account_IsTenantAvailable}`;
-    return this.http.post<AbpTenantResponse>(url, { tenancyName }).pipe(
+  resolveTenantByDomain(hostName: string): Observable<TenantResolution | null> {
+    const path = environment.urls.WebsiteTenantResolver_ResolveTenantByDomain
+      ?? 'WebsiteTenantResolver/ResolveTenantByDomain';
+    const url = `${this.apiRoot()}api/services/app/${path}`;
+
+    return this.http.post<AbpResultResponse<ResolveTenantByDomainApiResult>>(url, { hostName }).pipe(
       map((response) => {
-        const tenantId = response?.result?.tenantId ?? response?.result?.TenantId;
-        if (response?.success && tenantId != null) {
-          if (this.shopContext.getTenancyName() !== tenancyName) {
-            this.shopContext.clearStoreId();
-          }
-          this.shopContext.setTenancyName(tenancyName);
-          this.shopContext.setTenantId(Number(tenantId));
-          return true;
+        const result = response?.result;
+        if (!result) {
+          return null;
         }
-        return false;
+
+        const state = Number(result.state ?? result.State ?? 0);
+        if (state !== TENANT_RESOLUTION_AVAILABLE) {
+          return null;
+        }
+
+        const tenantId = Number(result.tenantId ?? result.TenantId ?? 0);
+        const tenancyName = String(result.tenancyName ?? result.TenancyName ?? '').trim();
+        if (!tenantId || !tenancyName) {
+          return null;
+        }
+
+        if (this.shopContext.getTenancyName() && this.shopContext.getTenancyName() !== tenancyName) {
+          this.shopContext.clearStoreId();
+        }
+
+        this.shopContext.setTenancyName(tenancyName);
+        this.shopContext.setTenantId(tenantId);
+
+        return {
+          tenantId,
+          tenancyName,
+          resolvedDomain: (result.resolvedDomain ?? result.ResolvedDomain) as string | undefined,
+          isCustomDomain: !!(result.isCustomDomain ?? result.IsCustomDomain),
+          storeId: normalizeStoreGuid(result.storeId ?? result.StoreId),
+        };
       }),
-      catchError(() => of(false)),
+      catchError(() => of(null)),
     );
   }
 
-  /** Resolves store id from CustomStore via OnlineShopTenant/GetTenantDetailsForWebsite. */
   fetchTenantStoreDetails(tenantId: number): Observable<TenantStoreDetails | null> {
     const path = environment.urls.OnlineShopTenant_GetTenantDetailsForWebsite;
     const url = `${this.apiRoot()}api/services/app/${path}?TenantId=${tenantId}`;
+
     return this.http.get<AbpResultResponse<TenantDetailsForWebsiteResult>>(url).pipe(
       map((response) => {
         if (response?.success === false || !response?.result) {
@@ -166,68 +187,52 @@ export class TenantService {
     this.loadingSubject.next(true);
 
     try {
-      const tenancyName = this.resolveTenancyNameFromHost();
-      if (!tenancyName) {
-        await router.navigateByUrl('/site-not-available');
+      const hostName = this.resolveHostName();
+      if (!hostName) {
+        void router.navigateByUrl('/site-not-available');
         return false;
       }
 
-      if (this.shopContext.getTenancyName() && this.shopContext.getTenancyName() !== tenancyName) {
-        this.shopContext.clearStoreId();
-      }
-
-      let tenantId: number | null = null;
-
-      if (!environment.production) {
-        // Local dev — fixed tenancy + tenant id, skip IsTenantAvailable.
-        this.shopContext.setTenancyName(tenancyName);
-        tenantId = Number(environment.devTenantId ?? 1);
-        if (!tenantId) {
-          await router.navigateByUrl('/site-not-available');
-          return false;
-        }
-        this.shopContext.setTenantId(tenantId);
-      } else {
-        const hasCachedTenant =
-          this.shopContext.getTenancyName() === tenancyName && !!this.shopContext.getTenantId();
-
-        const tenantCheck$ = hasCachedTenant
-          ? of(true)
-          : this.checkTenantAvailability(tenancyName);
-
-        const available = await firstValueFrom(tenantCheck$);
-        if (!available) {
-          await router.navigateByUrl('/site-not-available');
-          return false;
-        }
-
-        tenantId = this.shopContext.getTenantId();
-        if (!tenantId) {
-          await router.navigateByUrl('/site-not-available');
-          return false;
-        }
-      }
-
-      const tenantDetails = await firstValueFrom(this.fetchTenantStoreDetails(tenantId));
-      if (!tenantDetails?.storeId) {
-        await router.navigateByUrl('/site-not-available');
+      // Always resolve via the domain so the TenantDomains table stays the single source of
+      // truth (host -> TenantDomains -> AbpTenants -> store). Caching is layered on after this.
+      const resolution = await firstValueFrom(this.resolveTenantByDomain(hostName));
+      if (!resolution) {
+        void router.navigateByUrl('/site-not-available');
         return false;
       }
 
-      tenantId = tenantDetails.tenantId;
+      const tenancyName = resolution.tenancyName;
+      let tenantId = resolution.tenantId;
+
+      // The resolver already returns the store id for the tenant. Only fall back to the
+      // legacy per-tenant lookup if the resolver could not include it.
+      let resolvedStoreId = normalizeStoreGuid(resolution.storeId);
+      if (!resolvedStoreId) {
+        const tenantDetails = await firstValueFrom(this.fetchTenantStoreDetails(tenantId));
+        if (tenantDetails) {
+          tenantId = tenantDetails.tenantId;
+          resolvedStoreId = tenantDetails.storeId;
+        }
+      }
+
+      if (!resolvedStoreId) {
+        void router.navigateByUrl('/site-not-available');
+        return false;
+      }
+
       this.shopContext.setTenancyName(tenancyName);
       this.shopContext.setTenantId(tenantId);
-      this.shopContext.setStoreId(tenantDetails.storeId);
+      this.shopContext.setStoreId(resolvedStoreId);
 
       const storefront = await firstValueFrom(this.storefrontSettings.loadStorefront(true));
       if (!storefront?.isOnlineShopEnabled) {
-        await router.navigateByUrl('/site-not-available');
+        void router.navigateByUrl('/site-not-available');
         return false;
       }
 
       const storeId =
         normalizeStoreGuid(storefront.storeId) ??
-        tenantDetails.storeId;
+        resolvedStoreId;
 
       const resolvedStorefront = { ...storefront, storeId, tenantId };
       this.shopContext.applyStorefront(resolvedStorefront, tenancyName);
@@ -241,9 +246,10 @@ export class TenantService {
       };
 
       this.contextSubject.next(context);
+      await firstValueFrom(this.storeLogoService.initialize(tenantId, storeId));
       return true;
     } catch {
-      await router.navigateByUrl('/site-not-available');
+      void router.navigateByUrl('/site-not-available');
       return false;
     } finally {
       this.loadingSubject.next(false);
@@ -264,4 +270,3 @@ export class TenantService {
     return base.endsWith('/') ? base : `${base}/`;
   }
 }
-

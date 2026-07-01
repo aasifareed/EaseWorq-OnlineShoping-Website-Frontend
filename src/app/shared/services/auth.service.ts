@@ -25,6 +25,10 @@ export interface SignupPayload {
   password: string;
   storeId: string;
   tenantId: number;
+  address?: string;
+  townCity?: string;
+  stateCounty?: string;
+  postalCode?: string;
 }
 
 /** Checkout billing fields persisted after login / signup / previous orders. */
@@ -74,7 +78,7 @@ export class AuthService {
   get tenancyName(): string {
     return this.tenantService.snapshot?.tenancyName
       || this.shopContext.getTenancyName()
-      || environment.devTenancyName
+      || environment.shop?.tenancyName
       || '';
   }
 

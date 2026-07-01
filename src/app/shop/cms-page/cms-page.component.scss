@@ -1,32 +1,56 @@
 .cms-page__title {
   margin-bottom: 1.5rem;
   font-weight: 600;
+  color: var(--ml-page-title, inherit);
 }
 
 .cms-page__content {
   line-height: 1.7;
-  color: #333;
+  color: var(--ml-surface-text, #333);
 
-  ::ng-deep h1,
-  ::ng-deep h2,
-  ::ng-deep h3 {
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-  }
-
-  ::ng-deep p {
-    margin-bottom: 1rem;
-  }
-
+  /* Theme sets all `li` to inline-block globally — restore normal block flow for CMS HTML. */
   ::ng-deep ul,
   ::ng-deep ol {
+    display: block;
     margin-bottom: 1rem;
     padding-left: 1.5rem;
   }
 
+  ::ng-deep ul {
+    list-style-type: disc;
+  }
+
+  ::ng-deep ol {
+    list-style-type: decimal;
+  }
+
+  ::ng-deep li {
+    display: list-item;
+    margin-bottom: 0.35rem;
+  }
+
+  ::ng-deep h1,
+  ::ng-deep h2,
+  ::ng-deep h3,
+  ::ng-deep h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--ml-page-title, inherit);
+  }
+
+  ::ng-deep p {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  ::ng-deep strong,
+  ::ng-deep b {
+    font-weight: 600;
+  }
+
   ::ng-deep a {
-    color: #ff4c3b;
+    color: var(--theme-deafult, #ff4c3b);
     text-decoration: underline;
   }
 }
