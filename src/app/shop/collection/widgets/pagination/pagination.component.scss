@@ -1,0 +1,41 @@
+.product-pagination {
+  border-color: var(--ml-surface-border, #e5e5ea);
+
+  .pagination {
+    .page-item {
+      .page-link {
+        color: var(--ml-surface-text, #333333);
+        background: var(--ml-surface-bg, #ffffff);
+        border-color: var(--ml-surface-border, #e5e5ea);
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+        &:hover {
+          color: var(--ml-surface-text, #333333);
+          background: var(--ml-toolbar-toggle-hover, #f0f0f0);
+        }
+      }
+
+      &.active .page-link {
+        color: #111111;
+        background: var(--theme-deafult, #ffc107);
+        border-color: var(--theme-deafult, #ffc107);
+      }
+
+      &.disabled .page-link {
+        color: var(--ml-surface-text-muted, #777777);
+        background: var(--ml-toolbar-bg, #f8f8f9);
+        border-color: var(--ml-surface-border, #e5e5ea);
+      }
+    }
+  }
+
+  .product-search-count-bottom {
+    border-color: var(--ml-surface-border, #e5e5ea);
+
+    h5 {
+      color: var(--ml-surface-text-muted, #777777);
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}

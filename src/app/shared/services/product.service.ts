@@ -288,6 +288,10 @@ private apiRoot(): string {
   }
 
   loadWishlistFromApi(): Observable<Product[]> {
+    if (!this.auth.isLoggedIn() || !this.auth.getCustomerEmail()) {
+      return of([...state.wishlist]);
+    }
+
     const path = `${environment.urls.OnlineShopWishlist_GetWishlistForOnlineShop}`;
     return this.http.get(`${this.apiRoot()}api/services/app/${path}`, { params: this.wishlistQueryParams() }).pipe(
       map((resp: any) => {
@@ -347,6 +351,12 @@ private apiRoot(): string {
     const inventoryId = product?.id != null ? String(product.id) : '';
     if (!inventoryId) {
       return of(false);
+    }
+
+    if (!this.auth.isLoggedIn() || !this.auth.getCustomerEmail()) {
+      const next = state.wishlist.filter((item) => !this.sameLineId(item.id, product.id));
+      this.syncWishlistLocal(next);
+      return of(true);
     }
 
     const path = `${environment.urls.OnlineShopWishlist_RemoveFromWishlistForOnlineShop}`;

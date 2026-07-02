@@ -72,28 +72,30 @@
   &__image {
     width: 140px;
     height: 140px;
+    min-width: 140px;
+    min-height: 140px;
+    max-width: 140px;
+    max-height: 140px;
     flex-shrink: 0;
-    background: var(--mc-img-bg);
-    border: 1px solid var(--mc-border);
+    background: #ffffff;
+    border: 1px solid var(--ml-cart-summary-border);
     border-radius: 8px;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px;
+    padding: 0;
+    box-sizing: border-box;
 
     a {
-      display: flex;
+      display: block;
       width: 100%;
       height: 100%;
-      align-items: center;
-      justify-content: center;
     }
 
     img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
     }
   }
 
@@ -258,12 +260,16 @@ body.dark .wishlist-stock-badge {
 
 @media (max-width: 991px) {
   .wishlist-card {
-    grid-template-columns: 110px 1fr;
+    grid-template-columns: 120px 1fr;
     grid-template-rows: auto auto;
 
     &__image {
-      width: 110px;
-      height: 110px;
+      width: 120px;
+      height: 120px;
+      min-width: 120px;
+      min-height: 120px;
+      max-width: 120px;
+      max-height: 120px;
       grid-row: 1 / span 2;
     }
 
@@ -286,9 +292,12 @@ body.dark .wishlist-stock-badge {
     text-align: center;
 
     &__image {
-      width: 100%;
-      max-width: 200px;
-      height: 160px;
+      width: 140px;
+      height: 140px;
+      min-width: 140px;
+      min-height: 140px;
+      max-width: 140px;
+      max-height: 140px;
       margin: 0 auto;
       grid-row: auto;
     }

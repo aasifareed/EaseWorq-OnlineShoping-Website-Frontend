@@ -1,29 +1,30 @@
 /* Parent wrapper to control scaling */
 footer {
-  /* Using theme variables for colors so light/dark mode works */
-  
   .footer-title h4 {
     font-size: 14px;
     font-weight: 700;
     text-transform: uppercase;
     margin-bottom: 20px;
-    /* This ensures color stays visible in both modes */
-    color: var(--theme-deft); 
+    letter-spacing: 0.04em;
+    color: var(--ml-footer-title, #222222);
   }
 
   .footer-contant {
     p {
-      font-size: 13px;
-      line-height: 22px;
-      color: #777;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--ml-footer-text, #5a5a5a);
     }
+
     ul li a {
-      font-size: 13px;
-      color: #777;
-      transition: 0.3s;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ml-footer-link, #4a4a4a);
+      transition: color 0.2s ease, padding-left 0.2s ease;
       text-decoration: none;
+
       &:hover {
-        color: var(--theme-color); // Uses Multikart's primary color
+        color: var(--theme-deafult, #ffc107);
         padding-left: 5px;
       }
     }
@@ -32,13 +33,14 @@ footer {
   .footer-contact-link {
     color: inherit;
     text-decoration: none;
+
     &:hover {
-      color: var(--theme-color);
+      color: var(--theme-deafult, #ffc107);
     }
   }
 
   .footer-quick-links li + li {
-    margin-top: 4px;
+    margin-top: 6px;
   }
 
   .footer-contact-list {
@@ -79,23 +81,24 @@ footer {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #888;
+    color: var(--ml-footer-label, #6b6b6b);
   }
 
   .footer-contact-value {
-    font-size: 13px;
-    color: var(--ml-footer-contact-value);
+    font-size: 14px;
+    color: var(--ml-footer-contact-value, #444444);
     text-decoration: none;
     word-break: break-word;
+    line-height: 1.5;
 
     &:hover {
-      color: var(--theme-color);
+      color: var(--theme-deafult, #ffc107);
     }
   }
 
   .footer-contact-empty {
-    font-size: 13px;
-    color: #777;
+    font-size: 14px;
+    color: var(--ml-footer-text, #5a5a5a);
   }
 
   .footer-payment-row {
@@ -106,7 +109,7 @@ footer {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    color: #888;
+    color: var(--ml-footer-label, #6b6b6b);
     letter-spacing: 0.5px;
   }
 
@@ -135,21 +138,29 @@ footer {
 
   .sub-footer {
     border-top: 4px solid #ffcc00 !important;
-    p, a { color: #888; font-size: 12px; }
+    background: var(--ml-footer-cta-bg);
+
+    p,
+    a {
+      color: var(--ml-footer-copyright, #666666);
+      font-size: 13px;
+    }
   }
 }
 
-/* Fix for White Mode losing visibility */
 .light-layout {
-  border-color: rgba(0,0,0,0.05) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
 }
+
 .cta-footer {
   background: var(--ml-footer-cta-bg) !important;
   border-color: rgba(0, 0, 0, 0.05) !important;
 }
-section.section-b-space.light-layout{
-  padding-bottom: 0px !important;
+
+section.section-b-space.light-layout {
+  padding-bottom: 0 !important;
 }
+
 .cta-row i.fa {
   width: 50px;
   height: 50px;

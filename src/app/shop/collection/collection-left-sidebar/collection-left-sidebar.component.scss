@@ -87,6 +87,26 @@ section.shop-layout-microless {
     color: var(--ml-sidebar-text-faint);
     font-size: 12px;
   }
+
+  ::ng-deep .product-pagination {
+    border-color: var(--ml-surface-border);
+
+    .pagination .page-item .page-link {
+      color: var(--ml-surface-text);
+      background: var(--ml-surface-bg);
+      border-color: var(--ml-surface-border);
+    }
+
+    .pagination .page-item.active .page-link {
+      color: #111111;
+      background: var(--theme-deafult, #ffc107);
+      border-color: var(--theme-deafult, #ffc107);
+    }
+
+    .product-search-count-bottom h5 {
+      color: var(--ml-surface-text-muted);
+    }
+  }
 }
 
 .shop-sidebar-microless ::ng-deep {

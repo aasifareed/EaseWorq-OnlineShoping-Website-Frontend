@@ -86,7 +86,12 @@ body:not(.dark) {
   --ml-footer-cta-bg: #f5f5f5;
   --ml-footer-icon-bg: #e8e8e8;
   --ml-footer-divider: rgba(0, 0, 0, 0.08);
-  --ml-footer-contact-value: #555555;
+  --ml-footer-title: #222222;
+  --ml-footer-text: #5a5a5a;
+  --ml-footer-link: #4a4a4a;
+  --ml-footer-label: #6b6b6b;
+  --ml-footer-contact-value: #444444;
+  --ml-footer-copyright: #666666;
 
   --ml-carousel-nav-bg: rgba(0, 0, 0, 0.08);
 
@@ -115,11 +120,11 @@ body.dark {
   --mc-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   --mc-hover: 0 8px 24px rgba(0, 0, 0, 0.65);
   --mc-img-bg: #303030;
-  --mc-title: #e8e8f0;
+  --mc-title: #f3f3f8;
   --mc-sale-color: #ffffff;
-  --mc-old: #666677;
-  --mc-compare-border: #3a3a50;
-  --mc-compare-text: #666677;
+  --mc-old: #a8a8b8;
+  --mc-compare-border: #4a4a58;
+  --mc-compare-text: rgba(255, 255, 255, 0.78);
 
   --ml-toolbar-bg: #222226;
   --ml-toolbar-border: rgba(255, 255, 255, 0.1);
@@ -194,7 +199,12 @@ body.dark {
   --ml-footer-cta-bg: #000000;
   --ml-footer-icon-bg: #282828;
   --ml-footer-divider: rgba(255, 255, 255, 0.08);
-  --ml-footer-contact-value: #cccccc;
+  --ml-footer-title: #ffffff;
+  --ml-footer-text: rgba(255, 255, 255, 0.86);
+  --ml-footer-link: rgba(255, 255, 255, 0.84);
+  --ml-footer-label: rgba(255, 255, 255, 0.62);
+  --ml-footer-contact-value: rgba(255, 255, 255, 0.9);
+  --ml-footer-copyright: rgba(255, 255, 255, 0.72);
 
   --ml-carousel-nav-bg: rgba(255, 255, 255, 0.5);
 
