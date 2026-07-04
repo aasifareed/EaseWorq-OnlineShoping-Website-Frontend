@@ -3,7 +3,7 @@
     <ng-template carouselSlide>
       <div class="product-image">
         <a *ngIf="logo.id; else staticLogoLink"
-          [routerLink]="['/shop/collection/left/sidebar']"
+          [routerLink]="['/shop']"
           [queryParams]="{ brand: logo.id }"
           class="brand-logo-link">
           <ng-container *ngIf="!isPlaceholderImage(logo.image); else brandFallback">
@@ -19,7 +19,7 @@
           </ng-template>
         </a>
         <ng-template #staticLogoLink>
-          <a [routerLink]="'/home/fashion'" class="brand-logo-link">
+          <a [routerLink]="'/home'" class="brand-logo-link">
             <div class="brand-logo-media">
               <img [src]="logo.image" [alt]="logo.name || 'logo'" />
               <span *ngIf="logo.name" class="brand-logo-overlay">

@@ -2,7 +2,7 @@
   .mc-card {
     position: relative !important;
     background: var(--mc-bg) !important;
-    border-radius: 3px !important;
+    border-radius: var(--radius-md, 10px) !important;
     overflow: hidden !important;
     transition: box-shadow .25s ease, transform .25s ease !important;
     display: flex !important;
@@ -212,24 +212,27 @@
 }
 
 .btn-primary {
-  background: #4caf50;
-  border: 1px solid #009688;
+  background: var(--success, #4caf50);
+  border: 1px solid var(--success-hover, #3d9a41);
   color: #fff;
   overflow: hidden;
   position: relative;
   width: 100%;
-  transition: background-color .2s ease-in-out;
-}
+  border-radius: var(--radius-sm, 6px);
+  transition: background-color 0.2s ease-in-out, transform 0.15s ease;
 
-.btn-primary:hover {
-  background: #8bc34a;
-  border: 1px solid #8BC34A;
+  &:hover:not(:disabled) {
+    background: var(--success-hover, #43a047);
+    border-color: var(--success-hover, #388e3c);
+    transform: translateY(-1px);
+  }
 }
 
 :host.product-box-one--list {
   display: block !important;
   width: 100% !important;
   max-width: 100% !important;
+  margin: 0 !important;
 }
 
 /* Shop list view — flex so price + button sit on far right */
@@ -237,16 +240,18 @@
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 1rem 1.5rem;
+  gap: 0.75rem 1rem;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem !important;
+  margin: 0 !important;
   background: var(--mc-bg);
   border: 1px solid var(--mc-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md, 10px);
   box-shadow: var(--mc-shadow);
   transition: box-shadow 0.2s ease;
+  overflow: hidden;
 
   &:hover {
     box-shadow: var(--mc-hover);
@@ -254,9 +259,14 @@
 
   .shop-list-card__image {
     position: relative;
-    flex: 0 0 140px;
-    width: 140px;
-    height: 140px;
+    flex: 0 0 120px !important;
+    width: 120px !important;
+    height: 120px !important;
+    min-width: 120px !important;
+    min-height: 120px !important;
+    max-width: 120px !important;
+    max-height: 120px !important;
+    align-self: center !important;
     background: #ffffff;
     border: 1px solid var(--mc-border);
     border-radius: 8px;
@@ -265,20 +275,20 @@
     align-items: center;
     justify-content: center;
     padding: 0;
+    box-sizing: border-box;
 
     a {
-      display: flex;
+      display: block;
       width: 100%;
       height: 100%;
-      align-items: center;
-      justify-content: center;
     }
 
     img {
+      display: block;
       width: 100%;
       height: 100%;
-      max-width: none;
-      max-height: none;
+      max-width: 100%;
+      max-height: 100%;
       object-fit: cover;
       object-position: center;
     }
@@ -289,13 +299,14 @@
     right: 0 !important;
   }
 
-  &__body {
+  .shop-list-card__body {
     flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
     text-align: left;
+    align-self: center;
   }
 
   &__title {
@@ -328,10 +339,11 @@
     flex-direction: column;
     align-items: flex-end;
     justify-content: center;
-    gap: 0.75rem;
-    min-width: 180px;
+    gap: 0.5rem;
+    min-width: 160px;
     padding-left: 0.5rem;
     text-align: right;
+    align-self: center;
   }
 
   .shop-list-card__prices {
@@ -366,31 +378,43 @@
 
 .shop-list-stock-badge {
   display: inline-flex;
-  padding: 0.2rem 0.65rem;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.2;
 
   &--in {
-    background: #16a34a;
-    color: #ffffff;
+    background: var(--stock-in-bg, #047857);
+    color: var(--stock-in-text, #ffffff);
+    border: 1px solid var(--stock-in-border, #34d399);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
   }
 
   &--out {
-    background: #dc2626;
-    color: #ffffff;
+    background: var(--stock-out-bg, #be123c);
+    color: var(--stock-out-text, #ffffff);
+    border: 1px solid var(--stock-out-border, #fb7185);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
   }
 }
 
 @media (max-width: 991px) {
   .shop-list-card {
     flex-wrap: wrap;
+    padding: 1rem 1.15rem !important;
 
     .shop-list-card__image {
-      flex: 0 0 110px;
-      width: 110px;
-      height: 110px;
+      flex: 0 0 110px !important;
+      width: 110px !important;
+      height: 110px !important;
+      min-width: 110px !important;
+      min-height: 110px !important;
+      max-width: 110px !important;
+      max-height: 110px !important;
     }
 
     .shop-list-card__aside {
@@ -403,11 +427,16 @@
   .shop-list-card {
     flex-direction: column !important;
     text-align: center;
+    padding: 1rem 1rem 1.15rem !important;
 
     .shop-list-card__image {
-      width: 100%;
-      max-width: 200px;
-      height: 160px;
+      width: 100% !important;
+      max-width: 200px !important;
+      height: 160px !important;
+      min-width: 0 !important;
+      min-height: 160px !important;
+      max-height: 160px !important;
+      flex: 0 0 auto !important;
       margin: 0 auto;
     }
 

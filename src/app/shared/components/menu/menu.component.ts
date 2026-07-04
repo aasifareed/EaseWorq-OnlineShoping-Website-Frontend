@@ -70,7 +70,7 @@ export class MenuComponent implements OnInit, OnDestroy {
                 {
                   title: 'View category',
                   type: 'link',
-                  path: '/shop/collection/left/sidebar',
+                  path: '/shop',
                   queryParams: { category: categoryId },
                   skipTranslate: true,
                 },

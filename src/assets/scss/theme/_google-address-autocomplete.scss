@@ -62,4 +62,23 @@ body.dark {
   .google-address-suggestions li.highlighted {
     background: #3a3a3a;
   }
+
+  /* Overrides legacy .checkout-form .field-label span { color: #222 } */
+  .checkout-page .checkout-form .form-group .field-label span.required-mark,
+  .field-label .required-mark,
+  .required-mark,
+  .text.text-danger,
+  div.text.text-danger {
+    color: var(--text-primary, #f5f7fa) !important;
+  }
+}
+
+body:not(.dark) {
+  .checkout-page .checkout-form .form-group .field-label span.required-mark,
+  .field-label .required-mark,
+  .required-mark,
+  .text.text-danger,
+  div.text.text-danger {
+    color: var(--error-text, #dc2626) !important;
+  }
 }

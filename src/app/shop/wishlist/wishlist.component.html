@@ -10,7 +10,7 @@
       <img src="assets/images/empty-wishlist.png" alt="Empty wishlist" class="wishlist-empty__img">
       <h3 class="wishlist-empty__title">Your wishlist is empty</h3>
       <p class="wishlist-empty__text">Save items you love and shop them anytime.</p>
-      <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid mt-3">Start Shopping</a>
+      <a [routerLink]="['/shop']" class="btn btn-solid mt-3">Start Shopping</a>
     </div>
 
     <ng-container *ngIf="!loading && products.length">
@@ -25,7 +25,7 @@
         <article class="wishlist-card" *ngFor="let product of products">
           <div class="wishlist-card__image">
             <a [routerLink]="productLink(product)">
-              <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.jpg'"
+              <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.svg'"
                    [alt]="product?.images?.[0]?.alt || product?.title">
             </a>
           </div>
@@ -45,11 +45,11 @@
 
             <div class="wishlist-card__price">
               <span class="wishlist-card__price-current">
-                {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | currency:productService?.Currency.currency:'symbol' }}
+                {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | shopCurrency:productService?.Currency.currency }}
               </span>
               <span class="wishlist-card__price-old"
                     *ngIf="product?.discount > 0">
-                {{ product.price * (productService?.Currency?.price ?? 1) | currency:productService?.Currency.currency:'symbol' }}
+                {{ product.price * (productService?.Currency?.price ?? 1) | shopCurrency:productService?.Currency.currency }}
               </span>
             </div>
           </div>
@@ -73,7 +73,7 @@
       </div>
 
       <div class="wishlist-footer">
-        <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid wishlist-footer__btn">
+        <a [routerLink]="['/shop']" class="btn btn-solid wishlist-footer__btn">
           Continue Shopping
         </a>
         <a [routerLink]="['/shop/cart']" class="btn btn-solid wishlist-footer__btn wishlist-footer__btn--outline">

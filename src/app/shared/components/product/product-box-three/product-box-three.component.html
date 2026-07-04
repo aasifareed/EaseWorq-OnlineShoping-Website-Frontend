@@ -1,8 +1,8 @@
 <div class="img-wrapper">
     <div class="lable-block" *ngIf="product.new"><span class="lable3">new</span></div>
     <div class="front">
-        <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
-            <img  [defaultImage]="'assets/images/product/placeholder.jpg'"
+        <a [routerLink]="['/shop/product/', product.title.replace(' ', '-')]">
+            <img  [defaultImage]="'assets/images/product/placeholder.svg'"
                   [lazyLoad]="product.images[0].src" class="img-fluid"
                   alt="{{ product.images[0].alt }}">
         </a>
@@ -32,10 +32,10 @@
 </div>
 <div class="product-info">
     <bar-rating [rate]="5" [readOnly]="true"></bar-rating>
-    <a [routerLink]="['/shop/product/left/sidebar/', product?.title.replace(' ', '-')]">
+    <a [routerLink]="['/shop/product/', product?.title.replace(' ', '-')]">
     	<h6>{{ product?.title | titlecase }}</h6>
     </a>
-    <h4>{{ product?.price * currency?.price | discount:product | currency:currency?.currency:'symbol' }}</h4>
+    <h4>{{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}</h4>
 </div>
 
 <app-quick-view #quickView [product]="product" [currency]="currency"></app-quick-view>

@@ -74,27 +74,43 @@ export class OnlineShopSettingsService {
       return;
     }
 
-    const title = s.metaTitle || s.storeName;
-    if (title) {
-      this.title.setTitle(title);
-    }
+    const title = s.metaTitle || s.storeName || 'Sastakhareedo.com | Online Shopping Store';
+    this.title.setTitle(title);
 
-    if (s.metaDescription) {
-      this.meta.updateTag({ name: 'description', content: s.metaDescription });
-    }
+    const description =
+      s.metaDescription ||
+      `Shop online at ${s.storeName || 'Sastakhareedo.com'} — mobiles, accessories, and more.`;
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
 
     if (s.metaImageUrl) {
       this.meta.updateTag({ property: 'og:image', content: s.metaImageUrl });
     }
 
-    if (title) {
-      this.meta.updateTag({ property: 'og:title', content: title });
+    this.updateFavicon(s.logoUrl);
+  }
+
+  private updateFavicon(logoUrl?: string | null): void {
+    if (typeof document === 'undefined') {
+      return;
     }
+
+    const href = logoUrl?.trim() || 'assets/images/favicon-store.svg';
+    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.type = href.endsWith('.svg') ? 'image/svg+xml' : 'image/x-icon';
+    link.href = href;
   }
 
   private resolveGoPayFastEnabled(raw: Record<string, unknown>): boolean {
-    if (raw.isGoPayFastEnabled === true || raw.IsGoPayFastEnabled === true) {
-      return true;
+    const flag = raw.isGoPayFastEnabled ?? raw.IsGoPayFastEnabled;
+    if (flag !== undefined && flag !== null) {
+      return !!flag;
     }
     return !!(
       raw.isBankTransferEnabled ??

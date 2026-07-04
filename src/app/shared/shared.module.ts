@@ -53,6 +53,8 @@ import { TapToTopComponent } from './components/tap-to-top/tap-to-top.component'
 
 // Pipes
 import { DiscountPipe } from './pipes/discount.pipe';
+import { ShopCurrencyPipe } from './pipes/shop-currency.pipe';
+import { ContrastTextPipe } from './pipes/contrast-text.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
 import { ExcerptPipe } from './pipes/excerpt.pipe';
 import { TopCategoriesSliderComponent } from './components/top-categories-slider/top-categories-slider.component';
@@ -90,6 +92,8 @@ import { TopCategoriesSliderComponent } from './components/top-categories-slider
     LayoutBoxComponent,
     TapToTopComponent,
     DiscountPipe,
+    ShopCurrencyPipe,
+    ContrastTextPipe,
     RelativeTimePipe,
     ExcerptPipe,
     TopCategoriesSliderComponent,
@@ -144,6 +148,10 @@ import { TopCategoriesSliderComponent } from './components/top-categories-slider
     LayoutBoxComponent,
     TapToTopComponent,
     DiscountPipe,
+    ShopCurrencyPipe,
+    ContrastTextPipe,
+    RelativeTimePipe,
+    ExcerptPipe,
     TopCategoriesSliderComponent,
   ]
 })

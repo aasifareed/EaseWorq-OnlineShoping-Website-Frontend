@@ -140,7 +140,7 @@ export class OnlineShopHeaderMenuService {
         {
           title: `All ${categoryLabel}`,
           type: 'link',
-          path: '/shop/collection/left/sidebar',
+          path: '/shop',
           queryParams: { category: groupId },
           skipTranslate: true,
         },
@@ -213,7 +213,7 @@ export class OnlineShopHeaderMenuService {
       .map((p) => ({
         title: p.title,
         type: 'link',
-        path: ['/shop/product/left/sidebar', String(p.id)],
+        path: ['/shop/product', String(p.id)],
         skipTranslate: true,
       }));
   }
@@ -222,7 +222,7 @@ export class OnlineShopHeaderMenuService {
     return {
       title: this.toDisplayName(node.title),
       type: 'link',
-      path: '/shop/collection/left/sidebar',
+      path: '/shop',
       queryParams: { category: node.id },
       skipTranslate: true,
     };

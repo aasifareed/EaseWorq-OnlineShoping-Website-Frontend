@@ -18,6 +18,7 @@ import {
 } from '../../shared/services/online-shop-order.service';
 import { ProductService } from '../../shared/services/product.service';
 import { PayFastPaymentService } from '../../shop/checkout/pay-fast-payment.service';
+import { statusChipStyle } from '../../shared/utils/color-contrast.util';
 
 @Component({
   selector: 'app-my-orders',
@@ -541,7 +542,11 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return order.orderStatusDisplayName || order.orderStatusName || '—';
   }
 
+  statusChipStyles(colorCode?: string | null): { backgroundColor: string; color: string } {
+    return statusChipStyle(colorCode);
+  }
+
   productImage(url?: string): string {
-    return url || 'assets/images/product/1.jpg';
+    return url || this.productService.defaultProductImage;
   }
 }

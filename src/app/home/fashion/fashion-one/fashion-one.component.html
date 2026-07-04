@@ -13,7 +13,7 @@
   <div class="container">
     <div class="row partition2">
       <div class="col-md-6" *ngFor="let collection of collections">
-        <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'fashion'}">
+        <a [routerLink]="['/shop']" [queryParams]="{ category: 'fashion'}">
           <div class="collection-banner p-right text-center">
             <img [src]="collection.image" class="img-fluid" alt="collection-banner">
             <div class="contain-banner">
@@ -48,7 +48,7 @@
   </div>
 </div> -->
 <section class="p-t-0">
-  <div class="container">
+  <div class="container-fluid home-content-wrap">
     <div class="row">
       <div class="col">
         <!-- <owl-carousel-o class="product-m no-arrow" [options]="ProductSliderConfig">
@@ -312,11 +312,10 @@
 
 <!--  logo section start-->
 <!-- <section class="section-b-space"> -->
-  <div class="container">
+  <div class="container-fluid home-content-wrap">
     <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
       <div class="col-md-12">
-        <h2 class="text-white fw-bold text-uppercase mb-3 ps-2" style="border-left:4px solid #f5b800;">TOP BRANDS
-        </h2>
+        <h2 class="home-section-title">TOP BRANDS</h2>
         <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
       </div>
     </div>

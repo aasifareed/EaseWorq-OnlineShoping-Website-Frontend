@@ -137,6 +137,10 @@
     white-space: nowrap;
     line-height: 1;
     padding-top: 1px;
+
+    :host-context(body.dark) & {
+      color: #ffffff !important;
+    }
   }
 
   .microless-view-toggle {

@@ -1,239 +1,187 @@
-/* Microless UI theme tokens — light by default, dark when body.dark is set */
+/* Microless UI theme tokens — light by default */
 
 :root,
 body:not(.dark) {
-  --mc-bg: #ffffff;
-  --mc-border: #e2e2e8;
-  --mc-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  --mc-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
-  --mc-img-bg: #f5f5f7;
-  --mc-title: #1d1d2b;
-  --mc-sale-color: #1d1d2b;
-  --mc-old: #999999;
-  --mc-compare-border: #dddddd;
-  --mc-compare-text: #666666;
+  /* --- Semantic foundation (light) --- */
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #eceef2;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f8f9fb;
+  --surface-active: #f1f3f6;
+  --border: #e3e7ee;
+  --border-strong: #d5dbe5;
+  --border-subtle: #edf0f5;
 
-  --ml-toolbar-bg: #f8f8f9;
-  --ml-toolbar-border: #e5e5ea;
-  --ml-toolbar-text: #333333;
-  --ml-toolbar-text-strong: #111111;
-  --ml-toolbar-text-muted: #666666;
-  --ml-toolbar-text-faint: #999999;
-  --ml-toolbar-text-sep: #cccccc;
-  --ml-toolbar-input-bg: #ffffff;
-  --ml-toolbar-input-border: #d0d0d5;
-  --ml-toolbar-input-text: #333333;
-  --ml-toolbar-toggle-bg: #ffffff;
-  --ml-toolbar-toggle-hover: #f0f0f0;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --text-disabled: #9ca3af;
+  --text-inverse: #111827;
 
-  --ml-sidebar-bg: #ffffff;
-  --ml-sidebar-border: #e5e5ea;
-  --ml-sidebar-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --ml-sidebar-divider: #eeeeee;
-  --ml-sidebar-title: #222222;
-  --ml-sidebar-text: #444444;
-  --ml-sidebar-text-muted: #777777;
-  --ml-sidebar-text-faint: #999999;
-  --ml-sidebar-active: #111111;
-  --ml-sidebar-collapse-icon: #888888;
+  --primary: #ffc107;
+  --primary-hover: #e6ac00;
+  --primary-soft: rgba(255, 193, 7, 0.14);
+  --primary-border: rgba(255, 193, 7, 0.45);
 
-  --ml-page-heading-border: #e5e5ea;
-  --ml-page-title: #222222;
+  --success: #16a34a;
+  --success-hover: #15803d;
+  --success-soft: rgba(22, 163, 74, 0.1);
+  --discount-text: #15803d;
+  --discount-soft: rgba(22, 163, 74, 0.12);
+  --warning: #d97706;
+  --warning-soft: rgba(217, 119, 6, 0.1);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --error-text: #dc2626;
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.1);
 
-  --ml-header-top-bg: #f8f9fa;
-  --ml-header-top-border: #e8eaed;
-  --ml-header-top-text: #5f6368;
-  --ml-header-top-text-bold: #202124;
-  --ml-header-top-hover-bg: rgba(60, 64, 67, 0.08);
-  --ml-header-main-bg: #ffffff;
-  --ml-header-main-text: #222222;
-  --ml-header-search-bg: #f0f0f0;
-  --ml-header-search-text: #333333;
-  --ml-header-search-placeholder: #888888;
-  --ml-header-dropdown-bg: #ffffff;
-  --ml-header-dropdown-border: #dddddd;
-  --ml-header-dropdown-text: #333333;
-  --ml-header-dropdown-hover: #f5f5f5;
-  --ml-header-sticky-bg: #ffffff;
-  --ml-header-sticky-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  --ml-header-cart-badge-border: #ffffff;
-  --ml-header-separator: #dddddd;
-  --ml-header-switch-bg: #dddddd;
-  --ml-header-switch-icon: #555555;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04), 0 0 0 1px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.1);
 
-  --ml-surface-bg: #ffffff;
-  --ml-surface-border: #e5e5ea;
-  --ml-surface-text: #333333;
-  --ml-surface-text-muted: #777777;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
 
-  --ml-cart-item-bg: #ffffff;
-  --ml-cart-summary-bg: #ffffff;
-  --ml-cart-summary-border: #e5e5ea;
-  --ml-cart-title: #222222;
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease-in-out;
 
-  --ml-price-input-bg: #ffffff;
-  --ml-price-input-border: #d0d0d5;
-  --ml-price-input-text: #333333;
+  --layout-header-content-gap: 1rem;
+  --layout-breadcrumb-padding-y: 1rem;
+  --layout-content-top-gap: 1.25rem;
 
-  --ml-cat-dropdown-bg: #ffffff;
-  --ml-cat-dropdown-border: #e0e0e0;
-  --ml-cat-dropdown-text: #444444;
-  --ml-cat-dropdown-hover-bg: #f5f5f5;
-  --ml-cat-dropdown-hover-text: #c99700;
-  --ml-cat-sub-panel-bg: #fafafa;
-  --ml-cat-sub-link: #666666;
+  --scrollbar-track: #eef0f4;
+  --scrollbar-thumb: #c8ced8;
+  --scrollbar-thumb-hover: #aeb6c4;
 
-  --ml-footer-cta-bg: #f5f5f5;
-  --ml-footer-icon-bg: #e8e8e8;
-  --ml-footer-divider: rgba(0, 0, 0, 0.08);
-  --ml-footer-title: #222222;
-  --ml-footer-text: #5a5a5a;
-  --ml-footer-link: #4a4a4a;
-  --ml-footer-label: #6b6b6b;
-  --ml-footer-contact-value: #444444;
-  --ml-footer-copyright: #666666;
+  /* --- Legacy Microless tokens (mapped) --- */
+  --mc-bg: var(--surface);
+  --mc-border: var(--border-strong);
+  --mc-shadow: var(--shadow-sm);
+  --mc-hover: var(--shadow-md);
+  --mc-img-bg: #ffffff;
+  --mc-title: var(--text-primary);
+  --mc-sale-color: var(--text-primary);
+  --mc-old: var(--text-muted);
+  --mc-compare-border: var(--border);
+  --mc-compare-text: var(--text-muted);
 
-  --ml-carousel-nav-bg: rgba(0, 0, 0, 0.08);
+  --ml-toolbar-bg: var(--surface);
+  --ml-toolbar-border: var(--border);
+  --ml-toolbar-text: var(--text-secondary);
+  --ml-toolbar-text-strong: var(--text-primary);
+  --ml-toolbar-text-muted: var(--text-muted);
+  --ml-toolbar-text-faint: var(--text-disabled);
+  --ml-toolbar-text-sep: #c5cad3;
+  --ml-toolbar-input-bg: var(--surface);
+  --ml-toolbar-input-border: var(--border-strong);
+  --ml-toolbar-input-text: var(--text-primary);
+  --ml-toolbar-toggle-bg: var(--surface);
+  --ml-toolbar-toggle-hover: var(--surface-hover);
 
-  --ml-mega-bg: #ffffff;
-  --ml-mega-border: #e5e5ea;
-  --ml-mega-col-border: #eeeeee;
-  --ml-mega-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-  --ml-mega-heading: #c99700;
-  --ml-mega-link: #444444;
-  --ml-mega-link-hover: #111111;
-  --ml-mega-link-primary: #111111;
-  --ml-mega-link-hover-bg: rgba(255, 204, 0, 0.12);
-  --ml-mega-link-active-bg: rgba(255, 204, 0, 0.18);
-  --ml-mega-chevron: #999999;
-  --ml-mega-loading: #888888;
-  --ml-mega-scrollbar: #cccccc;
-  --ml-mega-mobile-bg: #ffffff;
-  --ml-mega-mobile-sub-bg: #f8f8f9;
-  --ml-mega-mobile-border: #e5e5ea;
-  --ml-mega-mobile-link: #444444;
+  --ml-sidebar-bg: var(--surface);
+  --ml-sidebar-border: var(--border);
+  --ml-sidebar-shadow: var(--shadow-sm);
+  --ml-sidebar-divider: var(--border-subtle);
+  --ml-sidebar-title: var(--text-primary);
+  --ml-sidebar-text: var(--text-secondary);
+  --ml-sidebar-text-muted: var(--text-muted);
+  --ml-sidebar-text-faint: var(--text-disabled);
+  --ml-sidebar-active: var(--primary-hover);
+  --ml-sidebar-active-bg: var(--primary-soft);
+  --ml-sidebar-active-text: var(--primary-hover);
+  --ml-sidebar-collapse-icon: var(--text-muted);
+
+  --ml-page-heading-border: var(--border);
+  --ml-page-title: var(--text-primary);
+
+  --ml-header-top-bg: var(--bg-secondary);
+  --ml-header-top-border: var(--border);
+  --ml-header-top-text: var(--text-muted);
+  --ml-header-top-text-bold: var(--text-primary);
+  --ml-header-top-hover-bg: var(--surface-hover);
+  --ml-header-main-bg: var(--surface);
+  --ml-header-main-text: var(--text-primary);
+  --ml-header-search-bg: var(--bg-secondary);
+  --ml-header-search-text: var(--text-primary);
+  --ml-header-search-placeholder: var(--text-muted);
+  --ml-header-dropdown-bg: var(--surface-elevated);
+  --ml-header-dropdown-border: var(--border);
+  --ml-header-dropdown-text: var(--text-primary);
+  --ml-header-dropdown-hover: var(--surface-hover);
+  --ml-header-sticky-bg: var(--surface);
+  --ml-header-sticky-shadow: var(--shadow-md);
+  --ml-header-cart-badge-border: var(--surface);
+  --ml-header-separator: var(--border);
+  --ml-header-switch-bg: var(--border);
+  --ml-header-switch-icon: var(--text-secondary);
+
+  --ml-surface-bg: var(--surface);
+  --ml-surface-border: var(--border);
+  --ml-surface-text: var(--text-primary);
+  --ml-surface-text-muted: var(--text-muted);
+
+  --ml-cart-item-bg: var(--surface);
+  --ml-cart-summary-bg: var(--surface);
+  --ml-cart-summary-border: var(--border);
+  --ml-cart-title: var(--text-primary);
+
+  --ml-price-input-bg: var(--surface);
+  --ml-price-input-border: var(--border-strong);
+  --ml-price-input-text: var(--text-primary);
+
+  --ml-cat-dropdown-bg: var(--surface-elevated);
+  --ml-cat-dropdown-border: var(--border);
+  --ml-cat-dropdown-text: var(--text-secondary);
+  --ml-cat-dropdown-hover-bg: var(--surface-hover);
+  --ml-cat-dropdown-hover-text: #b8860b;
+  --ml-cat-sub-panel-bg: var(--bg-secondary);
+  --ml-cat-sub-link: var(--text-muted);
+
+  --ml-footer-cta-bg: var(--bg-secondary);
+  --ml-footer-icon-bg: var(--primary-soft);
+  --ml-footer-icon-color: var(--primary-hover);
+  --ml-footer-divider: var(--border);
+  --ml-footer-title: var(--text-primary);
+  --ml-footer-text: #4b5563;
+  --ml-footer-link: #374151;
+  --ml-footer-label: #6b7280;
+  --ml-footer-contact-value: var(--text-primary);
+  --ml-footer-copyright: #6b7280;
+
+  --ml-carousel-nav-bg: rgba(17, 24, 39, 0.06);
+
+  --stock-in-bg: #059669;
+  --stock-in-border: #34d399;
+  --stock-in-text: #ffffff;
+  --stock-out-bg: #e11d48;
+  --stock-out-border: #fb7185;
+  --stock-out-text: #ffffff;
+
+  --ml-mega-bg: var(--surface-elevated);
+  --ml-mega-border: var(--border);
+  --ml-mega-col-border: var(--border-subtle);
+  --ml-mega-shadow: var(--shadow-lg);
+  --ml-mega-heading: #b8860b;
+  --ml-mega-link: var(--text-secondary);
+  --ml-mega-link-hover: var(--text-primary);
+  --ml-mega-link-primary: var(--text-primary);
+  --ml-mega-link-hover-bg: var(--primary-soft);
+  --ml-mega-link-active-bg: rgba(255, 193, 7, 0.2);
+  --ml-mega-chevron: var(--text-muted);
+  --ml-mega-loading: var(--text-muted);
+  --ml-mega-scrollbar: var(--scrollbar-thumb);
+  --ml-mega-mobile-bg: var(--surface);
+  --ml-mega-mobile-sub-bg: var(--bg-secondary);
+  --ml-mega-mobile-border: var(--border);
+  --ml-mega-mobile-link: var(--text-secondary);
+
+  --skeleton-base: #e8ebf0;
+  --skeleton-highlight: #f3f5f8;
 }
 
-body.dark {
-  --mc-bg: #303030;
-  --mc-border: #3a3a50;
-  --mc-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --mc-hover: 0 8px 24px rgba(0, 0, 0, 0.65);
-  --mc-img-bg: #303030;
-  --mc-title: #f3f3f8;
-  --mc-sale-color: #ffffff;
-  --mc-old: #a8a8b8;
-  --mc-compare-border: #4a4a58;
-  --mc-compare-text: rgba(255, 255, 255, 0.78);
-
-  --ml-toolbar-bg: #222226;
-  --ml-toolbar-border: rgba(255, 255, 255, 0.1);
-  --ml-toolbar-text: rgba(255, 255, 255, 0.82);
-  --ml-toolbar-text-strong: rgba(255, 255, 255, 0.95);
-  --ml-toolbar-text-muted: rgba(255, 255, 255, 0.65);
-  --ml-toolbar-text-faint: rgba(255, 255, 255, 0.55);
-  --ml-toolbar-text-sep: rgba(255, 255, 255, 0.35);
-  --ml-toolbar-input-bg: #121214;
-  --ml-toolbar-input-border: rgba(255, 255, 255, 0.12);
-  --ml-toolbar-input-text: #ffffff;
-  --ml-toolbar-toggle-bg: #121214;
-  --ml-toolbar-toggle-hover: rgba(255, 255, 255, 0.06);
-
-  --ml-sidebar-bg: #1c1c20;
-  --ml-sidebar-border: rgba(255, 255, 255, 0.07);
-  --ml-sidebar-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-  --ml-sidebar-divider: rgba(255, 255, 255, 0.06);
-  --ml-sidebar-title: rgba(255, 255, 255, 0.92);
-  --ml-sidebar-text: rgba(255, 255, 255, 0.82);
-  --ml-sidebar-text-muted: rgba(255, 255, 255, 0.75);
-  --ml-sidebar-text-faint: rgba(255, 255, 255, 0.45);
-  --ml-sidebar-active: #ffffff;
-  --ml-sidebar-collapse-icon: rgba(255, 255, 255, 0.55);
-
-  --ml-page-heading-border: rgba(255, 255, 255, 0.1);
-  --ml-page-title: #ffffff;
-
-  --ml-header-top-bg: #202124;
-  --ml-header-top-border: #3c4043;
-  --ml-header-top-text: #bdc1c6;
-  --ml-header-top-text-bold: #e8eaed;
-  --ml-header-top-hover-bg: rgba(232, 234, 237, 0.08);
-  --ml-header-main-bg: #000000;
-  --ml-header-main-text: #ffffff;
-  --ml-header-search-bg: #333333;
-  --ml-header-search-text: #ffffff;
-  --ml-header-search-placeholder: rgba(255, 255, 255, 0.75);
-  --ml-header-dropdown-bg: #262626;
-  --ml-header-dropdown-border: #444444;
-  --ml-header-dropdown-text: #ffffff;
-  --ml-header-dropdown-hover: #262626;
-  --ml-header-sticky-bg: #000000;
-  --ml-header-sticky-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --ml-header-cart-badge-border: #000000;
-  --ml-header-separator: #333333;
-  --ml-header-switch-bg: #333333;
-  --ml-header-switch-icon: #ffffff;
-
-  --ml-surface-bg: #303030;
-  --ml-surface-border: transparent;
-  --ml-surface-text: #ffffff;
-  --ml-surface-text-muted: #cccccc;
-
-  --ml-cart-item-bg: #303030;
-  --ml-cart-summary-bg: #303030;
-  --ml-cart-summary-border: #303030;
-  --ml-cart-title: #e8e8f0;
-
-  --ml-price-input-bg: #2a2a3a;
-  --ml-price-input-border: #444444;
-  --ml-price-input-text: #ffffff;
-
-  --ml-cat-dropdown-bg: #404040;
-  --ml-cat-dropdown-border: #333333;
-  --ml-cat-dropdown-text: #e1e1e1;
-  --ml-cat-dropdown-hover-bg: #2a2a2a;
-  --ml-cat-dropdown-hover-text: #f5b800;
-  --ml-cat-sub-panel-bg: #222222;
-  --ml-cat-sub-link: #bbbbbb;
-
-  --ml-footer-cta-bg: #000000;
-  --ml-footer-icon-bg: #282828;
-  --ml-footer-divider: rgba(255, 255, 255, 0.08);
-  --ml-footer-title: #ffffff;
-  --ml-footer-text: rgba(255, 255, 255, 0.86);
-  --ml-footer-link: rgba(255, 255, 255, 0.84);
-  --ml-footer-label: rgba(255, 255, 255, 0.62);
-  --ml-footer-contact-value: rgba(255, 255, 255, 0.9);
-  --ml-footer-copyright: rgba(255, 255, 255, 0.72);
-
-  --ml-carousel-nav-bg: rgba(255, 255, 255, 0.5);
-
-  --ml-mega-bg: #161616;
-  --ml-mega-border: #2a2a2a;
-  --ml-mega-col-border: #2e2e2e;
-  --ml-mega-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
-  --ml-mega-heading: #ffcc00;
-  --ml-mega-link: #e8e8e8;
-  --ml-mega-link-hover: #ffffff;
-  --ml-mega-link-primary: #ffffff;
-  --ml-mega-link-hover-bg: rgba(255, 204, 0, 0.08);
-  --ml-mega-link-active-bg: rgba(255, 204, 0, 0.15);
-  --ml-mega-chevron: #aaaaaa;
-  --ml-mega-loading: #aaaaaa;
-  --ml-mega-scrollbar: #444444;
-  --ml-mega-mobile-bg: #111111;
-  --ml-mega-mobile-sub-bg: #0d0d0d;
-  --ml-mega-mobile-border: #333333;
-  --ml-mega-mobile-link: #dddddd;
-}
-
-/* Global overrides for Multikart filter blocks inside Microless sidebar */
-body:not(.dark) .shop-sidebar-microless {
-  .collection-filter-block {
-    background-color: transparent !important;
-  }
-
-  .collection-filter-checkbox label {
-    color: var(--ml-sidebar-text) !important;
-  }
-}
+/* Light theme polish: see _microless-light-premium.scss */
+/* Dark theme tokens & polish: see _microless-dark-premium.scss */

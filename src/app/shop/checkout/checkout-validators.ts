@@ -39,3 +39,18 @@ export function trimMaxLength(max: number): ValidatorFn {
     return value.length <= max ? null : { maxlength: { requiredLength: max, actualLength: value.length } };
   };
 }
+
+/** Value must match a confirmed autocomplete selection (not free-typed text). */
+export function mustMatchSelectedValue(getConfirmed: () => string): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = (control.value ?? '').toString().trim();
+    if (!value) {
+      return null;
+    }
+    const confirmed = (getConfirmed() ?? '').trim();
+    if (!confirmed || value.toLowerCase() !== confirmed.toLowerCase()) {
+      return { mustSelectSuggestion: true };
+    }
+    return null;
+  };
+}

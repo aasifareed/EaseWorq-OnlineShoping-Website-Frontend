@@ -778,10 +778,12 @@ private apiRoot(): string {
     }
 
     if (nextQty < 1) {
-      state.cart.splice(idx, 1);
-    } else {
-      state.cart[idx].quantity = nextQty;
+      state.cart[idx].quantity = 1;
+      this.syncCartState();
+      return true;
     }
+
+    state.cart[idx].quantity = nextQty;
     this.syncCartState();
     return true;
   }
@@ -1054,7 +1056,7 @@ private apiRoot(): string {
   private resolveCategoryPictureUrl(pictureUrl: unknown): string {
     const raw = pictureUrl != null ? String(pictureUrl).trim() : '';
     if (!raw) {
-      return 'assets/images/product/placeholder.jpg';
+      return 'assets/images/product/placeholder.svg';
     }
     if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('assets/')) {
       return raw;
@@ -1139,7 +1141,7 @@ private apiRoot(): string {
         return this.http.get(`${this.apiRoot()}api/services/app/${url}`);
   }
 
-  readonly defaultProductImage = 'assets/images/product/placeholder.jpg';
+  readonly defaultProductImage = 'assets/images/product/placeholder.svg';
 
   /** Fix API paths that use backslashes so browsers load images correctly. */
   normalizeImageUrl(url: string | null | undefined): string {

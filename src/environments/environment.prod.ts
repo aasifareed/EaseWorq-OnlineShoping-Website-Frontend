@@ -31,6 +31,7 @@ urls: {
   Notification_GetUnread: 'Notification/GetUnreadCustomerNotifications',
   Notification_Update: 'Notification/UpdateNotification',
   Notification_MarkAsRead: 'Notification/MarkCustomerNotificationAsRead',
+  Notification_MarkAllAsRead: 'Notification/MarkAllCustomerNotificationsAsRead',
   OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:"OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop",
   OnlineShopAvailableProduct_GetProductDetailForOnlineShop: "OnlineShopAvailableProduct/GetProductDetailForOnlineShop",
   OnlineShopAvailableProduct_GetRelatedProductsForOnlineShop: "OnlineShopAvailableProduct/GetRelatedProductsForOnlineShop",

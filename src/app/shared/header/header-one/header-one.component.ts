@@ -47,6 +47,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   searchText = '';
   searchDropdownOpen = false;
   searchLoading = false;
+  clearingAllNotifications = false;
   searchSuggestions: SearchSuggestionsResult = { products: [], categories: [] };
   justAddedSuggestionId: string | null = null;
   cartRevision = 0;
@@ -137,6 +138,31 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     }
   }
 
+  clearAllNotifications(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const notifications = this.signalRService.signalrNotifications;
+    if (!notifications.length || this.clearingAllNotifications) {
+      return;
+    }
+
+    const ids = notifications.map((item) => item.id).filter((id) => id > 0);
+    this.clearingAllNotifications = true;
+
+    this.notificationService.markAllCustomerNotificationsAsRead(ids).subscribe({
+      next: (ok) => {
+        if (ok) {
+          this.signalRService.clearAllNotifications();
+        }
+        this.clearingAllNotifications = false;
+      },
+      error: () => {
+        this.clearingAllNotifications = false;
+      },
+    });
+  }
+
   private isOrderNotification(item: ShopNotificationItem): boolean {
     const sourceType = item.sourceType?.toLowerCase() ?? '';
     return sourceType.includes('onlineshopsaleorder') || sourceType.includes('order');
@@ -160,6 +186,18 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
       return name;
     }
     return this.productService.Currency?.name || '';
+  }
+
+  get showCashOnDelivery(): boolean {
+    return !!this.storefront?.isCashOnDeliveryEnabled;
+  }
+
+  get showGoPayFast(): boolean {
+    return !!this.storefront?.isGoPayFastEnabled;
+  }
+
+  get hasPaymentMethods(): boolean {
+    return this.showCashOnDelivery || this.showGoPayFast;
   }
 
   ngOnInit(): void {
@@ -290,7 +328,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
       return;
     }
     this.closeSearchDropdown();
-    void this.router.navigate(['/shop/collection/left/sidebar'], {
+    void this.router.navigate(['/shop'], {
       queryParams: { search: q, page: 1 },
     });
   }
@@ -299,10 +337,10 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     this.closeSearchDropdown();
     const slug = item.slug || item.productInventoryId || item.id;
     if (slug) {
-      void this.router.navigate(['/shop/product/left/sidebar', slug]);
+      void this.router.navigate(['/shop/product', slug]);
       return;
     }
-    void this.router.navigate(['/shop/collection/left/sidebar'], {
+    void this.router.navigate(['/shop'], {
       queryParams: { search: item.name, page: 1 },
     });
   }
@@ -370,7 +408,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
       queryParams.search = item.name?.trim() || this.searchText.trim();
     }
 
-    void this.router.navigate(['/shop/collection/left/sidebar'], { queryParams });
+    void this.router.navigate(['/shop'], { queryParams });
   }
 
   addSuggestionToCart(item: SearchProductSuggestion, event: Event): void {
@@ -410,7 +448,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
 
   selectCategorySuggestion(item: SearchCategorySuggestion): void {
     this.closeSearchDropdown();
-    void this.router.navigate(['/shop/collection/left/sidebar'], {
+    void this.router.navigate(['/shop'], {
       queryParams: { category: item.id, page: 1 },
     });
   }

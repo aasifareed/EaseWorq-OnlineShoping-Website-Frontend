@@ -16,7 +16,7 @@
     <div class="container-fluid">
         <div class="row partition2">
             <div class="col-md-6" *ngFor="let collection of collections1">
-                <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'fashion'}">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: 'fashion'}">
                     <div class="collection-banner p-left text-start">
                         <img [src]="collection.image" class="img-fluid" alt="collection-banner">
                         <div class="contain-banner">
@@ -35,7 +35,7 @@
     <div class="container-fluid">
         <div class="row partition2">
             <div class="col-md-6" *ngFor="let collection of collections2">
-                <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'fashion'}">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: 'fashion'}">
                     <div class="collection-banner p-left text-start">
                         <img [src]="collection.image" class="img-fluid" alt="collection-banner">
                         <div class="contain-banner">

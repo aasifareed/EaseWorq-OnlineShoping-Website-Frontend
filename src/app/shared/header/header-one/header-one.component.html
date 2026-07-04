@@ -46,7 +46,7 @@
           <div class="menu-left">
             <app-left-menu></app-left-menu>
             <div class="brand-logo">
-              <a routerLink="/home/fashion" id="headerlogo">
+              <a routerLink="/home" id="headerlogo">
                 <img [src]="themeLogo" class="img-fluid" alt="logo">
               </a>
             </div>
@@ -129,30 +129,43 @@
   </div> -->
   <div class="ml-top-header" *ngIf="topbar">
     <div class="container-fluid">
-      <div class="ml-top-utilities">
-        <div class="ml-utility-toggle">
-          <label class="ml-theme-switch" for="headerDarkCheck" aria-label="Toggle dark mode">
-            <input type="checkbox"
-                   id="headerDarkCheck"
-                   class="ml-theme-switch__input"
-                   [checked]="isDarkMode"
-                   (change)="onThemeToggle($event)">
-            <span class="ml-theme-switch__track">
-              <i class="fa fa-sun-o"></i>
-              <i class="fa fa-moon-o"></i>
-            </span>
-          </label>
+      <div class="ml-top-bar">
+        <div class="ml-top-utilities ml-top-utilities--left" *ngIf="hasPaymentMethods">
+          <span class="ml-utility-meta ml-payment-icon" *ngIf="showCashOnDelivery" title="Cash on Delivery">
+            <i class="fa fa-money" aria-hidden="true"></i>
+            COD
+          </span>
+          <span class="ml-utility-meta ml-payment-icon" *ngIf="showGoPayFast" title="GoPayFast Online Payment">
+            <i class="fa fa-credit-card" aria-hidden="true"></i>
+            GoPayFast
+          </span>
         </div>
 
-        <span class="ml-utility-meta" *ngIf="currencyLabel" title="Store currency">
-          <i class="fa fa-money" aria-hidden="true"></i>
-          {{ currencyLabel }}
-        </span>
+        <div class="ml-top-utilities ml-top-utilities--right">
+          <div class="ml-utility-toggle">
+            <label class="ml-theme-switch" for="headerDarkCheck" aria-label="Toggle dark mode">
+              <input type="checkbox"
+                     id="headerDarkCheck"
+                     class="ml-theme-switch__input"
+                     [checked]="isDarkMode"
+                     (change)="onThemeToggle($event)">
+              <span class="ml-theme-switch__track">
+                <i class="fa fa-sun-o"></i>
+                <i class="fa fa-moon-o"></i>
+              </span>
+            </label>
+          </div>
 
-        <span class="ml-utility-meta" title="Store language">
-          <i class="fa fa-globe" aria-hidden="true"></i>
-          English
-        </span>
+          <span class="ml-utility-meta" *ngIf="currencyLabel" title="Store currency">
+            <i class="fa fa-money" aria-hidden="true"></i>
+            {{ currencyLabel }}
+          </span>
+
+          <span class="ml-utility-meta" title="Store language">
+            <i class="fa fa-globe" aria-hidden="true"></i>
+            English
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -162,7 +175,7 @@
       <div class="row align-items-center gx-0">
         <div class="col-auto">
           <div class="brand-logo py-2">
-            <a [routerLink]="['/home/fashion']" class="text-decoration-none brand-logo-link">
+            <a [routerLink]="['/home']" class="text-decoration-none brand-logo-link">
               <img
                 *ngIf="storeLogoUrl"
                 [src]="storeLogoUrl"
@@ -287,8 +300,8 @@
 
         <div class="col-auto">
           <div class="d-flex align-items-center action-icons">
-            <div class="dropdown px-3 text-center border-end border-secondary-subtle">
-              <a class="text-decoration-none dropdown-toggle no-caret header-action-link" data-bs-toggle="dropdown">
+            <div class="dropdown px-3 text-center border-end border-secondary-subtle header-account-dropdown">
+              <a class="text-decoration-none dropdown-toggle no-caret header-action-link" data-bs-toggle="dropdown" aria-expanded="false">
                 <span *ngIf="isLoggedIn" class="account-initials">{{ userInitials }}</span>
                 <i *ngIf="!isLoggedIn" class="fa fa-user-o fs-5"></i>
                 <span class="d-block label">YOUR ACCOUNT</span>
@@ -328,11 +341,21 @@
               <div ngbDropdownMenu class="notification-dropdown shadow-lg">
                 <div class="notification-dropdown-header">
                   <span class="notification-dropdown-title">Alerts</span>
-                  <span
-                    *ngIf="signalRService.unreadCount > 0"
-                    class="notification-dropdown-count">
-                    {{ signalRService.unreadCount }} new
-                  </span>
+                  <div class="notification-dropdown-actions">
+                    <button
+                      type="button"
+                      class="notification-clear-all-btn"
+                      *ngIf="signalRService.signalrNotifications.length"
+                      [disabled]="clearingAllNotifications"
+                      (click)="clearAllNotifications($event)">
+                      Clear all
+                    </button>
+                    <span
+                      *ngIf="signalRService.unreadCount > 0"
+                      class="notification-dropdown-count">
+                      {{ signalRService.unreadCount }} new
+                    </span>
+                  </div>
                 </div>
                 <div class="notification-dropdown-body">
                   <div class="notification-empty" *ngIf="!signalRService.signalrNotifications.length">
@@ -396,7 +419,7 @@
         <!-- Left: Main category list -->
         <ul class="cat-main-list">
           <li *ngFor="let cat of categories" (mouseenter)="setActive(cat)" [class.active]="activeCat?.id === cat.id">
-            <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: cat.id }"
+            <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
               class="cat-main-link">
               {{ cat.title }}
               <i class="fa fa-angle-right ms-auto" *ngIf="cat.children?.length"></i>
@@ -408,7 +431,7 @@
         <div class="cat-sub-panel" *ngIf="activeCat?.children?.length">
           <ul class="cat-sub-list">
             <li *ngFor="let child of activeCat.children">
-              <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: child.id }"
+              <a [routerLink]="['/shop']" [queryParams]="{ category: child.id }"
                 class="cat-sub-link">
                 {{ child.title }}
               </a>

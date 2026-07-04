@@ -141,7 +141,7 @@
     <div class="container">
         <div class="row partition3">
             <div class="col-md-4" *ngFor="let collection of collections">
-                <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'watch'}">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: 'watch'}">
                     <div class="collection-banner p-left">
                         <img [src]="collection.image" class="img-fluid" alt="">
                         <div class="contain-banner banner-3" *ngIf="collection.title && collection.text">

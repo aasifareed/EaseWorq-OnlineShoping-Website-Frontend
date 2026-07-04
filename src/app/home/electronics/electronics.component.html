@@ -9,13 +9,13 @@
         <div class="col-md-5">
             <div class="row home-banner">
                 <div class="col-12">
-                    <a [routerLink]="['/shop/collection/left/sidebar']" 
+                    <a [routerLink]="['/shop']" 
                        [queryParams]="{ category: 'electronics'}">
                         <img src="assets/images/banner/2.jpg" class="img-fluid" alt="electronics">
                     </a>
                 </div>
                 <div class="col-12">
-                    <a [routerLink]="['/shop/collection/left/sidebar']"
+                    <a [routerLink]="['/shop']"
                        [queryParams]="{ category: 'electronics'}">
                         <img src="assets/images/banner/3.jpg" class="img-fluid" alt="electronics">
                     </a>
@@ -31,7 +31,7 @@
     <div class="container">
         <div class="row partition3">
             <div class="col-md-4" *ngFor="let collection of collections">
-                <a [routerLink]="['/shop/collection/left/sidebar']"
+                <a [routerLink]="['/shop']"
                    [queryParams]="{ category: 'electronics'}">
                     <div class="collection-banner p-right text-end">
                         <img [src]="collection.image" class="img-fluid" alt="">

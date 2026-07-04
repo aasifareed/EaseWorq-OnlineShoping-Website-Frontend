@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, of, tap } from 'rxjs';
+import { Observable, forkJoin, map, of, tap, catchError, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
 import { NotificationApiDto, ShopNotificationItem } from '../models/notification.model';
@@ -106,6 +106,62 @@ export class NotificationService {
 
     return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
       map((resp) => !!(resp?.result ?? resp))
+    );
+  }
+
+  /** Marks every unread notification as read for the logged-in customer (single bulk API call). */
+  markAllCustomerNotificationsAsRead(fallbackIds: number[] = []): Observable<boolean> {
+    const ctx = this.getCustomerContext();
+    if (!ctx.userId) {
+      return of(false);
+    }
+
+    const markAllPath =
+      environment.urls?.Notification_MarkAllAsRead || 'Notification/MarkAllCustomerNotificationsAsRead';
+    const url = `${this.apiRoot()}api/services/app/${markAllPath}`;
+    const body = {
+      userId: ctx.userId,
+      tenantId: ctx.tenantId,
+    };
+
+    return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
+      map((resp) => !!(resp?.result ?? resp)),
+      switchMap((ok) => (ok ? of(true) : this.markAllViaLegacyEndpoint(fallbackIds))),
+      catchError(() => this.markAllViaLegacyEndpoint(fallbackIds)),
+    );
+  }
+
+  /** Fallback when bulk endpoint is not deployed yet. */
+  private markAllViaLegacyEndpoint(fallbackIds: number[]): Observable<boolean> {
+    const ctx = this.getCustomerContext();
+    if (!ctx.userId) {
+      return of(false);
+    }
+
+    const markPath =
+      environment.urls?.Notification_MarkAsRead || 'Notification/MarkCustomerNotificationAsRead';
+    const url = `${this.apiRoot()}api/services/app/${markPath}`;
+    const body = {
+      notificationId: 0,
+      userId: ctx.userId,
+      tenantId: ctx.tenantId,
+    };
+
+    return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
+      map((resp) => !!(resp?.result ?? resp)),
+      switchMap((ok) => (ok ? of(true) : this.markEachNotificationAsRead(fallbackIds))),
+      catchError(() => this.markEachNotificationAsRead(fallbackIds)),
+    );
+  }
+
+  private markEachNotificationAsRead(notificationIds: number[]): Observable<boolean> {
+    const ids = [...new Set(notificationIds.filter((id) => id > 0))];
+    if (!ids.length) {
+      return of(false);
+    }
+
+    return forkJoin(ids.map((id) => this.markCustomerNotificationAsRead(id))).pipe(
+      map((results) => results.every(Boolean))
     );
   }
 

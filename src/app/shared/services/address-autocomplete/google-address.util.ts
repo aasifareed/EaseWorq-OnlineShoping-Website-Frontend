@@ -90,6 +90,10 @@ function addressFromPredictionDescription(description: string): string {
   return description.replace(/,?\s*Pakistan\s*$/i, '').trim();
 }
 
+function labelFromPredictionDescription(description?: string): string {
+  return description ? addressFromPredictionDescription(description) : '';
+}
+
 function extractPostalFromComponents(
   components: google.maps.GeocoderAddressComponent[]
 ): string {
@@ -204,11 +208,12 @@ export function parseGooglePlaceAddress(
     || currentPostal;
 
   if (mode === 'state') {
+    const fromPrediction = labelFromPredictionDescription(predictionDescription);
     return {
       address: currentAddress,
       town: currentTown,
-      state: resolvedState,
-      postalcode
+      state: fromPrediction || resolvedState,
+      postalcode: extractPostalCode(place) || currentPostal
     };
   }
 

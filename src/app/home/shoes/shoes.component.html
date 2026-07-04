@@ -22,14 +22,14 @@
                         <ng-container *ngFor="let category of categories">
                             <ng-template carouselSlide>
                                 <div class="category-block">
-                                    <a [routerLink]="['/shop/collection/left/sidebar']"
+                                    <a [routerLink]="['/shop']"
                                        [queryParams]="{ category: 'shoes'}">
                                         <div class="category-image">
                                             <img [src]="category.image" alt="" class="w-auto">
                                         </div>
                                     </a>
                                     <div class="category-details">
-                                        <a [routerLink]="['/shop/collection/left/sidebar']"
+                                        <a [routerLink]="['/shop']"
                                            [queryParams]="{ category: 'shoes'}">
                                             <h5>{{ category.title }}</h5>
                                         </a>
@@ -72,7 +72,7 @@
   <div class="container">
     <div class="row partition2">
       <div class="col-md-6" *ngFor="let collection of collections1">
-        <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'shoes'}">
+        <a [routerLink]="['/shop']" [queryParams]="{ category: 'shoes'}">
           <div class="collection-banner p-right text-center">
             <img [src]="collection.image" class="img-fluid" alt="collection-banner">
             <div class="contain-banner">
@@ -129,7 +129,7 @@
                       <img [src]="collection.image" class="img-fluid" alt="">
                   </div>
                   <div class="category-box">
-                      <a [routerLink]="['/shop/collection/left/sidebar']"
+                      <a [routerLink]="['/shop']"
                          [queryParams]="{ category: 'shoes'}">
                           <h2>{{collection.title}}</h2>
                       </a>
@@ -179,7 +179,7 @@
   <div class="container">
       <div class="row background">
           <div class="col" *ngFor="let size of sizes">
-              <a [routerLink]="['/shop/collection/left/sidebar']"
+              <a [routerLink]="['/shop']"
                  [queryParams]="{ category: 'shoes'}">
                   <div class="contain-bg">
                       <h4>{{size}}</h4>

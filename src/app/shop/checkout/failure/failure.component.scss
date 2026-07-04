@@ -111,5 +111,6 @@ li {
 }
 
 .total-sec .order-success-discount span {
-  color: #16a34a;
+  color: var(--discount-text, var(--success));
+  font-weight: 700;
 }

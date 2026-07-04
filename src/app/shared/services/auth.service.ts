@@ -6,6 +6,7 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ShopContextService } from './shop-context.service';
 import { TenantService } from './tenant.service';
+import { STOREFRONT_ROUTES } from '../constants/storefront-routes';
 
 export interface ShopAuthSession {
   accessToken: string;
@@ -461,7 +462,7 @@ export class AuthService {
   }
 
   navigateAfterLogin(returnUrl?: string | null): void {
-    const target = returnUrl && returnUrl !== '/pages/login' ? returnUrl : '/shop/collection/left/sidebar';
+    const target = returnUrl && returnUrl !== '/pages/login' ? returnUrl : STOREFRONT_ROUTES.shop;
     this.router.navigateByUrl(target);
   }
 }

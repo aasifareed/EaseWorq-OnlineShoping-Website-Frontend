@@ -50,7 +50,7 @@
               <td>
                 <span
                   class="order-status-badge"
-                  [style.background-color]="order.orderStatusColorCode || '#6c757d'">
+                  [ngStyle]="statusChipStyles(order.orderStatusColorCode)">
                   {{ statusLabel(order) }}
                 </span>
               </td>
@@ -151,7 +151,7 @@
         <div class="d-flex flex-wrap align-items-center gap-2">
           <span
             class="order-status-badge"
-            [style.background-color]="orderDetail.orderStatusColorCode || '#6c757d'">
+            [ngStyle]="statusChipStyles(orderDetail.orderStatusColorCode)">
             {{ orderDetail.orderStatusDisplayName || '—' }}
           </span>
         </div>
@@ -302,7 +302,7 @@
         <div class="tracking-summary-value">
           <span
             class="order-status-badge"
-            [style.background-color]="orderTimeline.currentOrderStatusColorCode || '#6c757d'">
+            [ngStyle]="statusChipStyles(orderTimeline.currentOrderStatusColorCode)">
             {{ orderTimeline.currentOrderStatusDisplayName || '—' }}
           </span>
         </div>
@@ -317,7 +317,7 @@
               <span
                 *ngIf="event.orderStatusColorCode"
                 class="order-status-badge"
-                [style.background-color]="event.orderStatusColorCode">
+                [ngStyle]="statusChipStyles(event.orderStatusColorCode)">
                 {{ timelineStatusLabel(event) }}
               </span>
               <span *ngIf="!event.orderStatusColorCode" class="tracking-timeline-status">{{ timelineStatusLabel(event) }}</span>

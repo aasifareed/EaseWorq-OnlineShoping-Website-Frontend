@@ -102,8 +102,16 @@ export class CartComponent implements OnDestroy {
   }
 
   // Decrement
-  decrement(product:any, qty = -1) {
+  decrement(product: any, qty = -1) {
+    const currentQty = Number(product?.quantity) || 0;
+    if (currentQty <= 1) {
+      return;
+    }
     this.productService.updateCartQuantity(product, qty);
+  }
+
+  canDecrement(product: any): boolean {
+    return (Number(product?.quantity) || 0) > 1;
   }
 
   public removeItem(product: any) {

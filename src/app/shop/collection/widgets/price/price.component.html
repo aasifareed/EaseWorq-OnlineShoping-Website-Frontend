@@ -17,15 +17,28 @@
 </div> -->
 
 <div class="collection-collapse-block border-0" [class.open]="collapse">
-  <h3 class="collapse-block-title" (click)="collapse = !collapse">Price (USD)</h3>
+  <h3 class="collapse-block-title" (click)="collapse = !collapse">{{ priceFilterLabel }}</h3>
   <div class="collection-collapse-block-content">
     <div class="collection-brand-filter">
 
-      <!-- Min / Max inputs -->
-      <div class="d-flex align-items-center gap-2 mt-2 mb-2">
-        <input type="number" class="price-input" [(ngModel)]="localMin" (change)="appliedFilter()" [min]="options.floor" [max]="localMax ?? options.ceil" />
-        <span class="text-secondary small">TO</span>
-        <input type="number" class="price-input" [(ngModel)]="localMax" (change)="appliedFilter()" [min]="localMin ?? options.floor" [max]="options.ceil" />
+      <div class="price-range-row">
+        <input
+          type="number"
+          class="price-input"
+          [(ngModel)]="localMin"
+          (change)="appliedFilter()"
+          [min]="options.floor"
+          [max]="options.ceil"
+        />
+        <span class="price-range-separator">to</span>
+        <input
+          type="number"
+          class="price-input"
+          [(ngModel)]="localMax"
+          (change)="appliedFilter()"
+          [min]="options.floor"
+          [max]="options.ceil"
+        />
       </div>
 
       <!-- Slider -->

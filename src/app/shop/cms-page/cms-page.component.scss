@@ -1,14 +1,16 @@
 .cms-page__title {
   margin-bottom: 1.5rem;
-  font-weight: 600;
-  color: var(--ml-page-title, inherit);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary, var(--ml-page-title, inherit));
 }
 
 .cms-page__content {
-  line-height: 1.7;
-  color: var(--ml-surface-text, #333);
+  line-height: 1.75;
+  font-size: 0.9375rem;
+  color: var(--text-secondary, var(--ml-surface-text, #333));
 
-  /* Theme sets all `li` to inline-block globally — restore normal block flow for CMS HTML. */
   ::ng-deep ul,
   ::ng-deep ol {
     display: block;
@@ -26,7 +28,8 @@
 
   ::ng-deep li {
     display: list-item;
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.4rem;
+    color: var(--text-secondary, inherit);
   }
 
   ::ng-deep h1,
@@ -35,22 +38,29 @@
   ::ng-deep h4 {
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
-    font-weight: 600;
-    color: var(--ml-page-title, inherit);
+    font-weight: 700;
+    color: var(--text-primary, var(--ml-page-title, inherit));
   }
 
   ::ng-deep p {
     display: block;
     margin-bottom: 1rem;
+    color: var(--text-secondary, inherit);
   }
 
   ::ng-deep strong,
   ::ng-deep b {
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--text-primary, inherit);
   }
 
   ::ng-deep a {
-    color: var(--theme-deafult, #ff4c3b);
+    color: var(--primary, var(--theme-deafult, #ffc107));
     text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--primary-hover, #e6ac00);
+    }
   }
 }

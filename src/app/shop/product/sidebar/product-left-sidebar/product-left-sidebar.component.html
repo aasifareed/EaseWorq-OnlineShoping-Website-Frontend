@@ -43,11 +43,11 @@
                 <div class="product-right">
                   <h2>{{ product?.title }}</h2>
                   <h4 *ngIf="product?.discount">
-                      <del>{{ product?.price * productService.Currency?.price | currency: productService.Currency?.currency:'symbol' }}</del>
+                      <del>{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
                       <span>{{ product?.discount }}% off</span>
                   </h4>
                   <h3>
-                      {{ (product?.price | discount:product) * productService.Currency?.price | currency: productService.Currency?.currency:'symbol' }}
+                      {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
                   </h3>
                   <ul class="color-variant" *ngIf="Color(product?.variants).length">
                     <li [class]="color" [class.active]="activeSlide === i"
@@ -135,6 +135,7 @@
                           <p>{{ product?.description }}</p>
                         </ng-template>
                     </li>
+                    <!-- Video tab — hidden for now
                     <li [ngbNavItem]="2">
                       <a ngbNavLink>Video</a>
                         <ng-template ngbNavContent>
@@ -185,6 +186,7 @@
                           </form>
                         </ng-template>
                     </li>
+                    -->
                   </ul>
                   <div [ngbNavOutlet]="nav" class="mt-2"></div>
               </div>

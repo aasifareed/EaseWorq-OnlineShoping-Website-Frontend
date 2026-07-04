@@ -5,21 +5,21 @@
         <div class="collection-brand-filter" *ngIf="!activeSlug || !navCurrent">
             <ul class="category-list">
                 <li *ngFor="let cat of category">
-                    <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: cat.id }"
+                    <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
                         [class.active]="isCategoryActive(cat)">
                         {{ cat.title }}
                         <span *ngIf="cat.count">({{ cat.count }})</span>
                     </a>
                     <ul *ngIf="isOpen(cat) && cat.children?.length">
                         <li *ngFor="let child of cat.children">
-                            <a [routerLink]="['/shop/collection/left/sidebar']"
+                            <a [routerLink]="['/shop']"
                                 [queryParams]="{ category: child.id }" [class.active]="isCategoryActive(child)">
                                 {{ child.title }}
                                 <span *ngIf="child.count">({{ child.count }})</span>
                             </a>
                             <ul *ngIf="isOpen(child) && child.children?.length">
                                 <li *ngFor="let grand of child.children">
-                                    <a [routerLink]="['/shop/collection/left/sidebar']"
+                                    <a [routerLink]="['/shop']"
                                         [queryParams]="{ category: grand.id }"
                                         [class.active]="isCategoryActive(grand)">
                                         {{ grand.title }}
@@ -34,14 +34,14 @@
         </div>
 
         <div class="collection-brand-filter microless-category-branch" *ngIf="activeSlug && navCurrent">
-            <a *ngIf="navParent" class="microless-cat-back" [routerLink]="['/shop/collection/left/sidebar']"
+            <a *ngIf="navParent" class="microless-cat-back" [routerLink]="['/shop']"
                 [queryParams]="{ category: navParent.id }">
                 <span class="microless-cat-back-chevron">&lt;</span> {{ navParent.title }}
             </a>
             <div class="microless-cat-current">{{ navCurrent.title }}</div>
             <ul class="microless-cat-children" *ngIf="navChildren.length">
                 <li *ngFor="let child of navChildren">
-                    <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: child.id }"
+                    <a [routerLink]="['/shop']" [queryParams]="{ category: child.id }"
                         [class.active]="isCategoryActive(child)">
                         {{ child.title }}
                         <span *ngIf="child.count">({{ child.count }})</span>

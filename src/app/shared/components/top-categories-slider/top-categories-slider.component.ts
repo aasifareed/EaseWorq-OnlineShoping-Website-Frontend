@@ -20,20 +20,20 @@ export class TopCategoriesSliderComponent implements OnInit, OnChanges {
   /** Extra category ids to hide (e.g. home page popular sliders already shown above). */
   @Input() excludeCategoryIds: string[] = [];
 
-  categorySliderConfig = {
-    loop: true,
-    nav: true,
-    dots: false,
-    navContainerClass: 'owl-nav',
-    navClass: ['owl-prev', 'owl-next'],
-    navText: ['<i class="ti-angle-left"></i>', '<i class="ti-angle-right"></i>'],
-    responsive: {
-      0: { items: 2 },
-      480: { items: 3 },
-      768: { items: 4 },
-      1024: { items: 6 }
+  get useCarousel(): boolean {
+    return this.categories.length > 6;
+  }
+
+  /** Tight equal-width columns for small category lists (no huge carousel gaps). */
+  get gridTemplateColumns(): string {
+    const n = this.categories.length;
+    if (n <= 1) {
+      return 'minmax(0, 220px)';
     }
-  };
+    return `repeat(${Math.min(n, 6)}, minmax(0, 1fr))`;
+  }
+
+  categorySliderConfig: Record<string, unknown> = this.buildSliderConfig(0);
 
   categories: TopCategoryCard[] = [];
   private rawCategories: TopCategoryCard[] = [];
@@ -91,5 +91,25 @@ export class TopCategoriesSliderComponent implements OnInit, OnChanges {
       const id = String(row.id || '').trim().toLowerCase();
       return id && !exclude.has(id);
     });
+    this.categorySliderConfig = this.buildSliderConfig(this.categories.length);
+  }
+
+  private buildSliderConfig(count: number): Record<string, unknown> {
+    const cap = (max: number) => Math.max(1, Math.min(count, max));
+    return {
+      loop: count > 6,
+      nav: count > 1,
+      dots: false,
+      margin: 8,
+      navContainerClass: 'owl-nav',
+      navClass: ['owl-prev', 'owl-next'],
+      navText: ['<i class="ti-angle-left"></i>', '<i class="ti-angle-right"></i>'],
+      responsive: {
+        0: { items: cap(2) },
+        480: { items: cap(3) },
+        768: { items: cap(4) },
+        1024: { items: cap(6) }
+      }
+    };
   }
 }

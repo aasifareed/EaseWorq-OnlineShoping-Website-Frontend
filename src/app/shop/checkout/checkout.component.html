@@ -76,6 +76,8 @@
                                     </div>
                                     <div *ngIf="control('billing.town').touched && control('billing.town').errors?.required"
                                         class="text text-danger">Town/City is required.</div>
+                                    <div *ngIf="control('billing.town').touched && control('billing.town').errors?.mustSelectSuggestion"
+                                        class="text text-danger">Please select a town/city from the suggestions.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">State / County <span class="required-mark">*</span></div>
@@ -95,6 +97,8 @@
                                     </div>
                                     <div *ngIf="control('billing.state').touched && control('billing.state').errors?.required"
                                         class="text text-danger">State is required.</div>
+                                    <div *ngIf="control('billing.state').touched && control('billing.state').errors?.mustSelectSuggestion"
+                                        class="text text-danger">Please select a state from the suggestions.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">Postal Code <span class="required-mark">*</span></div>
@@ -172,6 +176,8 @@
                                     </div>
                                     <div *ngIf="control('shipping.town').touched && control('shipping.town').errors?.required"
                                         class="text text-danger">Town/City is required.</div>
+                                    <div *ngIf="control('shipping.town').touched && control('shipping.town').errors?.mustSelectSuggestion"
+                                        class="text text-danger">Please select a town/city from the suggestions.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">State / County <span class="required-mark">*</span></div>
@@ -191,6 +197,8 @@
                                     </div>
                                     <div *ngIf="control('shipping.state').touched && control('shipping.state').errors?.required"
                                         class="text text-danger">State is required.</div>
+                                    <div *ngIf="control('shipping.state').touched && control('shipping.state').errors?.mustSelectSuggestion"
+                                        class="text text-danger">Please select a state from the suggestions.</div>
                                 </div>
                                 <div class="form-group col-md-12 col-sm-6 col-xs-12">
                                     <div class="field-label">Postal Code <span class="required-mark">*</span></div>
@@ -203,7 +211,7 @@
 
                             <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                 <div class="field-label">Order note (optional)</div>
-                                <textarea formControlName="description" rows="5" 
+                                <textarea formControlName="description" rows="5" maxlength="1024"
                                     placeholder="Notes for your order…" autocomplete="on"></textarea>
                             </div>
                         </div>
@@ -219,7 +227,7 @@
                                             {{ product.title }} × {{ product.quantity }}
                                             <span>
                                                 {{ (product.price | discount:product) * productService?.Currency.price |
-                                                currency:productService?.Currency.currency:'symbol' }}
+                                                shopCurrency:productService?.Currency.currency }}
                                             </span>
                                         </li>
                                     </ul>
@@ -230,12 +238,12 @@
                                         <li class="checkout-total-row">
                                             <span class="checkout-total-row__label">Subtotal</span>
                                             <span class="count checkout-total-row__value">{{ cartSubtotal |
-                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                                shopCurrency:productService?.Currency.currency }}</span>
                                         </li>
                                         <li class="checkout-total-row" *ngIf="couponDiscount > 0">
                                             <span class="checkout-total-row__label">Coupon discount</span>
                                             <span class="count checkout-total-row__value checkout-discount">−{{ couponDiscount |
-                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                                shopCurrency:productService?.Currency.currency }}</span>
                                         </li>
                                     </ul>
 
@@ -310,11 +318,13 @@
                                                         [attr.aria-checked]="isCourierOptionSelected(option)"
                                                         role="radio">
                                                         <span class="checkout-courier-card__top">
-                                                            <span class="checkout-courier-card__check" aria-hidden="true">
-                                                                <i class="fa fa-check"></i>
+                                                            <span class="checkout-courier-card__top-stack">
+                                                                <span class="checkout-courier-card__badge"
+                                                                    *ngIf="option.isRecommended">Best value</span>
+                                                                <span class="checkout-courier-card__check" aria-hidden="true">
+                                                                    <i class="fa fa-check"></i>
+                                                                </span>
                                                             </span>
-                                                            <span class="checkout-courier-card__badge"
-                                                                *ngIf="option.isRecommended">Best value</span>
                                                         </span>
                                                         <span class="checkout-courier-card__body">
                                                             <span class="checkout-courier-card__company">{{ option.courierCompany }}</span>
@@ -326,11 +336,11 @@
                                                             <span class="checkout-courier-card__was"
                                                                 *ngIf="(option.shippingDiscountAmount || 0) > 0">
                                                                 {{ option.cargoOriginalAmount |
-                                                                    currency:productService?.Currency.currency:'symbol' }}
+                                                                    shopCurrency:productService?.Currency.currency }}
                                                             </span>
                                                             <span class="checkout-courier-card__price">
                                                                 {{ option.finalShippingAmount |
-                                                                    currency:productService?.Currency.currency:'symbol' }}
+                                                                    shopCurrency:productService?.Currency.currency }}
                                                             </span>
                                                         </span>
                                                     </button>
@@ -342,7 +352,7 @@
                                                     <strong>{{ selectedCourierOption.courierCompany }}</strong>
                                                     · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
                                                     · {{ selectedCourierOption.finalShippingAmount |
-                                                        currency:productService?.Currency.currency:'symbol' }}
+                                                        shopCurrency:productService?.Currency.currency }}
                                                 </p>
                                             </div>
                                         </div>
@@ -352,12 +362,12 @@
                                                 *ngIf="(shippingRate?.shippingDiscountAmount || 0) > 0">
                                                 <span class="checkout-total-row__label">Shipping discount</span>
                                                 <span class="count checkout-total-row__value checkout-discount">−{{ shippingRate?.shippingDiscountAmount |
-                                                    currency:productService?.Currency.currency:'symbol' }}</span>
+                                                    shopCurrency:productService?.Currency.currency }}</span>
                                             </li>
                                             <li class="checkout-total-row">
                                                 <span class="checkout-total-row__label">Delivery charges</span>
                                                 <span class="count checkout-total-row__value">{{ shippingRate?.finalShippingAmount |
-                                                    currency:productService?.Currency.currency:'symbol' }}</span>
+                                                    shopCurrency:productService?.Currency.currency }}</span>
                                             </li>
                                         </ul>
                                     </div>
@@ -366,7 +376,7 @@
                                         <li class="checkout-total-row checkout-order-total__row">
                                             <span class="checkout-total-row__label checkout-order-total__label">Total</span>
                                             <span class="count checkout-total-row__value checkout-order-total__value">{{ orderTotal |
-                                                currency:productService?.Currency.currency:'symbol' }}</span>
+                                                shopCurrency:productService?.Currency.currency }}</span>
                                         </li>
                                     </ul>
 
@@ -374,9 +384,9 @@
                                         *ngIf="codCollectsShippingOnline" role="status">
                                         <strong>Cash on delivery:</strong>
                                         Pay shipping
-                                        <strong>{{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                        <strong>{{ shippingRate?.finalShippingAmount | shopCurrency:productService?.Currency.currency }}</strong>
                                         now via PayFast. The remaining
-                                        <strong>{{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }}</strong>
+                                        <strong>{{ codRemainingOnDelivery | shopCurrency:productService?.Currency.currency }}</strong>
                                         is collected when your order is delivered.
                                     </div>
 
@@ -402,8 +412,8 @@
                                         </p>
                                         <p class="checkout-payment-hint"
                                             *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && codCollectsShippingOnline">
-                                            Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | currency:productService?.Currency.currency:'symbol' }}).
-                                            Remaining {{ codRemainingOnDelivery | currency:productService?.Currency.currency:'symbol' }} on delivery.
+                                            Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | shopCurrency:productService?.Currency.currency }}).
+                                            Remaining {{ codRemainingOnDelivery | shopCurrency:productService?.Currency.currency }} on delivery.
                                         </p>
                                         <p class="checkout-payment-hint"
                                             *ngIf="paymentMethod === OnlineShopPaymentMethod.GoPayFast">

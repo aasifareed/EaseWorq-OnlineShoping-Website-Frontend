@@ -21,7 +21,7 @@
                     <ng-container *ngFor="let image of product.images; index as i">
                         <ng-template carouselSlide [id]="i">
                             <div>
-                              <img [defaultImage]="'assets/images/product/placeholder.jpg'" 
+                              <img [defaultImage]="'assets/images/product/placeholder.svg'" 
                                    [lazyLoad]="image.src" 
                                    [alt]="image.alt" class="img-fluid" [src]="image.src">
                             </div>
@@ -34,7 +34,7 @@
                             <ng-container *ngFor="let image of product.images; index as i">
                                 <ng-template carouselSlide [id]="i">
                                     <div class="owl-thumb" [class.active]="i == activeSlide">
-                                      <img [defaultImage]="'assets/images/product/placeholder.jpg'" 
+                                      <img [defaultImage]="'assets/images/product/placeholder.svg'" 
                                            [lazyLoad]="image.src" 
                                            [alt]="image.alt" class="img-fluid" [src]="image.src" (click)="owlCar.to(activeSlide = i.toString())">
                                     </div>
@@ -48,11 +48,11 @@
                 <div class="product-right">
                   <h2>{{ product?.title }}</h2>
                   <h4>
-                      <del *ngIf="product?.discount">{{ product?.price * productService.Currency?.price | currency: productService.Currency?.currency:'symbol' }}</del>
+                      <del *ngIf="product?.discount">{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
                       <span>{{ product?.discount }}% off</span>
                   </h4>
                   <h3>
-                      {{ (product?.price | discount:product) * productService.Currency?.price | currency: productService.Currency?.currency:'symbol' }}
+                      {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
                   </h3>
                   <ul class="color-variant" *ngIf="Color(product?.variants).length">
                     <li [class]="color" [class.active]="activeSlide == i.toString()" *ngFor="let color of Color(product?.variants); index as i" 

@@ -41,8 +41,8 @@
                 <div class="col-lg-6 rtl-text">
                     <div class="product-right">
                         <h2>{{ product?.title | titlecase }}</h2>
-                        <h3>{{ (product?.price | discount:product) * (currency?.price ?? 1) | currency:currency?.currency:'symbol' }}
-                            <del *ngIf="product?.discount"><span class="money">{{ product?.price * (currency?.price ?? 1) | currency:currency?.currency:'symbol' }}</span></del>
+                        <h3>{{ (product?.price | discount:product) * (currency?.price ?? 1) | shopCurrency:currency?.currency }}
+                            <del *ngIf="product?.discount"><span class="money">{{ product?.price * (currency?.price ?? 1) | shopCurrency:currency?.currency }}</span></del>
                         </h3>
                         <div class="border-product">
                             <h6 class="product-title">product details</h6>

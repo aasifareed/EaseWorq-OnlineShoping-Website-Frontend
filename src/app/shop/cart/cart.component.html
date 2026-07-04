@@ -23,12 +23,12 @@
                 <tbody *ngFor="let product of products">
                     <tr>
                         <td>
-                            <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">
+                            <a [routerLink]="['/shop/product/', product.title.replace(' ', '-')]">
                                 <img [src]="product.images[0].src" [alt]="product.images[0].alt">
                             </a>
                         </td>
                         <td>
-                            <a [routerLink]="['/shop/product/left/sidebar/', product.title.replace(' ', '-')]">{{ product.title | titlecase }}</a>
+                            <a [routerLink]="['/shop/product/', product.title.replace(' ', '-')]">{{ product.title | titlecase }}</a>
                             <div class="mobile-cart-content row">
                                 <div class="col">
                                     <div class="qty-box">
@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="col">
                                     <h2 class="td-color">
-                                        {{ (product.price | discount:product) * productService?.Currency.price | currency:productService?.Currency.currency:'symbol' }}
+                                        {{ (product.price | discount:product) * productService?.Currency.price | shopCurrency:productService?.Currency.currency }}
                                     </h2>
                                 </div>
                                 <div class="col">
@@ -53,14 +53,14 @@
                         </td>
                         <td>
                             <h2>
-                                {{ (product.price | discount:product) * productService?.Currency.price | currency:productService?.Currency.currency:'symbol' }}
+                                {{ (product.price | discount:product) * productService?.Currency.price | shopCurrency:productService?.Currency.currency }}
                             </h2>
                         </td>
                         <td>
                             <div class="qty-box">
                                 <div class="input-group">
                                     <span class="input-group-prepend">
-                                        <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement(product)">
+                                        <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement(product)" [disabled]="!canDecrement(product)">
                                             <i class="ti-angle-left"></i>
                                         </button>
                                     </span>
@@ -80,7 +80,7 @@
                         </td>
                         <td>
                             <h2 class="td-color">
-                                {{ ((product.price | discount:product) * product.quantity) * productService?.Currency.price | currency:productService?.Currency.currency:'symbol' }}
+                                {{ ((product.price | discount:product) * product.quantity) * productService?.Currency.price | shopCurrency:productService?.Currency.currency }}
                             </h2>
                         </td>
                     </tr>
@@ -91,7 +91,7 @@
                     <tr>
                         <td>total price :</td>
                         <td>
-                            <h2> {{ getTotal | async | currency:productService?.Currency.currency:'symbol'}}</h2>
+                            <h2> {{ getTotal | async | shopCurrency:productService?.Currency.currency}}</h2>
                         </td>
                     </tr>
                 </tfoot>
@@ -100,7 +100,7 @@
         </div>
         <div class="row cart-buttons" *ngIf='products.length'>
             <div class="col-6">
-                <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid">continue shopping</a>
+                <a [routerLink]="['/shop']" class="btn btn-solid">continue shopping</a>
             </div>
             <div class="col-6">
                 <a [routerLink]="['/shop/checkout']" class="btn btn-solid">check out</a>
@@ -124,8 +124,8 @@
 
                         <!-- Image -->
                         <div class="col-auto cell-thumbnail">
-                            <a [routerLink]="['/shop/product/left/sidebar', product.id]" [state]="{ product }">
-                                <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.jpg'"
+                            <a [routerLink]="['/shop/product', product.id]" [state]="{ product }">
+                                <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.svg'"
                                     [alt]="product?.images?.[0]?.alt || product?.title"
                                     class="cart-img" />
                             </a>
@@ -135,7 +135,7 @@
                         <div class="col">
 
                             <!-- Title -->
-                            <a [routerLink]="['/shop/product/left/sidebar', product.id]"
+                            <a [routerLink]="['/shop/product', product.id]"
                                [state]="{ product }"
                                class="cart-title d-block mb-2">
                                 {{ product?.title }}
@@ -169,19 +169,19 @@
                             <!-- Prices -->
                             <div class="mb-3">
                                 <div class="cart-price-value fw-bold">
-                                  {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | currency:productService?.Currency.currency:'symbol' }}</div>
+                                  {{ (product.price | discount:product) * (productService?.Currency?.price ?? 1) | shopCurrency:productService?.Currency.currency }}</div>
                                 <div class="text-secondary text-decoration-line-through small"
                                     *ngIf="product?.discount > 0"> {{ product.price * (productService?.Currency?.price ?? 1) |
-                                    currency:productService?.Currency.currency:'symbol' }}</div>
+                                    shopCurrency:productService?.Currency.currency }}</div>
                             </div>
 
                             <!-- Quantity -->
                             <div class="qty-box d-flex align-items-center justify-content-end gap-2">
-                                <span class="small text-secondary">Quantity</span>
+                                <span class="small cart-qty-label">Quantity</span>
                                 <div class="input-group">
                                     <span class="input-group-prepend">
                                         <button type="button" class="btn quantity-left-minus" data-type="minus"
-                                            (click)="decrement(product)">
+                                            (click)="decrement(product)" [disabled]="!canDecrement(product)">
                                             <i class="ti-angle-left"></i>
                                         </button>
                                     </span>
@@ -204,15 +204,15 @@
             <div class="cart-summary-totals text-end">
                 <div class="cart-summary-totals__row">
                     <span>Subtotal</span>
-                    <strong>{{ cartSubtotal | currency:productService?.Currency.currency:'symbol' }}</strong>
+                    <strong>{{ cartSubtotal | shopCurrency:productService?.Currency.currency }}</strong>
                 </div>
                 <div class="cart-summary-totals__row cart-summary-totals__row--discount" *ngIf="couponDiscount > 0">
                     <span>Coupon discount</span>
-                    <strong>−{{ couponDiscount | currency:productService?.Currency.currency:'symbol' }}</strong>
+                    <strong>−{{ couponDiscount | shopCurrency:productService?.Currency.currency }}</strong>
                 </div>
                 <div class="cart-summary-totals__row cart-summary-totals__row--total">
                     <span>Total price</span>
-                    <strong>{{ cartPayableTotal | currency:productService?.Currency.currency:'symbol' }}</strong>
+                    <strong>{{ cartPayableTotal | shopCurrency:productService?.Currency.currency }}</strong>
                 </div>
             </div>
         </div>
@@ -254,7 +254,7 @@
             </div>
             <hr class="border-secondary my-2" />
             <div class="col-6">
-                <a [routerLink]="['/shop/collection/left/sidebar']" class="btn btn-solid">continue shopping</a>
+                <a [routerLink]="['/shop']" class="btn btn-solid">continue shopping</a>
             </div>
             <div class="col-6">
                 <a href="javascript:void(0)" class="btn btn-solid" (click)="goToCheckout()"><i class="fa fa-lock me-1"></i> check out</a>

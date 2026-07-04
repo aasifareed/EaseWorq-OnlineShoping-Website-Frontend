@@ -48,9 +48,9 @@ export class ProductBoxOneComponent implements OnInit, OnChanges {
 
   get productLink(): (string | number)[] {
     if (this.product?.id != null) {
-      return ['/shop/product/left/sidebar', this.product.id];
+      return ['/shop/product', this.product.id];
     }
-    return ['/shop/collection/left/sidebar'];
+    return ['/shop'];
   }
 
   /** First gallery image for listing cards (pictureUrls[0] || pictureUrl). */

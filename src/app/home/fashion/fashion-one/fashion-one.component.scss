@@ -1,18 +1,13 @@
 @media (min-width: 1200px) {
-   .container {
-        max-width: 94% !important;
-    }
+  .home-hero-slider.container {
+    max-width: 100% !important;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .home-hero-slider {
-  /* Prevent header/menu from visually merging with the hero banner */
-  margin-top: 0.9rem;
-}
-
-@media (min-width: 768px) {
-  .home-hero-slider {
-    margin-top: 1.25rem;
-  }
+  margin-top: var(--layout-header-content-gap, 1rem);
 }
 
 .cat-item {

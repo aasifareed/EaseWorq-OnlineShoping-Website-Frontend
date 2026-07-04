@@ -1,0 +1,281 @@
+/* ==========================================================================
+   Design Polish — Dark theme production pass (loaded last)
+   ========================================================================== */
+
+body.dark {
+  color: var(--text-secondary);
+
+  /* Placeholders — readable but clearly secondary */
+  input::placeholder,
+  textarea::placeholder,
+  select::placeholder,
+  .form-control::placeholder,
+  .form-select::placeholder {
+    color: var(--input-placeholder, #b8c2d1) !important;
+    opacity: 1 !important;
+  }
+
+  /* Shop sidebar categories */
+  .shop-sidebar-microless {
+    .category-list > li > a,
+    .category-list ul li > a,
+    .microless-cat-children a {
+      color: var(--text-secondary) !important;
+      border-radius: var(--radius-sm);
+      padding: 5px 8px;
+      margin-left: -8px;
+      transition: color var(--transition-fast), background var(--transition-fast);
+
+      &:hover {
+        color: var(--text-primary) !important;
+        background: var(--surface-hover);
+      }
+
+      &.active {
+        color: var(--primary) !important;
+        background: var(--primary-soft) !important;
+        font-weight: 700 !important;
+        border-left: 3px solid var(--primary);
+        padding-left: 10px;
+      }
+    }
+
+    .category-list span,
+    .microless-cat-children span,
+    .microless-filter-count {
+      color: var(--text-muted) !important;
+      font-weight: 600;
+    }
+
+    .microless-cat-current {
+      color: var(--primary) !important;
+      font-weight: 700;
+    }
+
+    .collapse-block-title {
+      color: var(--text-primary) !important;
+    }
+  }
+
+  /* Stock chips — premium pill system */
+  .shop-list-stock-badge--in,
+  .wishlist-stock-badge--in {
+    background: var(--stock-in-bg) !important;
+    color: var(--stock-in-text) !important;
+    border: 1px solid var(--stock-in-border) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  .shop-list-stock-badge--out,
+  .wishlist-stock-badge--out {
+    background: var(--stock-out-bg) !important;
+    color: var(--stock-out-text) !important;
+    border: 1px solid var(--stock-out-border) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Status badges — never force text color; component binds contrast */
+  .order-status-badge {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: var(--radius-sm);
+    padding: 0.28rem 0.65rem;
+    line-height: 1.3;
+  }
+
+  /* Orders pagination */
+  .orders-pagination {
+    .pagination {
+      gap: 0.35rem;
+
+      .page-link {
+        border-radius: var(--radius-sm) !important;
+        padding: 0.45rem 0.95rem !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: 1px solid var(--border) !important;
+        background: var(--surface) !important;
+        color: var(--text-secondary) !important;
+        transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+
+        &:hover:not(:disabled) {
+          background: var(--surface-hover) !important;
+          color: var(--text-primary) !important;
+          border-color: var(--border-strong) !important;
+        }
+      }
+
+      .page-item.disabled .page-link {
+        background: var(--bg-secondary) !important;
+        color: var(--text-disabled) !important;
+        opacity: 0.85;
+      }
+    }
+  }
+
+  /* Product pagination */
+  .product-pagination .pagination .page-item {
+    .page-link {
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      color: var(--text-secondary) !important;
+    }
+
+    &.active .page-link {
+      background: var(--primary) !important;
+      border-color: var(--primary) !important;
+      color: #000000 !important;
+    }
+  }
+
+  .product-search-count-bottom h5 {
+    color: var(--text-muted) !important;
+  }
+
+  /* Footer copyright — integrated strip */
+  footer .sub-footer {
+    background: var(--surface) !important;
+    border-top: 1px solid var(--border) !important;
+    box-shadow: inset 0 3px 0 0 var(--primary);
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+
+    p,
+    .footer-copyright-text {
+      color: var(--text-secondary) !important;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+  }
+
+  /* CMS / static pages */
+  .cms-page__content {
+    color: var(--text-secondary) !important;
+
+    ::ng-deep p,
+    ::ng-deep li {
+      color: var(--text-secondary) !important;
+    }
+
+    ::ng-deep h1,
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4 {
+      color: var(--text-primary) !important;
+    }
+
+    ::ng-deep strong,
+    ::ng-deep b {
+      color: var(--text-primary);
+    }
+  }
+
+  /* Cart secondary links */
+  .cart-section {
+    .cart-meta a,
+    .text-secondary {
+      color: var(--text-muted) !important;
+
+      &:hover {
+        color: var(--primary) !important;
+      }
+    }
+
+    .cart-title {
+      color: var(--text-primary) !important;
+    }
+  }
+
+  /* Tap to top */
+  .tap-top {
+    background: var(--primary) !important;
+    color: #000000 !important;
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* List view — compact rows */
+.product-wrapper-grid.list-view {
+  .col-grid-box + .col-grid-box {
+    margin-top: 0.5rem !important;
+  }
+}
+
+body.dark .shop-list-card {
+  padding: 0.5rem 0.75rem !important;
+  gap: 0.5rem 0.65rem !important;
+
+  .shop-list-card__image {
+    flex: 0 0 96px !important;
+    width: 96px !important;
+    height: 96px !important;
+    min-width: 96px !important;
+    min-height: 96px !important;
+    max-width: 96px !important;
+    max-height: 96px !important;
+  }
+
+  .shop-list-card__body {
+    gap: 0.25rem;
+  }
+
+  .shop-list-card__title {
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+
+  .shop-list-card__aside {
+    gap: 0.35rem;
+    min-width: 150px;
+  }
+
+  .shop-list-card__price-current {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Dark theme — form validation (white) + discount readability */
+body.dark {
+  .checkout-page .checkout-form .form-group .field-label span.required-mark,
+  .field-label .required-mark,
+  .field-label > span.required-mark,
+  .required-mark,
+  .text-danger,
+  .text.text-danger,
+  div.text.text-danger,
+  .invalid-feedback,
+  .form-text.text-danger {
+    color: var(--text-primary, #f5f7fa) !important;
+  }
+
+  .checkout-discount,
+  .cart-summary-totals__row--discount strong,
+  .order-success-discount span {
+    color: var(--discount-text, #b8f5d0) !important;
+    font-weight: 700 !important;
+  }
+
+  .checkout-discount {
+    display: inline-block;
+    padding: 0.12rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--discount-soft, var(--success-soft));
+    line-height: 1.35;
+  }
+}
+
+/* Light theme — validation: red asterisk + error messages */
+body:not(.dark) {
+  .checkout-page .checkout-form .form-group .field-label span.required-mark,
+  .field-label .required-mark,
+  .field-label > span.required-mark,
+  .required-mark,
+  .text-danger,
+  .text.text-danger,
+  div.text.text-danger,
+  .invalid-feedback,
+  .form-text.text-danger {
+    color: var(--error-text, #dc2626) !important;
+  }
+}

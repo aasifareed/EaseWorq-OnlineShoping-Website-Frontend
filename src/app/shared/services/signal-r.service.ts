@@ -100,6 +100,10 @@ export class SignalRService {
     this.signalrNotifications = this.signalrNotifications.filter((n) => n.id !== notificationId);
   }
 
+  clearAllNotifications(): void {
+    this.signalrNotifications = [];
+  }
+
   closeConnection(): void {
     this.signalRConnectionEnabled = false;
     this.signalrNotifications = [];

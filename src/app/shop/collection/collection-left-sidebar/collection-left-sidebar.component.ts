@@ -96,6 +96,18 @@ export class CollectionLeftSidebarComponent implements OnInit {
         const rawMax = params['maxPrice'];
         this.minPrice = rawMin !== undefined && rawMin !== null && rawMin !== '' ? +rawMin : null;
         this.maxPrice = rawMax !== undefined && rawMax !== null && rawMax !== '' ? +rawMax : null;
+        const normalized = this.normalizePriceRangeValues(this.minPrice, this.maxPrice);
+        if (normalized.minPrice !== this.minPrice || normalized.maxPrice !== this.maxPrice) {
+          this.minPrice = normalized.minPrice;
+          this.maxPrice = normalized.maxPrice;
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { minPrice: this.minPrice, maxPrice: this.maxPrice },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+          return;
+        }
         this.tags = [...this.brands, ...this.colors, ...this.size]; // All Tags Array
         
         this.category = params.category ? params.category : null;
@@ -152,13 +164,13 @@ export class CollectionLeftSidebarComponent implements OnInit {
   }
 
   rebuildToolbarContext(): void {
-    const pathRoute = ['/shop/collection/left/sidebar'];
+    const pathRoute = ['/shop'];
     const catPath = this.productService.findCategoryPathFlexible(this.categoryTree, this.category);
     const trail: CollectionToolbarBreadcrumb[] = [];
     trail.push({
       label: 'Home',
-      routerLink: pathRoute,
-      queryParams: this.queryWithoutCategoryPage()
+      routerLink: ['/home'],
+      queryParams: undefined
     });
     if (catPath?.length) {
       this.pageTitle = catPath[catPath.length - 1].title;
@@ -320,7 +332,18 @@ export class CollectionLeftSidebarComponent implements OnInit {
 
   // Append filter value to Url (color, size, price)
   updateFilter(tags: any) {
-    const queryParams = { ...tags, page: null };
+    const minPrice = tags?.minPrice ?? null;
+    const maxPrice = tags?.maxPrice ?? null;
+    const normalized = this.normalizePriceRangeValues(minPrice, maxPrice);
+    this.minPrice = normalized.minPrice;
+    this.maxPrice = normalized.maxPrice;
+
+    const queryParams = {
+      ...tags,
+      minPrice: normalized.minPrice,
+      maxPrice: normalized.maxPrice,
+      page: null,
+    };
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
@@ -330,6 +353,20 @@ export class CollectionLeftSidebarComponent implements OnInit {
       this.viewScroller.setOffset([120, 120]);
       this.viewScroller.scrollToAnchor('products');
     });
+  }
+
+  private normalizePriceRangeValues(
+    minPrice: number | null,
+    maxPrice: number | null,
+  ): { minPrice: number | null; maxPrice: number | null } {
+    const min = minPrice != null && !Number.isNaN(+minPrice) ? +minPrice : null;
+    const max = maxPrice != null && !Number.isNaN(+maxPrice) ? +maxPrice : null;
+
+    if (min !== null && max !== null && min > max) {
+      return { minPrice: max, maxPrice: min };
+    }
+
+    return { minPrice: min, maxPrice: max };
   }
 
   // SortBy Filter

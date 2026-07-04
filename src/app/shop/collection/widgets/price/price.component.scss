@@ -1,12 +1,33 @@
+.price-range-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.price-range-separator {
+  color: var(--text-secondary, #999);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  flex: 0 0 auto;
+  text-transform: lowercase;
+  padding: 0 2px;
+}
+
 .price-input {
-  width: 80px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 72px;
   background: var(--ml-price-input-bg);
   border: 1px solid var(--ml-price-input-border);
   border-radius: 4px;
   color: var(--ml-price-input-text);
-  font-size: 12px;
-  padding: 4px 8px;
+  font-size: 11px;
+  padding: 3px 6px;
   text-align: center;
+  height: 28px;
 
   &:focus { outline: none; border-color: #888; }
 

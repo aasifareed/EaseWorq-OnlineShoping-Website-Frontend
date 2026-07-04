@@ -33,7 +33,7 @@
                                 <td class="item-row" *ngFor="let product of products">
                                     <img [src]="product.images[0].src" [alt]="product.images[0].alt" width="185" class="featured-image">
                                     <div class="product-price product_price"> 
-                                    <strong>On Sale: </strong><span> {{ (product.price | discount:product) * productService?.Currency.price | currency:productService?.Currency.currency:'symbol' }}</span></div>
+                                    <strong>On Sale: </strong><span> {{ (product.price | discount:product) * productService?.Currency.price | shopCurrency:productService?.Currency.currency }}</span></div>
                                     <form class="variants clearfix">
                                       <button title="Add to Cart" (click)="addToCart(product)" class="add-to-cart btn btn-solid">Add to Cart</button>
                                     </form>

@@ -9,7 +9,7 @@ import { SiteNotAvailableComponent } from './site-not-available/site-not-availab
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home/fashion',
+    redirectTo: 'home',
     pathMatch: 'full'
   },
   {
@@ -41,7 +41,7 @@ const routes: Routes = [
     loadChildren: () => import('./elements/elements.module').then(m => m.ElementsModule) },
   {
     path: '**', // Navigate to Home Page if not found any page
-    redirectTo: 'home/fashion',
+    redirectTo: 'home',
   },
 ];
 

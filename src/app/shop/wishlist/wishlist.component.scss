@@ -159,33 +159,26 @@
 .wishlist-stock-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.65rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.2;
 
   &--in {
-    background: #16a34a;
-    color: #ffffff;
+    background: var(--stock-in-bg, #059669);
+    color: var(--stock-in-text, #ffffff);
+    border: 1px solid var(--stock-in-border, #34d399);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
   }
 
   &--out {
-    background: #dc2626;
-    color: #ffffff;
-  }
-}
-
-body.dark .wishlist-stock-badge {
-  &--in {
-    background: #16a34a;
-    color: #ffffff;
-  }
-
-  &--out {
-    background: #dc2626;
-    color: #ffffff;
+    background: var(--stock-out-bg, #e11d48);
+    color: var(--stock-out-text, #ffffff);
+    border: 1px solid var(--stock-out-border, #fb7185);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -199,18 +192,19 @@ body.dark .wishlist-stock-badge {
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  border-radius: 6px;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border-radius: var(--radius-sm, 6px);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 
   &--primary {
-    background: #4caf50;
-    border: 1px solid #3d9a41;
+    background: var(--success, #34c759);
+    border: 1px solid var(--success-hover, #2fb350);
     color: #fff;
 
     &:hover:not(:disabled) {
-      background: #43a047;
-      border-color: #388e3c;
+      background: var(--success-hover, #2fb350);
+      border-color: var(--success-hover, #2fb350);
       color: #fff;
+      transform: translateY(-1px);
     }
 
     &:disabled {

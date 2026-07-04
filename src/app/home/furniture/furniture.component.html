@@ -16,7 +16,7 @@
     <div class="container-fluid">
         <div class="row partition3">
             <div class="col-md-4" *ngFor="let collection of collections">
-                <a [routerLink]="['/shop/collection/left/sidebar']" 
+                <a [routerLink]="['/shop']" 
                    [queryParams]="{ category: 'furniture'}">
                     <div class="collection-banner p-right text-end">
                         <img [src]="collection.image" alt="collection" class="img-fluid">

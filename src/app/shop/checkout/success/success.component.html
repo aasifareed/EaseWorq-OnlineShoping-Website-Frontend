@@ -12,7 +12,7 @@
             <div class="col-sm-12">
                 <div class="error-section">
                     <h2>Order not found</h2>
-                    <a [routerLink]="'/home/fashion'" class="btn btn-solid">back to home</a>
+                    <a [routerLink]="'/home'" class="btn btn-solid">back to home</a>
                 </div>
             </div>
         </div>
@@ -59,23 +59,23 @@
                         <div class="col-3 order_detail">
                             <div>
                                 <h4>price</h4>
-                                <h5>{{ line.lineTotal | currency:productService?.Currency.currency:'symbol' }}</h5>
+                                <h5>{{ line.lineTotal | shopCurrency:productService?.Currency.currency }}</h5>
                             </div>
                         </div>
                     </div>
                     <div class="total-sec">
                         <ul>
-                            <li>Subtotal <span>{{ order.subTotalAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+                            <li>Subtotal <span>{{ order.subTotalAmount | shopCurrency:productService?.Currency.currency }}</span></li>
                             <li *ngIf="order.discountAmount > 0" class="order-success-discount">
                                 Coupon discount
-                                <span>−{{ order.discountAmount | currency:productService?.Currency.currency:'symbol' }}</span>
+                                <span>−{{ order.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
                             </li>
-                            <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | currency:productService?.Currency.currency:'symbol' }}</span></li>
-                            <li>Tax <span>{{ order.taxAmount | currency:productService?.Currency.currency:'symbol' }}</span></li>
+                            <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | shopCurrency:productService?.Currency.currency }}</span></li>
+                            <li>Tax <span>{{ order.taxAmount | shopCurrency:productService?.Currency.currency }}</span></li>
                         </ul>
                     </div>
                     <div class="final-total">
-                        <h3>total <span>{{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</span></h3>
+                        <h3>total <span>{{ order.totalAmount | shopCurrency:productService?.Currency.currency }}</span></h3>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                         <ul class="order-detail">
                             <li>order ID: {{ order.onlineOrderNumber }}</li>
                             <li>Order Date: {{ formatDate(order.orderDate) }}</li>
-                            <li>Order Total: {{ order.totalAmount | currency:productService?.Currency.currency:'symbol' }}</li>
+                            <li>Order Total: {{ order.totalAmount | shopCurrency:productService?.Currency.currency }}</li>
                             <li>Shipping: {{ order.shippingMethodName }}</li>
                         </ul>
                     </div>
@@ -103,12 +103,6 @@
                     <div class="col-sm-12 payment-mode">
                         <h4>payment method</h4>
                         <p>{{ order.paymentMethodName }}</p>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="delivery-sec">
-                            <h3>expected date of delivery</h3>
-                            <h2>{{ formatDate(order.expectedDeliveryDate) }}</h2>
-                        </div>
                     </div>
                 </div>
             </div>

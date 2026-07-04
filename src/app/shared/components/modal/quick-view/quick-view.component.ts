@@ -36,7 +36,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   public zoomActive = false;
   public zoomOrigin = '50% 50%';
 
-  readonly placeholderImage = 'assets/images/product/placeholder.jpg';
+  readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
   private touchStartX = 0;
 
@@ -205,7 +205,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     }
     this.productService.persistShopProduct(this.product);
     this.modalService.dismissAll();
-    this.router.navigate(['/shop/product/left/sidebar', this.product.id], {
+    this.router.navigate(['/shop/product', this.product.id], {
       state: { product: this.product }
     });
   }

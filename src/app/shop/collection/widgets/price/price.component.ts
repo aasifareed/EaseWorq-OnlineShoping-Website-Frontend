@@ -1,6 +1,7 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Output, Input, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Options } from 'ngx-slider-v2';
+import { ProductService } from '../../../../shared/services/product.service';
 
 @Component({
   selector: 'app-price',
@@ -26,28 +27,59 @@ export class PriceComponent implements OnInit, OnChanges {
     ceil: 10000000
   };
   
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) { 
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    public productService: ProductService,
+  ) { 
     if (isPlatformBrowser(this.platformId)) {
       this.isBrowser = true;
     }
   }
+
+  get priceFilterLabel(): string {
+    const symbol = this.productService.Currency?.currency?.trim() || 'RS';
+    return `Price (${symbol})`;
+  }
   
   ngOnInit(): void {
-    this.localMin = this.min;
-    this.localMax = this.max;
+    this.syncFromInputs();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['min'] || changes['max']) {
-      this.localMin = this.min;
-      this.localMax = this.max;
+      this.syncFromInputs();
     }
   }
 
-  appliedFilter() {
-    const minPrice = this.parseNum(this.localMin);
-    const maxPrice = this.parseNum(this.localMax);
-    this.priceFilter.emit({ minPrice, maxPrice });
+  appliedFilter(): void {
+    const normalized = this.normalizeRange(
+      this.parseNum(this.localMin),
+      this.parseNum(this.localMax),
+    );
+
+    this.localMin = normalized.minPrice;
+    this.localMax = normalized.maxPrice;
+    this.priceFilter.emit(normalized);
+  }
+
+  private syncFromInputs(): void {
+    const normalized = this.normalizeRange(
+      this.parseNum(this.min),
+      this.parseNum(this.max),
+    );
+    this.localMin = normalized.minPrice;
+    this.localMax = normalized.maxPrice;
+  }
+
+  /** Ensures min is never greater than max when both values are set. */
+  private normalizeRange(
+    minPrice: number | null,
+    maxPrice: number | null,
+  ): { minPrice: number | null; maxPrice: number | null } {
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      return { minPrice: maxPrice, maxPrice: minPrice };
+    }
+    return { minPrice, maxPrice };
   }
 
   private parseNum(v: unknown): number | null {

@@ -1,5 +1,6 @@
 section.shop-layout-microless {
-  padding-top: 0 !important;
+  margin-top: var(--layout-header-content-gap, 1rem);
+  padding-top: var(--layout-content-top-gap, 1.25rem) !important;
 }
 
 .shop-layout-microless {
@@ -84,8 +85,9 @@ section.shop-layout-microless {
   }
 
   .microless-filter-count {
-    color: var(--ml-sidebar-text-faint);
+    color: var(--ml-sidebar-text-muted);
     font-size: 12px;
+    font-weight: 600;
   }
 
   ::ng-deep .product-pagination {
@@ -148,12 +150,20 @@ section.shop-layout-microless {
   }
 }
 
-/* List view — main product grid (not inside sidebar) */
+/* List view — balanced gap (not legacy 50px, not merged) */
 .shop-layout-microless .product-wrapper-grid.list-view {
   .col-grid-box {
     width: 100%;
     max-width: 100%;
     flex: 0 0 100%;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .col-grid-box + .col-grid-box {
+    margin-top: 0.75rem !important;
   }
 
   .product-box.product-box--list {
@@ -161,11 +171,8 @@ section.shop-layout-microless {
     width: 100% !important;
     max-width: 100% !important;
     padding-bottom: 0 !important;
-
-    > * {
-      display: block !important;
-      width: 100% !important;
-    }
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 
     app-product-box-one.product-box-one--list {
       display: block !important;

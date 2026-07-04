@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef } from '@angular/core';
-import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength } from './checkout-validators';
+import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
 import { merge, Observable, of, Subject } from 'rxjs';
 import { catchError, debounceTime, startWith, takeUntil } from 'rxjs/operators';
@@ -194,6 +194,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       if (field === 'town') {
         this.enforceTownSelected(group);
       }
+      if (field === 'state') {
+        this.enforceStateSelected(group);
+      }
     }, 0);
   }
 
@@ -217,7 +220,33 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.googleAddressService.isAddressSelect = true;
     formGroup.patchValue({ town: '', postalcode: '' });
     townCtrl?.markAsTouched();
+    townCtrl?.updateValueAndValidity();
     this.lastSelectedValues[group].town = '';
+    this.googleAddressService.clearSuggestions();
+  }
+
+  private enforceStateSelected(group: CheckoutAddressGroup): void {
+    if (this.placeSelectionInFlight) {
+      return;
+    }
+
+    const formGroup = group === 'billing' ? this.billingGroup : this.shippingGroup;
+    const stateCtrl = formGroup.get('state');
+    const state = (stateCtrl?.value ?? '').toString().trim();
+    if (!state) {
+      return;
+    }
+
+    const confirmed = (this.lastSelectedValues[group].state ?? '').trim();
+    if (state.toLowerCase() === confirmed.toLowerCase()) {
+      return;
+    }
+
+    this.googleAddressService.isAddressSelect = true;
+    formGroup.patchValue({ state: '' });
+    stateCtrl?.markAsTouched();
+    stateCtrl?.updateValueAndValidity();
+    this.lastSelectedValues[group].state = '';
     this.googleAddressService.clearSuggestions();
   }
 
@@ -284,6 +313,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
         state: parsed.state,
         postalcode: parsed.postalcode
       });
+
+      formGroup.get('town')?.updateValueAndValidity();
+      formGroup.get('state')?.updateValueAndValidity();
 
       this.activeAutocompleteKey = null;
       this.highlightedIndex = -1;
@@ -587,8 +619,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       customerMobileNo: ['', [trimRequired(), trimDigitsOnly()]],
       customerEmail: ['', [trimRequired(), this.trimEmailValidator]],
       address: ['', [trimRequired(), trimMaxLength(100)]],
-      town: ['', trimRequired()],
-      state: ['', trimRequired()],
+      town: ['', [trimRequired(), this.suggestionMatchValidator('billing', 'town')]],
+      state: ['', [trimRequired(), this.suggestionMatchValidator('billing', 'state')]],
       postalcode: ['', trimRequired()]
     });
   }
@@ -620,8 +652,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
           customerName: [trimRequired(), trimPersonName()],
           customerMobileNo: [trimRequired(), trimDigitsOnly()],
           address: [trimRequired(), trimMaxLength(100)],
-          town: [trimRequired()],
-          state: [trimRequired()],
+          town: [trimRequired(), this.suggestionMatchValidator('shipping', 'town')],
+          state: [trimRequired(), this.suggestionMatchValidator('shipping', 'state')],
           postalcode: [trimRequired()]
         }
       : {
@@ -754,6 +786,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.activeAutocompleteKey = null;
       this.highlightedIndex = -1;
       this.billingGroup.patchValue(patch, { emitEvent: false });
+      this.billingGroup.get('town')?.updateValueAndValidity({ emitEvent: false });
+      this.billingGroup.get('state')?.updateValueAndValidity({ emitEvent: false });
       this.googleAddressService.isAddressSelect = false;
 
       if (patch.address || patch.town || patch.state || patch.postalcode) {
@@ -902,9 +936,19 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
           if (!this.googleAddressService.isAddressSelect && value !== this.lastSelectedValues[groupName][field]) {
             this.activeAutocompleteKey = `${groupName}.${field}`;
             void this.googleAddressService.getPlacePredictions(value, field);
+            if (field === 'town' || field === 'state') {
+              group.get(field)?.updateValueAndValidity({ emitEvent: false });
+            }
           }
           this.googleAddressService.isAddressSelect = false;
         });
     });
+  }
+
+  private suggestionMatchValidator(
+    group: CheckoutAddressGroup,
+    field: 'town' | 'state'
+  ): ValidatorFn {
+    return mustMatchSelectedValue(() => this.lastSelectedValues[group][field]);
   }
 }

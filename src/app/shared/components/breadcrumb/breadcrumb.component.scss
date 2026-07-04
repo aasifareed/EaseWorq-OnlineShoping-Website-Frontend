@@ -5,6 +5,7 @@ $breadcrumb-dark-border: #404040;
 
 :host {
   display: block;
+  margin-top: var(--layout-header-content-gap, 1rem);
 }
 
 :host .breadcrumb-section {
@@ -89,23 +90,23 @@ $breadcrumb-dark-border: #404040;
 }
 
 :host-context(body.dark) .breadcrumb-section {
-  background-color: $breadcrumb-dark-bg;
-  border-bottom: 1px solid $breadcrumb-dark-border;
+  background-color: var(--bg-secondary, #12151b);
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
 
   .page-title h2 {
-    color: #f3f4f6;
+    color: var(--text-primary, #f3f5f8);
   }
 
   .breadcrumb {
     .breadcrumb-item {
-      color: #9ca3af;
+      color: var(--text-secondary, #c4ccd8);
 
       + .breadcrumb-item::before {
-        color: #6b7280;
+        color: var(--text-muted, #9aa5b5);
       }
 
       a {
-        color: #d1d5db;
+        color: var(--text-secondary, #c4ccd8);
 
         &:hover {
           color: $breadcrumb-accent;

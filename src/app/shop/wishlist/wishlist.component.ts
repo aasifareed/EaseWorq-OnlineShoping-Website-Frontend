@@ -38,7 +38,7 @@ export class WishlistComponent implements OnInit {
   }
 
   productLink(product: Product): (string | number)[] {
-    return ['/shop/product/left/sidebar', String(product?.id ?? '')];
+    return ['/shop/product', String(product?.id ?? '')];
   }
 
 }

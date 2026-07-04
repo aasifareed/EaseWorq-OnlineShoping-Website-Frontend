@@ -18,10 +18,10 @@
     <a [routerLink]="productLink" class="mc-card__name">{{ product?.title }}</a>
     <div class="mc-card__prices">
       <span class="mc-card__sale">
-        {{ product?.price * currency?.price | discount:product | currency:currency?.currency:'symbol' }}
+        {{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}
       </span>
       <span class="mc-card__old" *ngIf="product?.discount">
-        {{ product?.price * currency?.price | currency:currency?.currency:'symbol' }}
+        {{ product?.price * currency?.price | shopCurrency:currency?.currency }}
       </span>
       <a href="javascript:void(0)" class="btn btn-primary" title="Quick View" (click)="QuickView.openModal()">
         Add To Cart
@@ -31,7 +31,7 @@
 </div>
 
 <!-- List row (wishlist-style, full width) -->
-<article class="shop-list-card mb-2" *ngIf="!loader && listMode">
+<article class="shop-list-card" *ngIf="!loader && listMode">
   <div class="shop-list-card__image">
     <a [routerLink]="productLink">
       <img [src]="cardImageSrc"
@@ -56,10 +56,10 @@
   <div class="shop-list-card__aside">
     <div class="shop-list-card__prices">
       <span class="mc-card__sale shop-list-card__price-current">
-        {{ product?.price * currency?.price | discount:product | currency:currency?.currency:'symbol' }}
+        {{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}
       </span>
       <span class="mc-card__old shop-list-card__price-old" *ngIf="product?.discount">
-        {{ product?.price * currency?.price | currency:currency?.currency:'symbol' }}
+        {{ product?.price * currency?.price | shopCurrency:currency?.currency }}
       </span>
     </div>
     <a href="javascript:void(0)"

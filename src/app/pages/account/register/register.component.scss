@@ -1,5 +1,5 @@
 .required-mark {
-  color: #dc3545;
+  color: var(--error-text, var(--danger, #dc2626));
   font-weight: 700;
   margin-left: 2px;
 }

@@ -28,7 +28,7 @@
     <div class="container">
         <div class="row partition3">
             <div class="col-md-4" *ngFor="let collection of collections1">
-                <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'pets'}">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: 'pets'}">
                     <div class="collection-banner p-left">
                         <img [src]="collection.image" class="img-fluid" alt="pets">
                         <div class="contain-banner banner-3">
@@ -42,7 +42,7 @@
         </div>
         <div class="row partition3 banner-top-cls">
             <div class="col-md-4" *ngFor="let collection of collections2">
-                <a [routerLink]="['/shop/collection/left/sidebar']" [queryParams]="{ category: 'pets'}">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: 'pets'}">
                     <div class="collection-banner p-right">
                         <img [src]="collection.image" class="img-fluid" alt="pets">
                         <div class="contain-banner banner-3">
@@ -99,7 +99,7 @@
                         <p>
                           Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.
                         </p>
-                        <a [routerLink]="['/shop/collection/left/sidebar']"
+                        <a [routerLink]="['/shop']"
                            [queryParams]="{ category: 'pets'}" 
                            class="btn btn-solid black-btn">
                            shop now

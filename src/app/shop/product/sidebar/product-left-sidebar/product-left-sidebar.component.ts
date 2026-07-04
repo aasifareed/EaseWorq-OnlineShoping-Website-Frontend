@@ -22,7 +22,7 @@ export class ProductLeftSidebarComponent implements OnInit {
   public zoomActive = false;
   public zoomOrigin = '50% 50%';
 
-  readonly placeholderImage = 'assets/images/product/placeholder.jpg';
+  readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
   @ViewChild('sizeChart') SizeChart: SizeModalComponent;
 
