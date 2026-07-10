@@ -11,7 +11,10 @@
             [value]="brand.id"
             [checked]="brand.checked"
             (click)="toggleBrand(brand.id, $event)" />
-          <label class="custom-control-label" [attr.for]="'shop-brand-' + i">{{ brand.name }}</label>
+          <label class="custom-control-label" [attr.for]="'shop-brand-' + i">
+            {{ brand.name }}
+            <span class="microless-filter-count" *ngIf="brand.count">({{ brand.count }})</span>
+          </label>
         </div>
       </div>
     </div>

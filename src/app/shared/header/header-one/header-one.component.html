@@ -329,15 +329,21 @@
               class="px-3 text-center border-end border-secondary-subtle header-notifications"
               ngbDropdown
               placement="bottom-end">
-              <div class="badge-top-container position-relative">
-                <span
-                  *ngIf="signalRService.unreadCount > 0"
-                  class="badge p-0 position-absolute bg-danger rounded-circle header-notify-badge">
-                  {{ signalRService.unreadCount > 99 ? '99+' : signalRService.unreadCount }}
+              <button
+                type="button"
+                ngbDropdownToggle
+                class="header-notifications-trigger header-action-link"
+                aria-label="View alerts">
+                <span class="badge-top-container position-relative d-inline-block">
+                  <span
+                    *ngIf="signalRService.unreadCount > 0"
+                    class="badge p-0 position-absolute bg-danger rounded-circle header-notify-badge">
+                    {{ signalRService.unreadCount > 99 ? '99+' : signalRService.unreadCount }}
+                  </span>
+                  <i class="fa fa-bell-o fs-5 header-action-icon" aria-hidden="true"></i>
                 </span>
-                <i ngbDropdownToggle class="fa fa-bell-o fs-5 header-action-icon" role="button" tabindex="0"></i>
                 <span class="d-block label header-action-label">ALERTS</span>
-              </div>
+              </button>
               <div ngbDropdownMenu class="notification-dropdown shadow-lg">
                 <div class="notification-dropdown-header">
                   <span class="notification-dropdown-title">Alerts</span>
@@ -403,7 +409,7 @@
     </div>
   </div>
 
-  <div class="bg-warning navigation-bar">
+  <div class="bg-warning navigation-bar" *ngIf="!hideNavigationBar">
     <div class="container-fluid d-flex align-items-center h-100" >
       <div class="all-cat-wrapper" (mouseenter)="openMenu()" (mouseleave)="closeMenu()">
         <div class="all-cat-btn px-4 h-100 d-flex align-items-center border-end border-dark">
@@ -456,4 +462,7 @@
     </div>
   </div>
 </header>
-<div class="microless-header-spacer" *ngIf="sticky" aria-hidden="true"></div>
+<div class="microless-header-spacer"
+  *ngIf="sticky"
+  [class.microless-header-spacer--compact]="hideNavigationBar"
+  aria-hidden="true"></div>

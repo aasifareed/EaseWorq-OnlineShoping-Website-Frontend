@@ -148,6 +148,23 @@ section.shop-layout-microless {
   .collection-filter-checkbox label {
     color: var(--ml-sidebar-text) !important;
   }
+
+  /* Match category count style — undo legacy circle badge on label spans */
+  .collection-filter-checkbox label .microless-filter-count {
+    width: auto;
+    height: auto;
+    min-width: 0;
+    border: none;
+    border-radius: 0;
+    margin-left: 0;
+    position: static;
+    display: inline;
+    background: transparent;
+    font-size: inherit;
+    font-weight: 600;
+    color: var(--ml-sidebar-text-muted);
+    vertical-align: baseline;
+  }
 }
 
 /* List view — balanced gap (not legacy 50px, not merged) */

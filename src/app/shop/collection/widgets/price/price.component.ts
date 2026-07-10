@@ -1,6 +1,8 @@
-import { Component, OnInit, OnChanges, SimpleChanges, Output, Input, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, Output, Input, EventEmitter, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Options } from 'ngx-slider-v2';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../../../shared/services/product.service';
 
 @Component({
@@ -8,7 +10,7 @@ import { ProductService } from '../../../../shared/services/product.service';
   templateUrl: './price.component.html',
   styleUrls: ['./price.component.scss']
 })
-export class PriceComponent implements OnInit, OnChanges {
+export class PriceComponent implements OnInit, OnDestroy, OnChanges {
   
   @Output() priceFilter : EventEmitter<any> = new EventEmitter<any>();
 	
@@ -21,6 +23,9 @@ export class PriceComponent implements OnInit, OnChanges {
 
   public collapse: boolean = true;
   public isBrowser: boolean = false;
+
+  private readonly filterChanges$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   options: Options = {
     floor: 0,
@@ -43,6 +48,14 @@ export class PriceComponent implements OnInit, OnChanges {
   
   ngOnInit(): void {
     this.syncFromInputs();
+    this.filterChanges$
+      .pipe(debounceTime(500), takeUntil(this.destroy$))
+      .subscribe(() => this.appliedFilter());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -60,6 +73,10 @@ export class PriceComponent implements OnInit, OnChanges {
     this.localMin = normalized.minPrice;
     this.localMax = normalized.maxPrice;
     this.priceFilter.emit(normalized);
+  }
+
+  onPriceInputChange(): void {
+    this.filterChanges$.next();
   }
 
   private syncFromInputs(): void {

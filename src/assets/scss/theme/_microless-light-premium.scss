@@ -263,6 +263,23 @@ body:not(.dark) {
     border-radius: var(--radius-sm);
     font-weight: 600;
   }
+
+  .mc-card__cart-btn,
+  .shop-list-card__cart-btn.mc-card__cart-btn {
+    background: var(--success) !important;
+    border: 1px solid var(--success-hover) !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+
+    &:hover,
+    &:focus,
+    &:active {
+      color: #ffffff !important;
+      background: var(--success-hover) !important;
+      border-color: var(--success-hover) !important;
+      text-decoration: none !important;
+    }
+  }
 }
 
 /* Shop sidebar */

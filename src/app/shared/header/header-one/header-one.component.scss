@@ -148,9 +148,17 @@
   pointer-events: none;
 }
 
+.microless-header-spacer--compact {
+  height: 88px;
+}
+
 @media (max-width: 767px) {
   .microless-header-spacer {
     height: 121px;
+  }
+
+  .microless-header-spacer--compact {
+    height: 76px;
   }
 }
 
@@ -834,9 +842,8 @@
       .dropdown-toggle::after { display: none; }
 
       .header-account-dropdown {
-        &:hover > .dropdown-menu,
-        &:focus-within > .dropdown-menu {
-          display: block;
+        .header-action-link {
+          cursor: pointer;
         }
       }
       .border-end { border-color: rgba(255,255,255,0.1) !important; }
@@ -1097,6 +1104,27 @@
 
 .header-notifications {
   cursor: pointer;
+
+  .header-notifications-trigger {
+    display: inline-block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    text-align: center;
+    line-height: inherit;
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
 
   .header-notify-badge {
     top: -6px;

@@ -40,9 +40,11 @@
             <div class="col-lg-6">
                 <div class="product-order">
                     <h3>your order details</h3>
-                    <div class="row product-order-detail" *ngFor="let line of order.products">
-                        <div class="col-3">
-                            <img [src]="productImage(line.productImageUrl)" alt="" class="img-fluid">
+                    <div class="row product-order-detail align-items-center g-3" *ngFor="let line of order.products">
+                        <div class="col-auto">
+                            <div class="success-product-thumb">
+                                <img [src]="productImage(line.productImageUrl)" [alt]="line.productName" class="success-product-img">
+                            </div>
                         </div>
                         <div class="col-3 order_detail">
                             <div>

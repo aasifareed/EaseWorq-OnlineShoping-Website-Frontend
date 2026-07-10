@@ -16,6 +16,7 @@ import { ProductService } from '../../../../shared/services/product.service';
 export interface ShopBrandOption {
   id: string;
   name: string;
+  count?: number;
 }
 
 export interface ShopBrandDisplayOption extends ShopBrandOption {
@@ -104,7 +105,8 @@ export class BrandsComponent implements OnInit, OnDestroy, OnChanges {
         this.brandList = (raw as any[])
           .map((x) => ({
             id: String(x.id ?? x.Id ?? '').trim(),
-            name: String(x.brandName ?? x.BrandName ?? '')
+            name: String(x.brandName ?? x.BrandName ?? ''),
+            count: Number(x.count ?? x.Count ?? 0) || 0,
           }))
           .filter((x) => x.id.length > 0);
         this.brandOptionsReady.emit(this.brandList);

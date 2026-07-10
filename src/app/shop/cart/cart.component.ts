@@ -98,6 +98,9 @@ export class CartComponent implements OnDestroy {
 
   // Increament
   increment(product:any, qty = 1) {
+    if (!this.canIncrement(product)) {
+      return;
+    }
     this.productService.updateCartQuantity(product, qty);
   }
 
@@ -112,6 +115,18 @@ export class CartComponent implements OnDestroy {
 
   canDecrement(product: any): boolean {
     return (Number(product?.quantity) || 0) > 1;
+  }
+
+  canIncrement(product: any): boolean {
+    return this.productService.canIncrementCartLine(product);
+  }
+
+  getProductStock(product: any): number {
+    return this.productService.getProductStock(product);
+  }
+
+  isAtMaxInCart(product: any): boolean {
+    return this.productService.isCartLineAtMax(product);
   }
 
   public removeItem(product: any) {

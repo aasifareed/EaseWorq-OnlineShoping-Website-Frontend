@@ -35,7 +35,13 @@ app-breadcrumb + section {
   margin-top: var(--layout-content-top-gap) !important;
 }
 
-/* --- Shop / collection pages (no breadcrumb) --- */
+/* --- Checkout (no breadcrumb, compact top gap) --- */
+app-checkout > section.checkout-page--compact,
+app-checkout > section.section-b-space {
+  margin-top: 0.35rem !important;
+  padding-top: 0.5rem !important;
+}
+
 app-collection-left-sidebar > section.section-b-space,
 app-collection-left-sidebar > section.shop-layout-microless,
 app-collection-right-sidebar > section.section-b-space,
@@ -47,10 +53,13 @@ app-cms-page > section.section-b-space {
 }
 
 /* --- Home hero slider — gap below header menu --- */
-app-fashion-one > section.home-hero-slider,
-section.home-hero-slider {
-  margin-top: var(--layout-header-content-gap) !important;
+.home-hero-slider.container,
+app-fashion-one > section.home-hero-slider.container,
+section.home-hero-slider.container {
+  margin-top: 43px !important;
   padding-top: 0 !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
 }
 
 /* --- Inner home sections after hero --- */

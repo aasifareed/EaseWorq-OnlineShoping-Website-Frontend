@@ -111,6 +111,57 @@ export class ProductService {
     return Math.max(0, available - this.getCartLineQuantity(productId));
   }
 
+  /** Total in-stock quantity for a shop product or API inventory row. */
+  getProductStock(productOrItem: any): number {
+    if (!productOrItem) {
+      return 0;
+    }
+    if (productOrItem.isAvailable === false) {
+      return 0;
+    }
+    if (productOrItem.stock != null && productOrItem.productTotalQuantity == null && productOrItem.ProductTotalQuantity == null) {
+      const parsed = Number(productOrItem.stock);
+      return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    }
+    return this.resolveProductStock(productOrItem);
+  }
+
+  /** Quantity the user can still add (PDP / quick view), after items already in cart. */
+  getSelectableQuantity(product: any): number {
+    return this.getRemainingStock(product?.id, this.getProductStock(product));
+  }
+
+  canIncrementSelectable(product: any, currentQty: number): boolean {
+    const max = this.getSelectableQuantity(product);
+    return max > 0 && currentQty < max;
+  }
+
+  canIncrementCartLine(product: any): boolean {
+    const stock = this.getProductStock(product);
+    const currentQty = Number(product?.quantity) || 0;
+    return stock > 0 && currentQty < stock;
+  }
+
+  getCartQuantityForProduct(product: any): number {
+    return this.getCartLineQuantity(product?.id);
+  }
+
+  isFullyInCart(product: any): boolean {
+    const stock = this.getProductStock(product);
+    const inCart = this.getCartQuantityForProduct(product);
+    return stock > 0 && inCart > 0 && inCart >= stock;
+  }
+
+  hasItemsInCart(product: any): boolean {
+    return this.getCartQuantityForProduct(product) > 0;
+  }
+
+  isCartLineAtMax(product: any): boolean {
+    const stock = this.getProductStock(product);
+    const currentQty = Number(product?.quantity) || 0;
+    return stock > 0 && currentQty >= stock;
+  }
+
   canAddMoreToCart(productId: unknown, stock: unknown, qtyToAdd = 1): boolean {
     const addQty = Number(qtyToAdd);
     if (!Number.isFinite(addQty) || addQty < 1) {
@@ -421,13 +472,17 @@ private apiRoot(): string {
     return this.cartChanged.asObservable();
   }
 
-  /** Total units in cart (sum of line quantities). */
+  /** Total line items in cart (distinct products), not units. */
   public get cartCount(): Observable<number> {
     return this.cartChanged.pipe(
-      map((items) =>
-        (items || []).reduce((sum, item) => sum + Math.max(0, Number(item.quantity) || 0), 0),
-      ),
+      map((items) => (items || []).filter((x) => x && this.isCartLineVisible(x)).length),
     );
+  }
+
+  private isCartLineVisible(item: Product): boolean {
+    // Defensive: header badge should not count zero/invalid quantities.
+    const qty = Number((item as any)?.quantity);
+    return Number.isFinite(qty) ? qty > 0 : true;
   }
 
   private syncCartState(): void {
@@ -591,7 +646,7 @@ private apiRoot(): string {
     }
 
     const cartItem = state.cart.find((item: any) => this.sameLineId(item.id, cartProduct.id));
-    const stock = Number(cartProduct.stock);
+    const stock = this.getProductStock(cartProduct);
     const currentQty = cartItem ? Number(cartItem.quantity) || 0 : 0;
     const newQty = currentQty + qtyToAdd;
 
@@ -770,7 +825,7 @@ private apiRoot(): string {
     }
     const line = state.cart[idx] as any;
     const nextQty = (Number(line.quantity) || 0) + quantity;
-    const stock = Number(line.stock);
+    const stock = this.getProductStock(line);
 
     if (nextQty > stock) {
       this.toastrService.error('You can not add more items than available. In stock ' + stock + ' items.');
@@ -1066,14 +1121,11 @@ private apiRoot(): string {
     return `${base}${path}`;
   }
 
-  /** Brands (manufacturers) for the shop sidebar; optional category limits to products in that group. */
+  /** Brands for the shop sidebar with in-stock product counts; optional category limits to that subtree. */
   public getBrandsForOnlineShop(productGroupId?: string | null): Observable<any> {
     return this.tenantService.whenReady().pipe(
       switchMap((ctx) => {
-        let url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopBrand_GetBrandsListForOnline}?TenantId=${ctx.tenantId}`;
-        if (productGroupId) {
-          url += `&ProductGroupId=${encodeURIComponent(productGroupId)}`;
-        }
+        const url = `${this.apiRoot()}api/services/app/${environment.urls.OnlineShopAvailableProduct_GetProductBrandsListForOnline}?${this.onlineShopFacetQuery(ctx, productGroupId || null)}`;
         return this.http.get(url);
       }),
     );

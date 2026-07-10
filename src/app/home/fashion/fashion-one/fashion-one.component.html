@@ -1,7 +1,7 @@
 <app-header-one [sticky]="true"></app-header-one>
 
 <!-- Home slider start-->
-<section class="p-0 container home-hero-slider">
+<section class="py-0 container home-hero-slider">
   <app-slider [sliders]="sliders" [textClass]="'text-center'" [category]="'fashion'" [buttonText]="'shop now'">
   </app-slider>
 </section>
@@ -314,7 +314,7 @@
 <!-- <section class="section-b-space"> -->
   <div class="container-fluid home-content-wrap">
     <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
-      <div class="col-md-12">
+      <div class="col-md-12" style="margin-bottom: 20px;">
         <h2 class="home-section-title">TOP BRANDS</h2>
         <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
       </div>
