@@ -2,8 +2,8 @@ import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef, 
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
-import { merge, Observable, of, Subject } from 'rxjs';
-import { catchError, debounceTime, startWith, takeUntil } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from '../../shared/classes/product';
 import { ProductService } from '../../shared/services/product.service';
@@ -162,13 +162,6 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.refreshShippingRate();
     });
-
-    merge(
-      this.billingGroup.valueChanges.pipe(startWith(this.billingGroup.value)),
-      this.shippingGroup.valueChanges.pipe(startWith(this.shippingGroup.value))
-    )
-      .pipe(debounceTime(500), takeUntil(this.destroy$))
-      .subscribe(() => this.refreshShippingRate());
 
     this.prefillCheckoutCustomerDetails();
   }
@@ -578,6 +571,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleBillingEdit(): void {
     this.isBillingCardView = false;
+    this.clearShippingRate();
   }
 
   continueBillingAddress(): void {
@@ -594,6 +588,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleShippingEdit(): void {
     this.isShippingCardView = false;
+    this.clearShippingRate();
   }
 
   continueShippingAddress(): void {
@@ -919,15 +914,27 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.canShowBillingCard) {
         this.isBillingCardView = true;
       }
-
-      if (patch.address || patch.town || patch.state || patch.postalcode) {
-        this.refreshShippingRate();
-      }
     }
+  }
+
+  private isAddressConfirmedForShippingRate(): boolean {
+    if (!this.isBillingCardView) {
+      return false;
+    }
+
+    if (this.shipToDifferentAddress && !this.isShippingCardView) {
+      return false;
+    }
+
+    return true;
   }
 
   private refreshShippingRate(): void {
     if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+      return;
+    }
+
+    if (!this.isAddressConfirmedForShippingRate()) {
       return;
     }
 
