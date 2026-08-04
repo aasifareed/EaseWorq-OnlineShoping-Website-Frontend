@@ -88,22 +88,23 @@ export class OnlineShopSettingsService {
       this.meta.updateTag({ property: 'og:image', content: s.metaImageUrl });
     }
 
-    this.updateFavicon(s.logoUrl);
+    this.ensureStoreFavicon();
   }
 
-  private updateFavicon(logoUrl?: string | null): void {
+  /** Keep tab icon on the storefront favicon — do not use header logo as favicon. */
+  private ensureStoreFavicon(): void {
     if (typeof document === 'undefined') {
       return;
     }
 
-    const href = logoUrl?.trim() || 'assets/images/favicon-store.svg';
+    const href = 'assets/images/favicon-store.svg';
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!link) {
       link = document.createElement('link');
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.type = href.endsWith('.svg') ? 'image/svg+xml' : 'image/x-icon';
+    link.type = 'image/svg+xml';
     link.href = href;
   }
 

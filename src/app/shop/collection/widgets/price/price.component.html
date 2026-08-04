@@ -26,7 +26,7 @@
           type="number"
           class="price-input"
           [(ngModel)]="localMin"
-          (change)="appliedFilter()"
+          (ngModelChange)="onPriceInputChange()"
           [min]="options.floor"
           [max]="options.ceil"
         />
@@ -35,7 +35,7 @@
           type="number"
           class="price-input"
           [(ngModel)]="localMax"
-          (change)="appliedFilter()"
+          (ngModelChange)="onPriceInputChange()"
           [min]="options.floor"
           [max]="options.ceil"
         />

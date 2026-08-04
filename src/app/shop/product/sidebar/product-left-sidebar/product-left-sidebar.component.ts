@@ -136,6 +136,7 @@ export class ProductLeftSidebarComponent implements OnInit {
           const mapped = this.productService.mapInventoryItemToProduct(item);
           this.product = { ...this.product, ...mapped };
           this.activeSlide = 0;
+          this.resetCounter();
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
           this.loadRelatedProducts(inventoryId);
@@ -196,13 +197,36 @@ export class ProductLeftSidebarComponent implements OnInit {
   }
 
   increment() {
-    this.counter++;
+    if (this.productService.canIncrementSelectable(this.product, this.counter)) {
+      this.counter++;
+    }
   }
 
   decrement() {
     if (this.counter > 1) {
       this.counter--;
     }
+  }
+
+  get selectableQuantity(): number {
+    return this.productService.getSelectableQuantity(this.product);
+  }
+
+  get cartQuantity(): number {
+    return this.productService.getCartQuantityForProduct(this.product);
+  }
+
+  get isFullyInCart(): boolean {
+    return this.productService.isFullyInCart(this.product);
+  }
+
+  get canIncrementCounter(): boolean {
+    return this.productService.canIncrementSelectable(this.product, this.counter);
+  }
+
+  private resetCounter(): void {
+    const max = this.selectableQuantity;
+    this.counter = max > 0 ? 1 : 0;
   }
 
   async addToCart(product: any) {

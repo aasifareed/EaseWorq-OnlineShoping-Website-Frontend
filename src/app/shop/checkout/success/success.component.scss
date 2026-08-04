@@ -1,11 +1,47 @@
 li {
-    word-wrap: break-word;       /* Older browsers */
-    overflow-wrap: break-word;   /* Modern standard */
-    word-break: break-all;       /* Forces break even if there are no spaces */
-    white-space: normal;         /* Ensures text wraps to the next line */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
+    white-space: normal;
 }
 
 .total-sec .order-success-discount span {
     color: var(--discount-text, var(--success));
     font-weight: 700;
+}
+
+.product-order-detail {
+    .success-product-thumb {
+        flex: 0 0 100px;
+        width: 100px;
+        height: 100px;
+        min-width: 100px;
+        min-height: 100px;
+        border-radius: 8px;
+        padding: 0;
+        background: #ffffff;
+        border: 1px solid var(--ml-cart-summary-border, #e5e5ea);
+        overflow: hidden;
+        display: block;
+        box-sizing: border-box;
+    }
+
+    .success-product-img {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none;
+        object-fit: cover;
+        object-position: center;
+    }
+}
+
+@media (min-width: 768px) {
+    .product-order-detail .success-product-thumb {
+        flex: 0 0 140px;
+        width: 140px;
+        height: 140px;
+        min-width: 140px;
+        min-height: 140px;
+    }
 }

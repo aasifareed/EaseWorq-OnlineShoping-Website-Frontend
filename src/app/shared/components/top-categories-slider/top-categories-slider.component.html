@@ -6,6 +6,7 @@
 
     <div
       class="top-categories-grid"
+      [class.top-categories-grid--few]="categories.length <= 4"
       *ngIf="!gridMode && !useCarousel"
       [style.grid-template-columns]="gridTemplateColumns">
       <a

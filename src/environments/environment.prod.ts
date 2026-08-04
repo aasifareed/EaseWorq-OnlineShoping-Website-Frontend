@@ -39,6 +39,7 @@ urls: {
   OnlineShopBrand_GetHomePopularBrandsForOnline: "OnlineShopBrand/GetHomePopularBrandsForOnline",
   OnlineShopAvailableProduct_GetProductColorsListForOnline: "OnlineShopAvailableProduct/GetProductColorsListForOnlineShop",
   OnlineShopAvailableProduct_GetProductSizesListForOnline: "OnlineShopAvailableProduct/GetProductSizesListForOnlineShop",
+  OnlineShopAvailableProduct_GetProductBrandsListForOnline: "OnlineShopAvailableProduct/GetProductBrandsListForOnlineShop",
   OnlineShopAvailableProduct_GetHomePopularCategoryProductSliders: "OnlineShopAvailableProduct/GetHomePopularCategoryProductSliders",
   OnlineShopProduct_GetHomePopularCategoryProductSliders: "OnlineShopProduct/GetHomePopularCategoryProductSliders",
   OnlineShopWishlist_GetWishlistForOnlineShop: "OnlineShopWishlist/GetWishlistForOnlineShop",

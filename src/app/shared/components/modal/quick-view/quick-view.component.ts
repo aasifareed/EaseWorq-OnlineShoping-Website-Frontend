@@ -55,7 +55,28 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['product']) {
       this.syncImageGallery();
+      this.resetCounter();
     }
+  }
+
+  get productStock(): number {
+    return this.productService.getProductStock(this.product);
+  }
+
+  get selectableQuantity(): number {
+    return this.productService.getSelectableQuantity(this.product);
+  }
+
+  get cartQuantity(): number {
+    return this.productService.getCartQuantityForProduct(this.product);
+  }
+
+  get isFullyInCart(): boolean {
+    return this.productService.isFullyInCart(this.product);
+  }
+
+  get canIncrementCounter(): boolean {
+    return this.productService.canIncrementSelectable(this.product, this.counter);
   }
 
   get selectedImage(): string {
@@ -67,7 +88,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   openModal(): void {
-    this.counter = 1;
+    this.resetCounter();
     this.syncImageGallery();
     this.modalOpen = true;
     if (isPlatformBrowser(this.platformId)) {
@@ -172,13 +193,20 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   increment(): void {
-    this.counter++;
+    if (this.canIncrementCounter) {
+      this.counter++;
+    }
   }
 
   decrement(): void {
     if (this.counter > 1) {
       this.counter--;
     }
+  }
+
+  private resetCounter(): void {
+    const max = this.selectableQuantity;
+    this.counter = max > 0 ? 1 : 0;
   }
 
   async addToCart(product: any): Promise<void> {

@@ -1,6 +1,13 @@
 .top-categories-grid {
   display: grid;
   gap: 10px;
+
+  &--few {
+    .top-category-img {
+      height: 168px;
+      max-height: 168px;
+    }
+  }
 }
 
 .top-category-card {
@@ -19,7 +26,8 @@
 
   .top-category-img {
     width: 100%;
-    aspect-ratio: 1;
+    height: clamp(130px, 18vw, 180px);
+    max-height: 180px;
     overflow: hidden;
     display: block;
     background: var(--ml-surface-bg, #1a1a1a);
@@ -97,5 +105,10 @@
   .top-categories-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px;
+
+    &--few .top-category-img {
+      height: 140px;
+      max-height: 140px;
+    }
   }
 }

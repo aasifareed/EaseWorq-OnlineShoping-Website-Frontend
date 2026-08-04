@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
-import { merge, Observable, of, Subject } from 'rxjs';
-import { catchError, debounceTime, startWith, takeUntil } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from '../../shared/classes/product';
 import { ProductService } from '../../shared/services/product.service';
@@ -40,6 +40,14 @@ import {
 type CheckoutAddressGroup = 'billing' | 'shipping';
 type CheckoutAutocompleteKey = `${CheckoutAddressGroup}.${GoogleAddressFieldMode}`;
 
+interface StoredCheckoutShippingAddress extends CheckoutAddressFormValues {
+  confirmedAddress?: string;
+  confirmedTown?: string;
+  confirmedState?: string;
+}
+
+const CHECKOUT_SHIPPING_STORAGE_KEY = 'onlineShopCheckoutShippingAddress';
+
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
@@ -59,7 +67,11 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   activeAutocompleteKey: CheckoutAutocompleteKey | null = null;
   highlightedIndex = -1;
-  courierPanelExpanded = true;
+  itemsExpanded = false;
+  isBillingCardView = false;
+  isShippingCardView = false;
+  readonly checkoutVisibleItemCount = 4;
+  @ViewChild('courierRail') courierRail?: ElementRef<HTMLElement>;
   /** True while a Google place selection is resolving, so blur won't clear a city mid-pick. */
   private placeSelectionInFlight = false;
 
@@ -141,16 +153,15 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.setShippingValidators(!!checked);
       if (!checked) {
         this.shippingGroup.reset();
+        this.isShippingCardView = false;
+        this.clearShippingLocalStorage();
+        this.resetShippingAutocompleteState();
+      } else {
+        this.isShippingCardView = false;
+        this.loadShippingFromLocalStorage();
       }
       this.refreshShippingRate();
     });
-
-    merge(
-      this.billingGroup.valueChanges.pipe(startWith(this.billingGroup.value)),
-      this.shippingGroup.valueChanges.pipe(startWith(this.shippingGroup.value))
-    )
-      .pipe(debounceTime(500), takeUntil(this.destroy$))
-      .subscribe(() => this.refreshShippingRate());
 
     this.prefillCheckoutCustomerDetails();
   }
@@ -337,8 +348,46 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.applySelectedCourierToRate();
   }
 
-  toggleCourierPanel(): void {
-    this.courierPanelExpanded = !this.courierPanelExpanded;
+  toggleItemsExpanded(): void {
+    this.itemsExpanded = !this.itemsExpanded;
+  }
+
+  scrollCourierRail(direction: -1 | 1): void {
+    const rail = this.courierRail?.nativeElement;
+    if (!rail) {
+      return;
+    }
+
+    const step = Math.max(132, Math.round(rail.clientWidth * 0.72));
+    rail.scrollBy({ left: direction * step, behavior: 'smooth' });
+  }
+
+  get displayedProducts(): Product[] {
+    if (this.itemsExpanded || this.products.length <= this.checkoutVisibleItemCount) {
+      return this.products;
+    }
+    return this.products.slice(0, this.checkoutVisibleItemCount);
+  }
+
+  get hiddenItemCount(): number {
+    return Math.max(0, this.products.length - this.checkoutVisibleItemCount);
+  }
+
+  get orderNoteLength(): number {
+    return String(this.checkoutForm.get('description')?.value ?? '').length;
+  }
+
+  get appliedCouponCode(): string {
+    return (this.appliedCoupon?.couponCode ?? '').trim();
+  }
+
+  productImage(product: Product): string {
+    return product?.pictureUrl || product?.images?.[0]?.src || 'assets/images/product/placeholder.svg';
+  }
+
+  productVariant(product: Product): string {
+    const parts = [product?.color, product?.productSize].filter((value) => value != null && String(value).trim() !== '');
+    return parts.length ? parts.map((value) => String(value)).join(' / ') : '—';
   }
 
   isCourierOptionSelected(option: CourierShippingOptionResult): boolean {
@@ -487,6 +536,76 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   get shipToDifferentAddress(): boolean {
     return !!this.checkoutForm.get('shipToDifferentAddress')?.value;
+  }
+
+  get canShowBillingCard(): boolean {
+    return this.isBillingAddressComplete(this.billingGroup.getRawValue() as CheckoutAddressFormValues);
+  }
+
+  get canShowShippingCard(): boolean {
+    return this.isShippingFormComplete(this.shippingGroup.getRawValue() as CheckoutAddressFormValues);
+  }
+
+  get billingPreview(): CheckoutAddressFormValues {
+    return this.billingGroup.getRawValue() as CheckoutAddressFormValues;
+  }
+
+  get shippingPreview(): CheckoutAddressFormValues {
+    return this.shippingGroup.getRawValue() as CheckoutAddressFormValues;
+  }
+
+  get showAddressCardsRow(): boolean {
+    return this.isBillingCardView || (this.shipToDifferentAddress && this.isShippingCardView);
+  }
+
+  get addressCardCount(): number {
+    let count = 0;
+    if (this.isBillingCardView) {
+      count += 1;
+    }
+    if (this.shipToDifferentAddress && this.isShippingCardView) {
+      count += 1;
+    }
+    return count;
+  }
+
+  toggleBillingEdit(): void {
+    this.isBillingCardView = false;
+    this.clearShippingRate();
+  }
+
+  continueBillingAddress(): void {
+    if (this.billingGroup.invalid) {
+      this.billingGroup.markAllAsTouched();
+      this.toastr.warning('Please complete all required billing fields.');
+      return;
+    }
+
+    this.isBillingCardView = true;
+    this.persistCustomerProfileFromBilling(this.billingGroup.getRawValue() as CheckoutAddressFormValues);
+    this.refreshShippingRate();
+  }
+
+  toggleShippingEdit(): void {
+    this.isShippingCardView = false;
+    this.clearShippingRate();
+  }
+
+  continueShippingAddress(): void {
+    if (!this.shipToDifferentAddress) {
+      return;
+    }
+
+    if (this.shippingGroup.invalid) {
+      this.shippingGroup.markAllAsTouched();
+      this.toastr.warning('Please complete all required shipping fields.');
+      return;
+    }
+
+    this.saveShippingToLocalStorage();
+    this.isShippingCardView = true;
+    this.toastr.success('Shipping address saved.');
+    this.refreshShippingRate();
   }
 
   placeOrder(): void {
@@ -692,6 +811,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private clearCartAfterOrder(): void {
+    this.clearShippingLocalStorage();
+    this.isShippingCardView = false;
     this.productService.clearCheckoutAfterOrder();
     this.products = [];
     this.appliedCoupon = null;
@@ -790,14 +911,30 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.billingGroup.get('state')?.updateValueAndValidity({ emitEvent: false });
       this.googleAddressService.isAddressSelect = false;
 
-      if (patch.address || patch.town || patch.state || patch.postalcode) {
-        this.refreshShippingRate();
+      if (this.canShowBillingCard) {
+        this.isBillingCardView = true;
       }
     }
   }
 
+  private isAddressConfirmedForShippingRate(): boolean {
+    if (!this.isBillingCardView) {
+      return false;
+    }
+
+    if (this.shipToDifferentAddress && !this.isShippingCardView) {
+      return false;
+    }
+
+    return true;
+  }
+
   private refreshShippingRate(): void {
     if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+      return;
+    }
+
+    if (!this.isAddressConfirmedForShippingRate()) {
       return;
     }
 
@@ -904,6 +1041,99 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       address?.state?.trim() &&
       address?.postalcode?.trim()
     );
+  }
+
+  private isShippingFormComplete(address: CheckoutAddressFormValues): boolean {
+    return !!(
+      address?.customerName?.trim() &&
+      address?.customerMobileNo?.trim() &&
+      address?.address?.trim() &&
+      address?.town?.trim() &&
+      address?.state?.trim() &&
+      address?.postalcode?.trim()
+    );
+  }
+
+  private isBillingAddressComplete(address: CheckoutAddressFormValues): boolean {
+    return !!(
+      address?.customerName?.trim() &&
+      address?.customerMobileNo?.trim() &&
+      address?.customerEmail?.trim() &&
+      address?.address?.trim() &&
+      address?.town?.trim() &&
+      address?.state?.trim() &&
+      address?.postalcode?.trim()
+    );
+  }
+
+  private saveShippingToLocalStorage(): void {
+    const shipping = this.shippingGroup.getRawValue() as CheckoutAddressFormValues;
+    const payload: StoredCheckoutShippingAddress = {
+      ...shipping,
+      confirmedAddress: this.lastSelectedValues.shipping.address,
+      confirmedTown: this.lastSelectedValues.shipping.town,
+      confirmedState: this.lastSelectedValues.shipping.state,
+    };
+
+    try {
+      localStorage.setItem(CHECKOUT_SHIPPING_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Ignore quota / privacy mode errors.
+    }
+  }
+
+  private loadShippingFromLocalStorage(): void {
+    const stored = this.readShippingFromLocalStorage();
+    if (!stored) {
+      return;
+    }
+
+    this.googleAddressService.isAddressSelect = true;
+    this.shippingGroup.patchValue({
+      customerName: stored.customerName ?? '',
+      customerMobileNo: stored.customerMobileNo ?? '',
+      address: stored.address ?? '',
+      town: stored.town ?? '',
+      state: stored.state ?? '',
+      postalcode: stored.postalcode ?? '',
+    }, { emitEvent: false });
+
+    this.lastSelectedValues.shipping.address = (stored.confirmedAddress ?? stored.address ?? '').trim();
+    this.lastSelectedValues.shipping.town = (stored.confirmedTown ?? stored.town ?? '').trim();
+    this.lastSelectedValues.shipping.state = (stored.confirmedState ?? stored.state ?? '').trim();
+
+    this.shippingGroup.get('town')?.updateValueAndValidity({ emitEvent: false });
+    this.shippingGroup.get('state')?.updateValueAndValidity({ emitEvent: false });
+    this.googleAddressService.isAddressSelect = false;
+
+    if (this.canShowShippingCard) {
+      this.isShippingCardView = true;
+    }
+  }
+
+  private readShippingFromLocalStorage(): StoredCheckoutShippingAddress | null {
+    try {
+      const raw = localStorage.getItem(CHECKOUT_SHIPPING_STORAGE_KEY);
+      if (!raw) {
+        return null;
+      }
+
+      return JSON.parse(raw) as StoredCheckoutShippingAddress;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearShippingLocalStorage(): void {
+    try {
+      localStorage.removeItem(CHECKOUT_SHIPPING_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors.
+    }
+  }
+
+  private resetShippingAutocompleteState(): void {
+    this.lastSelectedValues.shipping = { address: '', town: '', state: '' };
   }
 
   private applyPaymentMethodDefaults(): void {

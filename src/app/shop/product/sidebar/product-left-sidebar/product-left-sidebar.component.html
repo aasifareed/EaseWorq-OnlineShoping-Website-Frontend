@@ -74,19 +74,27 @@
                           </li>
                       </ul>
                     </div>
-                    <h5 class="avalibility" *ngIf="counter <= (product?.stock ?? 0)"><span>In Stock</span></h5>
-                    <h5 class="avalibility" *ngIf="counter > (product?.stock ?? 0)"><span>Out of Stock</span></h5>
-                    <h6 class="product-title">quantity</h6>
-                    <div class="qty-box">
+                    <h5 class="avalibility" *ngIf="isFullyInCart"><span>In cart</span></h5>
+                    <h5 class="avalibility" *ngIf="!isFullyInCart && selectableQuantity > 0 && counter <= selectableQuantity"><span>In Stock</span></h5>
+                    <h5 class="avalibility" *ngIf="!isFullyInCart && (selectableQuantity <= 0 || counter > selectableQuantity)"><span>Out of Stock</span></h5>
+                    <p class="product-stock-available" *ngIf="product?.stock > 0">
+                      Available quantity: <strong>{{ product?.stock }}</strong>
+                      <span class="product-stock-in-cart" *ngIf="isFullyInCart"> · Already in your cart</span>
+                      <span class="product-stock-partial" *ngIf="!isFullyInCart && cartQuantity > 0 && selectableQuantity > 0">
+                        · {{ cartQuantity }} in cart, add up to {{ selectableQuantity }} more
+                      </span>
+                    </p>
+                    <h6 class="product-title" *ngIf="!isFullyInCart">quantity</h6>
+                    <div class="qty-box" *ngIf="!isFullyInCart">
                       <div class="input-group">
                         <span class="input-group-prepend">
-                          <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement()">
+                          <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement()" [disabled]="counter <= 1">
                             <i class="ti-angle-left"></i>
                           </button>
                         </span>
                         <input type="text" name="quantity" class="form-control input-number" [value]="counter" disabled/>
                         <span class="input-group-prepend">
-                          <button type="button" class="btn quantity-right-plus" data-type="plus" (click)="increment()">
+                          <button type="button" class="btn quantity-right-plus" data-type="plus" (click)="increment()" [disabled]="!canIncrementCounter">
                             <i class="ti-angle-right"></i>
                           </button>
                         </span>
@@ -95,8 +103,8 @@
                   </div>
                   <!-- class="wishlist-btn" -->
                   <div class="product-buttons product-detail-actions">
-                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="counter > (product?.stock ?? 0)" (click)="addToCart(product)">add to cart</a>
-                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="counter > (product?.stock ?? 0)" (click)="buyNow(product)">buy now</a>
+                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="addToCart(product)">add to cart</a>
+                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="buyNow(product)">buy now</a>
                     <a href="javascript:void(0)" class="btn btn-solid" (click)="addToWishlist(product)">
                       <i class="fa fa-heart"></i>
                       <span class="title-font">Add To WishList</span>

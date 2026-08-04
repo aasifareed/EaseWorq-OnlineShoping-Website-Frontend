@@ -38,6 +38,8 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   @Input() themeLogo: string = 'assets/images/icon/logo.png';
   @Input() topbar: boolean = true;
   @Input() sticky: boolean = false;
+  /** Hides the yellow category navigation bar (e.g. on checkout). */
+  @Input() hideNavigationBar: boolean = false;
 
   public storefront: OnlineShopStorefront | null = null;
   storeLogoUrl: string | null = null;
