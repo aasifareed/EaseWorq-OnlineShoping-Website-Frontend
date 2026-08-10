@@ -3,26 +3,26 @@
 :root,
 body:not(.dark) {
   /* --- Semantic foundation (light) --- */
-  --bg-primary: #f3f4f6;
-  --bg-secondary: #eceef2;
+  --bg-primary: #F7F8FA;
+  --bg-secondary: #F5F6F8;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
   --surface-hover: #f8f9fb;
   --surface-active: #f1f3f6;
-  --border: #e3e7ee;
-  --border-strong: #d5dbe5;
+  --border: #E5E7EB;
+  --border-strong: #E5E7EB;
   --border-subtle: #edf0f5;
 
-  --text-primary: #111827;
+  --text-primary: #111111;
   --text-secondary: #374151;
-  --text-muted: #6b7280;
+  --text-muted: #667085;
   --text-disabled: #9ca3af;
-  --text-inverse: #111827;
+  --text-inverse: #111111;
 
-  --primary: #ffc107;
+  --primary: #FFC400;
   --primary-hover: #e6ac00;
-  --primary-soft: rgba(255, 193, 7, 0.14);
-  --primary-border: rgba(255, 193, 7, 0.45);
+  --primary-soft: rgba(255, 196, 0, 0.14);
+  --primary-border: rgba(255, 196, 0, 0.45);
 
   --success: #16a34a;
   --success-hover: #15803d;
@@ -90,34 +90,35 @@ body:not(.dark) {
   --ml-sidebar-text: var(--text-secondary);
   --ml-sidebar-text-muted: var(--text-muted);
   --ml-sidebar-text-faint: var(--text-disabled);
-  --ml-sidebar-active: var(--primary-hover);
-  --ml-sidebar-active-bg: var(--primary-soft);
-  --ml-sidebar-active-text: var(--primary-hover);
+  --ml-sidebar-active: #111111;
+  --ml-sidebar-active-bg: #FFF8D8;
+  --ml-sidebar-active-text: #111111;
   --ml-sidebar-collapse-icon: var(--text-muted);
 
   --ml-page-heading-border: var(--border);
   --ml-page-title: var(--text-primary);
 
-  --ml-header-top-bg: var(--bg-secondary);
-  --ml-header-top-border: var(--border);
-  --ml-header-top-text: var(--text-muted);
-  --ml-header-top-text-bold: var(--text-primary);
-  --ml-header-top-hover-bg: var(--surface-hover);
-  --ml-header-main-bg: var(--surface);
-  --ml-header-main-text: var(--text-primary);
-  --ml-header-search-bg: var(--bg-secondary);
-  --ml-header-search-text: var(--text-primary);
-  --ml-header-search-placeholder: var(--text-muted);
+  /* Header stays Microless-black in light mode (page content remains light) */
+  --ml-header-top-bg: #1a1a1a;
+  --ml-header-top-border: #333333;
+  --ml-header-top-text: #ffffff;
+  --ml-header-top-text-bold: #ffffff;
+  --ml-header-top-hover-bg: #333333;
+  --ml-header-main-bg: #000000;
+  --ml-header-main-text: #ffffff;
+  --ml-header-search-bg: #ffffff;
+  --ml-header-search-text: #333333;
+  --ml-header-search-placeholder: #888888;
   --ml-header-dropdown-bg: var(--surface-elevated);
   --ml-header-dropdown-border: var(--border);
   --ml-header-dropdown-text: var(--text-primary);
   --ml-header-dropdown-hover: var(--surface-hover);
-  --ml-header-sticky-bg: var(--surface);
-  --ml-header-sticky-shadow: var(--shadow-md);
-  --ml-header-cart-badge-border: var(--surface);
-  --ml-header-separator: var(--border);
-  --ml-header-switch-bg: var(--border);
-  --ml-header-switch-icon: var(--text-secondary);
+  --ml-header-sticky-bg: #000000;
+  --ml-header-sticky-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --ml-header-cart-badge-border: #000000;
+  --ml-header-separator: #333333;
+  --ml-header-switch-bg: #333333;
+  --ml-header-switch-icon: #ffffff;
 
   --ml-surface-bg: var(--surface);
   --ml-surface-border: var(--border);
@@ -141,16 +142,16 @@ body:not(.dark) {
   --ml-cat-sub-panel-bg: var(--bg-secondary);
   --ml-cat-sub-link: var(--text-muted);
 
-  --ml-footer-cta-bg: var(--bg-secondary);
-  --ml-footer-icon-bg: var(--primary-soft);
-  --ml-footer-icon-color: var(--primary-hover);
-  --ml-footer-divider: var(--border);
-  --ml-footer-title: var(--text-primary);
-  --ml-footer-text: #4b5563;
-  --ml-footer-link: #374151;
-  --ml-footer-label: #6b7280;
-  --ml-footer-contact-value: var(--text-primary);
-  --ml-footer-copyright: #6b7280;
+  --ml-footer-cta-bg: #1a1a1a;
+  --ml-footer-icon-bg: rgba(255, 196, 0, 0.12);
+  --ml-footer-icon-color: #FFC400;
+  --ml-footer-divider: rgba(255, 255, 255, 0.12);
+  --ml-footer-title: #ffffff;
+  --ml-footer-text: #a3a3a3;
+  --ml-footer-link: #d4d4d4;
+  --ml-footer-label: #a3a3a3;
+  --ml-footer-contact-value: #ffffff;
+  --ml-footer-copyright: #a3a3a3;
 
   --ml-carousel-nav-bg: rgba(17, 24, 39, 0.06);
 

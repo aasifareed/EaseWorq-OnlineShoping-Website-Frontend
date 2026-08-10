@@ -11,6 +11,7 @@ import {
 } from '../models/online-shop-storefront.model';
 import { ShopContextService } from './shop-context.service';
 import { normalizeStoreGuid, resolveStoreIdFromApiPayload } from '../utils/shop-context.util';
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 @Injectable({
   providedIn: 'root',
@@ -49,7 +50,8 @@ export class OnlineShopSettingsService {
 
     const url = this.buildUrl();
     this.loadingSubject.next(true);
-    this.loadRequest$ = this.http.get<AbpResponse<Record<string, unknown>>>(url).pipe(
+    // Store settings load behind the boot screen, which is the loader for this stage.
+    this.loadRequest$ = this.http.get<AbpResponse<Record<string, unknown>>>(url, asBackgroundRequest()).pipe(
       map((response) => this.normalize(response?.result)),
       tap((storefront) => {
         this.storefrontSubject.next(storefront);

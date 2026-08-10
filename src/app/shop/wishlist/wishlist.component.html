@@ -8,7 +8,10 @@
       <img src="assets/images/empty-wishlist.png" alt="Empty wishlist" class="wishlist-empty__img">
       <h3 class="wishlist-empty__title">Your wishlist is empty</h3>
       <p class="wishlist-empty__text">Save items you love and shop them anytime.</p>
-      <a [routerLink]="['/shop']" class="btn btn-solid mt-3">Start Shopping</a>
+      <a [routerLink]="['/shop']" class="btn btn-solid mt-3">
+        <i class="fa fa-shopping-bag me-2" aria-hidden="true"></i>
+        Start Shopping
+      </a>
     </div>
 
     <ng-container *ngIf="!loading && products.length">
@@ -72,9 +75,11 @@
 
       <div class="wishlist-footer">
         <a [routerLink]="['/shop']" class="btn btn-solid wishlist-footer__btn">
+          <i class="fa fa-arrow-left me-2" aria-hidden="true"></i>
           Continue Shopping
         </a>
         <a [routerLink]="['/shop/cart']" class="btn btn-solid wishlist-footer__btn wishlist-footer__btn--outline">
+          <i class="fa fa-shopping-cart me-2" aria-hidden="true"></i>
           View Cart
         </a>
       </div>

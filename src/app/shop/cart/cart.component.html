@@ -123,7 +123,7 @@
 
                         <!-- Image -->
                         <div class="col-auto cell-thumbnail">
-                            <a [routerLink]="['/shop/product', product.id]" [state]="{ product }">
+                            <a [routerLink]="productLink(product)" [state]="{ product }">
                                 <img [src]="product?.images?.[0]?.src || 'assets/images/product/placeholder.svg'"
                                     [alt]="product?.images?.[0]?.alt || product?.title"
                                     class="cart-img" />
@@ -134,7 +134,7 @@
                         <div class="col">
 
                             <!-- Title -->
-                            <a [routerLink]="['/shop/product', product.id]"
+                            <a [routerLink]="productLink(product)"
                                [state]="{ product }"
                                class="cart-title d-block mb-2">
                                 {{ product?.title }}
@@ -213,10 +213,21 @@
                     <span>Subtotal</span>
                     <strong>{{ cartSubtotal | shopCurrency:productService?.Currency.currency }}</strong>
                 </div>
-                <div class="cart-summary-totals__row cart-summary-totals__row--discount" *ngIf="couponDiscount > 0">
-                    <span>Coupon discount</span>
-                    <strong>−{{ couponDiscount | shopCurrency:productService?.Currency.currency }}</strong>
+                <div class="cart-summary-totals__row cart-summary-totals__row--discount"
+                    *ngFor="let discount of discountRows">
+                    <span>{{ discount.description || 'Discount' }}</span>
+                    <strong>−{{ discount.discountAmount | shopCurrency:productService?.Currency.currency }}</strong>
                 </div>
+                <ng-container *ngFor="let coupon of couponStatuses">
+                    <div class="cart-summary-totals__row cart-summary-totals__note"
+                        *ngIf="isCouponPartiallyEligible(coupon)">
+                        <span>
+                            {{ couponLabel(coupon) }} applies to
+                            {{ coupon.eligibleSubtotal | shopCurrency:productService?.Currency.currency }}
+                            of eligible items
+                        </span>
+                    </div>
+                </ng-container>
                 <div class="cart-summary-totals__row cart-summary-totals__row--total">
                     <span>Total price</span>
                     <strong>{{ cartPayableTotal | shopCurrency:productService?.Currency.currency }}</strong>
@@ -247,13 +258,24 @@
                             <button type="button" class="btn btn-primary btn-sm px-3"
                                 (click)="applyCoupon()"
                                 [disabled]="couponApplying">
+                                <i class="fa" [ngClass]="couponApplying ? 'fa-spinner fa-spin' : 'fa-tag'" aria-hidden="true"></i>
                                 {{ couponApplying ? '…' : 'Apply' }}
                             </button>
                         </div>
-                        <p class="cart-coupon-applied small mb-0 mt-2" *ngIf="appliedCoupon?.result?.isValid">
-                            {{ appliedCoupon?.result?.couponTitle || appliedCoupon?.couponCode }} applied.
-                            <a href="javascript:void(0)" (click)="clearCoupon()">Remove</a>
-                        </p>
+                        <ul class="cart-coupon-list list-unstyled mb-0 mt-2" *ngIf="couponStatuses.length">
+                            <li class="cart-coupon-chip"
+                                *ngFor="let coupon of couponStatuses"
+                                [class.cart-coupon-chip--rejected]="!coupon.isValid">
+                                <span class="cart-coupon-chip__code">{{ coupon.couponCode }}</span>
+                                <span class="cart-coupon-chip__message">{{ coupon.message }}</span>
+                                <a href="javascript:void(0)"
+                                    class="cart-coupon-chip__remove"
+                                    (click)="removeCoupon(coupon.couponCode)"
+                                    [attr.aria-label]="'Remove ' + coupon.couponCode">
+                                    <i class="ti-close"></i>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
@@ -261,10 +283,16 @@
             </div>
             <hr class="border-secondary my-2" />
             <div class="col-6">
-                <a [routerLink]="['/shop']" class="btn btn-solid">continue shopping</a>
+                <a [routerLink]="['/shop']" class="btn btn-solid">
+                  <i class="fa fa-arrow-left me-1" aria-hidden="true"></i>
+                  continue shopping
+                </a>
             </div>
             <div class="col-6">
-                <a href="javascript:void(0)" class="btn btn-solid" (click)="goToCheckout()"><i class="fa fa-lock me-1"></i> check out</a>
+                <a href="javascript:void(0)" class="btn btn-solid" (click)="goToCheckout()">
+                  <i class="fa fa-lock me-1" aria-hidden="true"></i>
+                  check out
+                </a>
             </div>
         </div>
 

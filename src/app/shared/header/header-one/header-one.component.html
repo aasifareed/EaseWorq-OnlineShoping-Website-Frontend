@@ -141,6 +141,8 @@
           </span>
         </div>
 
+        <app-delivery-deals-banner class="ml-top-deals" [compact]="true"></app-delivery-deals-banner>
+
         <div class="ml-top-utilities ml-top-utilities--right">
           <div class="ml-utility-toggle">
             <label class="ml-theme-switch" for="headerDarkCheck" aria-label="Toggle dark mode">
@@ -174,7 +176,7 @@
     <div class="container-fluid">
       <div class="row align-items-center gx-0">
         <div class="col-auto">
-          <div class="brand-logo py-2">
+          <div class="brand-logo">
             <a [routerLink]="['/home']" class="text-decoration-none brand-logo-link">
               <img
                 *ngIf="storeLogoUrl"
@@ -192,7 +194,7 @@
             <input
               type="text"
               class="form-control"
-              placeholder="What are you looking for?"
+              placeholder="Search products, brands and categories"
               [(ngModel)]="searchText"
               (input)="onSearchInput()"
               (keydown)="onSearchKeydown($event)"
@@ -298,13 +300,13 @@
           </div>
         </div>
 
-        <div class="col-auto">
+        <div class="col-auto d-flex align-items-center">
           <div class="d-flex align-items-center action-icons">
-            <div class="dropdown px-3 text-center border-end border-secondary-subtle header-account-dropdown">
+            <div class="dropdown border-end border-secondary-subtle header-account-dropdown">
               <a class="text-decoration-none dropdown-toggle no-caret header-action-link" data-bs-toggle="dropdown" aria-expanded="false">
                 <span *ngIf="isLoggedIn" class="account-initials">{{ userInitials }}</span>
-                <i *ngIf="!isLoggedIn" class="fa fa-user-o fs-5"></i>
-                <span class="d-block label">YOUR ACCOUNT</span>
+                <i *ngIf="!isLoggedIn" class="fa fa-user-o header-action-icon"></i>
+                <span class="label header-action-label">Account</span>
               </a>
               <ul class="dropdown-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
                 <ng-container *ngIf="!isLoggedIn">
@@ -314,19 +316,22 @@
                 <ng-container *ngIf="isLoggedIn">
                   <li><a class="dropdown-item" [routerLink]="['/pages/my-orders']">My Orders</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><button type="button" class="dropdown-item" (click)="logout()">Log Out</button></li>
+                  <li><button type="button" class="dropdown-item" (click)="logout()">
+                    <i class="fa fa-sign-out me-2" aria-hidden="true"></i>
+                    Log Out
+                  </button></li>
                 </ng-container>
               </ul>
             </div>
 
-            <div  [routerLink]="['/shop/wishlist']" class="px-3 text-center border-end border-secondary-subtle pointer">
-              <i class="fa fa-heart-o fs-5 header-action-icon"></i>
-              <span class="d-block label header-action-label">WISHLIST</span>
+            <div [routerLink]="['/shop/wishlist']" class="border-end border-secondary-subtle pointer header-action-item">
+              <i class="fa fa-heart-o header-action-icon"></i>
+              <span class="label header-action-label">Wishlist</span>
             </div>
 
             <div
               *ngIf="isLoggedIn"
-              class="px-3 text-center border-end border-secondary-subtle header-notifications"
+              class="border-end border-secondary-subtle header-notifications"
               ngbDropdown
               placement="bottom-end">
               <button
@@ -334,15 +339,15 @@
                 ngbDropdownToggle
                 class="header-notifications-trigger header-action-link"
                 aria-label="View alerts">
-                <span class="badge-top-container position-relative d-inline-block">
+                <span class="badge-top-container position-relative">
                   <span
                     *ngIf="signalRService.unreadCount > 0"
                     class="badge p-0 position-absolute bg-danger rounded-circle header-notify-badge">
                     {{ signalRService.unreadCount > 99 ? '99+' : signalRService.unreadCount }}
                   </span>
-                  <i class="fa fa-bell-o fs-5 header-action-icon" aria-hidden="true"></i>
+                  <i class="fa fa-bell-o header-action-icon" aria-hidden="true"></i>
                 </span>
-                <span class="d-block label header-action-label">ALERTS</span>
+                <span class="label header-action-label">Alerts</span>
               </button>
               <div ngbDropdownMenu class="notification-dropdown shadow-lg">
                 <div class="notification-dropdown-header">
@@ -382,26 +387,35 @@
                         <span class="notification-time">{{ item.time | relativeTime }}</span>
                       </div>
                       <p class="notification-text">{{ item.text }}</p>
-                      <span
-                        *ngIf="item.badge"
-                        class="notification-status notification-status--{{ item.status }}">
-                        {{ item.badge }}
-                      </span>
+                      <div class="notification-footer">
+                        <span
+                          *ngIf="item.badge"
+                          class="notification-status notification-status--{{ item.status }}">
+                          {{ item.badge }}
+                        </span>
+                        <button
+                          type="button"
+                          class="notification-mark-read-btn"
+                          [disabled]="isMarkingNotificationRead(item.id)"
+                          (click)="markNotificationAsRead($event, item)">
+                          {{ isMarkingNotificationRead(item.id) ? 'Marking…' : 'Mark as read' }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <a class="px-3 text-center header-cart-link text-decoration-none" [routerLink]="['/shop/cart']"
+            <a class="header-cart-link text-decoration-none" [routerLink]="['/shop/cart']"
               aria-label="View shopping cart">
               <span class="header-cart-icon-wrap">
-                <i class="fa fa-shopping-cart fs-5 header-action-icon" aria-hidden="true"></i>
+                <i class="fa fa-shopping-cart header-action-icon" aria-hidden="true"></i>
                 <ng-container *ngIf="cartCount$ | async as count">
                   <span class="header-cart-badge" *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
                 </ng-container>
               </span>
-              <span class="d-block label header-action-label">YOUR CART</span>
+              <span class="label header-action-label">Cart</span>
             </a>
           </div>
         </div>
@@ -455,9 +469,15 @@
         <app-menu></app-menu>
       </div>
 
-      <a [routerLink]="['/pages/my-orders']" class="nav-orders-link ms-auto px-4 text-dark fw-bold text-decoration-none d-flex align-items-center">
-        <i class="fa fa-list-alt me-2" aria-hidden="true"></i>
-        ORDERS
+      <a
+        [routerLink]="['/pages/my-orders']"
+        class="nav-orders-link ms-auto"
+        [attr.aria-label]="myOrdersAriaLabel">
+        <i class="fa fa-shopping-bag nav-orders-icon" aria-hidden="true"></i>
+        <span class="nav-orders-text">My Orders</span>
+        <span class="nav-orders-count" *ngIf="isLoggedIn && myOrderCount !== null">
+          {{ myOrderCount > 99 ? '99+' : myOrderCount }}
+        </span>
       </a>
     </div>
   </div>

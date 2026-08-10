@@ -16,6 +16,7 @@ import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { Router } from '@angular/router';
 import { Product } from '../../../classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
+import { shopProductLink } from '../../../constants/storefront-routes';
 
 @Component({
   selector: 'app-quick-view',
@@ -33,12 +34,12 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   public selectedIndex = 0;
   public counter = 1;
   public modalOpen = false;
-  public zoomActive = false;
-  public zoomOrigin = '50% 50%';
+  public lightboxOpen = false;
 
   readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
   private touchStartX = 0;
+  private lightboxTouchStartX = 0;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -79,6 +80,51 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     return this.productService.canIncrementSelectable(this.product, this.counter);
   }
 
+  get stockTone(): 'ok' | 'out' | 'cart' {
+    if (this.isFullyInCart) {
+      return 'cart';
+    }
+    if (this.productStock <= 0 || this.selectableQuantity <= 0) {
+      return 'out';
+    }
+    return 'ok';
+  }
+
+  /** Combined stock line — avoids duplicating "In Stock" + "Available quantity". */
+  get stockStatusLine(): string {
+    if (this.isFullyInCart) {
+      return 'In cart · Full quantity already added';
+    }
+    if (this.productStock <= 0 || this.selectableQuantity <= 0) {
+      return 'Out of Stock';
+    }
+    const qty = this.productStock;
+    const qtyLabel = qty === 1 ? 'Only 1 available' : `Only ${qty} available`;
+    return `In Stock · ${qtyLabel}`;
+  }
+
+  get stockNote(): string | null {
+    if (this.isFullyInCart || this.productStock <= 0) {
+      return null;
+    }
+    if (this.cartQuantity > 0 && this.selectableQuantity > 0) {
+      return `${this.cartQuantity} in cart — you can add up to ${this.selectableQuantity} more`;
+    }
+    return null;
+  }
+
+  get hasProductDescription(): boolean {
+    return !!(this.product?.description && String(this.product.description).trim());
+  }
+
+  get productDescriptionText(): string {
+    if (!this.hasProductDescription) {
+      return 'No description available.';
+    }
+    const text = String(this.product.description).trim();
+    return text.length > 200 ? `${text.substring(0, 200)}...` : text;
+  }
+
   get selectedImage(): string {
     return this.productImages[this.selectedIndex] ?? this.placeholderImage;
   }
@@ -87,9 +133,14 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     return this.productImages.length > 1;
   }
 
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   openModal(): void {
     this.resetCounter();
     this.syncImageGallery();
+    this.closeLightbox();
     this.modalOpen = true;
     if (isPlatformBrowser(this.platformId)) {
       this.modalService
@@ -97,13 +148,23 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
           size: 'lg',
           ariaLabelledBy: 'modal-basic-title',
           centered: true,
-          windowClass: 'Quickview'
+          backdrop: true,
+          keyboard: true,
+          windowClass: 'Quickview',
+          beforeDismiss: () => {
+            if (this.lightboxOpen) {
+              this.closeLightbox();
+              return false;
+            }
+            return true;
+          }
         })
         .result.then(
           (result) => {
             `Result ${result}`;
           },
           (reason) => {
+            this.closeLightbox();
             this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
           }
         );
@@ -123,20 +184,45 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   syncImageGallery(): void {
     this.productImages = this.productService.getProductImages(this.product);
     this.selectedIndex = 0;
-    this.zoomActive = false;
     this.cdr.markForCheck();
   }
 
-  selectThumbnail(index: number): void {
-    if (index < 0 || index >= this.productImages.length) {
+  openLightbox(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.productImages.length) {
       return;
     }
-    this.selectedIndex = index;
-    this.zoomActive = false;
+    this.lightboxOpen = true;
     this.cdr.detectChanges();
   }
 
-  prevImage(): void {
+  closeLightbox(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.lightboxOpen) {
+      return;
+    }
+    this.lightboxOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  selectThumbnail(index: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (index < 0 || index >= this.productImages.length) {
+      return;
+    }
+    if (this.selectedIndex === index) {
+      return;
+    }
+    this.selectedIndex = index;
+    this.cdr.detectChanges();
+  }
+
+  prevImage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     const n = this.productImages.length;
     if (n <= 1) {
       return;
@@ -144,7 +230,9 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     this.selectThumbnail((this.selectedIndex - 1 + n) % n);
   }
 
-  nextImage(): void {
+  nextImage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
     const n = this.productImages.length;
     if (n <= 1) {
       return;
@@ -169,27 +257,33 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  onZoomMove(event: MouseEvent): void {
-    const el = event.currentTarget as HTMLElement;
-    if (!el) {
+  onLightboxTouchStart(event: TouchEvent): void {
+    this.lightboxTouchStartX = event.changedTouches[0]?.clientX ?? 0;
+  }
+
+  onLightboxTouchEnd(event: TouchEvent): void {
+    const endX = event.changedTouches[0]?.clientX ?? 0;
+    const delta = endX - this.lightboxTouchStartX;
+    if (Math.abs(delta) < 40) {
       return;
     }
-    const rect = el.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    this.zoomOrigin = `${x}% ${y}%`;
-    this.zoomActive = true;
-  }
-
-  onZoomLeave(): void {
-    this.zoomActive = false;
-  }
-
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img && !img.src.includes('placeholder')) {
-      img.src = this.placeholderImage;
+    if (delta > 0) {
+      this.prevImage();
+    } else {
+      this.nextImage();
     }
+  }
+
+  onImageError(event: Event, index?: number): void {
+    const i = typeof index === 'number' ? index : this.selectedIndex;
+    if (i < 0 || i >= this.productImages.length) {
+      return;
+    }
+    if (this.productImages[i] === this.placeholderImage) {
+      return;
+    }
+    this.productImages[i] = this.placeholderImage;
+    this.cdr.markForCheck();
   }
 
   increment(): void {
@@ -213,6 +307,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     product.quantity = this.counter || 1;
     const status = await this.productService.addToCart(product);
     if (status) {
+      this.closeLightbox();
       this.modalService.dismissAll();
     }
   }
@@ -221,6 +316,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     product.quantity = this.counter || 1;
     const status = await this.productService.addToCart(product);
     if (status) {
+      this.closeLightbox();
       this.modalService.dismissAll();
       this.router.navigate(['/shop/checkout']);
     }
@@ -228,17 +324,19 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
 
   goProductDetail(event: Event): void {
     event.preventDefault();
-    if (!this.product?.id) {
+    if (!this.product?.id && !this.product?.slug) {
       return;
     }
     this.productService.persistShopProduct(this.product);
+    this.closeLightbox();
     this.modalService.dismissAll();
-    this.router.navigate(['/shop/product', this.product.id], {
+    this.router.navigate(shopProductLink(this.product), {
       state: { product: this.product }
     });
   }
 
   ngOnDestroy(): void {
+    this.closeLightbox();
     if (this.modalOpen) {
       this.modalService.dismissAll();
     }

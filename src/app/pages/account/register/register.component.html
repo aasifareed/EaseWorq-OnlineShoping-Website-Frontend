@@ -111,6 +111,7 @@
                             Passwords do not match.
                         </small>
                         <button type="submit" class="btn btn-solid" [disabled]="loading">
+                            <i class="fa" [ngClass]="loading ? 'fa-spinner fa-spin me-2' : 'fa-user-plus me-2'" aria-hidden="true"></i>
                             {{ loading ? 'Creating…' : 'create Account' }}
                         </button>
                     </form>

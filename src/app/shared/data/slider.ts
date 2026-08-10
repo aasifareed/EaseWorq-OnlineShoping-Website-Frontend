@@ -3,6 +3,10 @@ export let HomeSlider: any = {
     loop: true,
     nav: true,
     dots: false,
+    autoplay: true,
+    autoplayTimeout: 5000,
+    autoplayHoverPause: true,
+    autoplaySpeed: 900,
     navContainerClass: 'owl-nav',
     navClass: [ 'owl-prev', 'owl-next' ],
     navText: [ '<i class="ti-angle-left"></i>', '<i class="ti-angle-right"></i>' ],
@@ -64,19 +68,19 @@ export let InstaSlider: any = {
     }
 };
 
-// Logo Slider
+// Logo Slider (kept for any legacy theme usage; home brands use CSS grid instead)
 export let LogoSlider: any = {
     loop: true,
     dots: false,
     nav: true,
     navSpeed: 300,
-      navContainerClass: 'owl-nav',
+    margin: 12,
+    navContainerClass: 'owl-nav',
     navClass: [ 'owl-prev', 'owl-next' ],
     navText: [ '<i class="ti-angle-left"></i>', '<i class="ti-angle-right"></i>' ],
-
     responsive: {
-          991: {
-            items: 7
+        991: {
+            items: 6
         },
         767: {
             items: 5

@@ -1,0 +1,96 @@
+/**
+ * Fixed image frames for the storefront. Card size is owned by the container —
+ * never by the uploaded file's pixel dimensions.
+ */
+
+/* Category tiles: landscape cover crop, identical ratio on every breakpoint. */
+.img-frame--category {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: none;
+  overflow: hidden;
+  background: #2a2a2e;
+
+  > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  &.img-frame--category-empty {
+    background:
+      linear-gradient(145deg, #3a3a40 0%, #252528 55%, #1c1c1f 100%);
+  }
+}
+
+/* Product tiles: square contain panel, never crop the product. */
+.img-frame--product {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #ffffff;
+
+  > img,
+  .img-frame__media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+    box-sizing: border-box;
+  }
+}
+
+/* Brand logos: compact contain box; oversized files are capped, never cropped. */
+.img-frame--brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 12 / 5;
+  height: auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  background: #ffffff;
+
+  > img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(100%, 150px);
+    max-height: min(100%, 52px);
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+.img-frame--brand-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 12 / 5;
+  height: auto;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  background: #f7f7f8;
+  text-align: center;
+}

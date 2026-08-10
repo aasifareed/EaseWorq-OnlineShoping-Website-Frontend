@@ -6,7 +6,7 @@ import { formatNumber } from '@angular/common';
   standalone: false,
 })
 export class ShopCurrencyPipe implements PipeTransform {
-  transform(value: number | string | null | undefined, currencySymbol: string = 'RS'): string {
+  transform(value: number | string | null | undefined, currencySymbol: string = 'Rs.'): string {
     if (value === null || value === undefined || value === '') {
       return '';
     }
@@ -16,8 +16,13 @@ export class ShopCurrencyPipe implements PipeTransform {
       return '';
     }
 
-    const symbol = (currencySymbol || 'RS').trim() || 'RS';
-    const formatted = formatNumber(num, 'en-US', '1.2-2');
+    let symbol = (currencySymbol || 'Rs.').trim() || 'Rs.';
+    // Normalize legacy / storefront symbols to retail style
+    if (/^rs\.?$/i.test(symbol) || /^pkr$/i.test(symbol)) {
+      symbol = 'Rs.';
+    }
+
+    const formatted = formatNumber(Math.round(num), 'en-US', '1.0-0');
     return `${symbol} ${formatted}`;
   }
 }

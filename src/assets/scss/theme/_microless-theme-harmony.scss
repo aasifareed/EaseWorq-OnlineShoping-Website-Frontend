@@ -208,9 +208,16 @@ body:not(.dark) {
 }
 
 body.dark .checkout-chip--selected .checkout-chip__text {
-  background: var(--primary) !important;
+  background: rgba(255, 196, 0, 0.1) !important;
   border-color: var(--primary) !important;
-  color: #111827 !important;
+  color: var(--text-primary) !important;
+}
+
+body.dark .checkout-chip--payment.checkout-chip--selected .checkout-chip__text,
+body.dark .checkout-chip--choice.checkout-chip--selected .checkout-chip__text {
+  background: #141414 !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
 }
 
 body.dark .checkout-chip .checkout-chip__text {
@@ -378,17 +385,17 @@ body.dark .shop-list-card__title {
 .product-box .mc-card__cart-btn,
 .product-wrapper-grid .mc-card__cart-btn,
 .collection--microless .mc-card__cart-btn {
-  background: var(--success, #16a34a) !important;
-  border: 1px solid var(--success-hover, #15803d) !important;
-  color: #ffffff !important;
+  background: #FFC400 !important;
+  border: 1px solid #FFC400 !important;
+  color: #111111 !important;
   text-decoration: none !important;
 
   &:hover,
   &:focus,
   &:active {
-    color: #ffffff !important;
-    background: var(--success-hover, #15803d) !important;
-    border-color: var(--success-hover, #15803d) !important;
+    color: #111111 !important;
+    background: #ffd54d !important;
+    border-color: #ffd54d !important;
     text-decoration: none !important;
   }
 }

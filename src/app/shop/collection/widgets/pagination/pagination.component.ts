@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Product } from '../../../../shared/classes/product';
 
 @Component({
@@ -12,16 +12,24 @@ export class PaginationComponent implements OnInit {
   @Input() paginate: any = {};
   @Input() pageSize: number = 0;
   @Input() TotalCount: number = 0;
-  @Output() setPage  : EventEmitter<any> = new EventEmitter<any>();
-    
-  constructor() { 
-  }
+  @Output() setPage: EventEmitter<any> = new EventEmitter<any>();
+
+  constructor() { }
 
   ngOnInit(): void {
   }
 
-  pageSet(page: number) {
-    this.setPage.emit(page);  // Set Page Number  
+  get summaryText(): string {
+    const total = +(this.paginate?.totalItems ?? this.TotalCount ?? 0);
+    if (!total) {
+      return '';
+    }
+    const start = (this.paginate?.startIndex ?? 0) + 1;
+    const end = (this.paginate?.endIndex ?? 0) + 1;
+    return `Showing ${start}–${end} of ${total} products`;
   }
 
+  pageSet(page: number) {
+    this.setPage.emit(page);
+  }
 }

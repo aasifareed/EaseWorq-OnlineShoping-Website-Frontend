@@ -1,0 +1,230 @@
+.delivery-deals {
+  /* The theme applies a global `section { padding-top: 70px }`; reset it here. */
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(90deg, #151515 0%, #1f1f1f 50%, #151515 100%);
+  border-bottom: 1px solid rgba(255, 196, 0, 0.22);
+}
+
+/* Centred and width-capped so the row doesn't strand itself against the left edge. */
+.delivery-deals__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  padding: 12px 20px;
+}
+
+.delivery-deals__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+}
+
+.delivery-deals__label-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 196, 0, 0.14);
+  color: #ffc400;
+  font-size: 0.82rem;
+}
+
+.delivery-deals__label-text {
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.delivery-deals__divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.delivery-deals__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.delivery-deals__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 196, 0, 0.45);
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.delivery-deals__item--free {
+  border-color: rgba(255, 196, 0, 0.45);
+  background: rgba(255, 196, 0, 0.1);
+}
+
+.delivery-deals__spend {
+  color: #c4c4c4;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.delivery-deals__benefit {
+  display: inline-flex;
+  align-items: center;
+  color: #ffc400;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+
+  &::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    margin-right: 9px;
+    border-radius: 50%;
+    background: rgba(255, 196, 0, 0.6);
+  }
+}
+
+.delivery-deals__country {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.7rem;
+}
+
+.delivery-deals__note {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.68rem;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Sits inside the 36px top header bar: no chrome of its own, tighter metrics. */
+.delivery-deals--compact {
+  background: none;
+  border-bottom: 0;
+
+  .delivery-deals__inner {
+    max-width: none;
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding: 0;
+  }
+
+  .delivery-deals__label-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+
+  .delivery-deals__label-text {
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+  }
+
+  .delivery-deals__divider {
+    height: 14px;
+  }
+
+  .delivery-deals__list {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .delivery-deals__item {
+    padding: 3px 10px;
+    gap: 7px;
+  }
+
+  .delivery-deals__spend {
+    font-size: 0.72rem;
+  }
+
+  .delivery-deals__benefit {
+    font-size: 0.72rem;
+
+    &::before {
+      width: 3px;
+      height: 3px;
+      margin-right: 7px;
+    }
+  }
+
+  /* The 36px top bar has no room for it; the section's tooltip still carries the wording. */
+  .delivery-deals__note {
+    display: none;
+  }
+}
+
+@media (max-width: 991px) {
+  .delivery-deals__inner {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 10px 14px;
+    overflow: hidden;
+  }
+
+  .delivery-deals__divider {
+    display: none;
+  }
+
+  .delivery-deals__label-text {
+    display: none;
+  }
+
+  /* Chips stay on one swipeable row rather than stacking the strip tall. */
+  .delivery-deals__list {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .delivery-deals__list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .delivery-deals__item {
+    padding: 6px 12px;
+    gap: 7px;
+  }
+
+  .delivery-deals__spend {
+    font-size: 0.73rem;
+  }
+
+  .delivery-deals__benefit {
+    font-size: 0.75rem;
+
+    &::before {
+      margin-right: 7px;
+    }
+  }
+
+  .delivery-deals__note {
+    display: none;
+  }
+}

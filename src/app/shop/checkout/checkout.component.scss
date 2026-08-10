@@ -427,16 +427,27 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   }
 
   &__action {
-    border: 0;
-    background: transparent;
-    padding: 0;
-    color: rgba(255, 255, 255, 0.72);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid rgba(240, 180, 41, 0.45);
+    background: rgba(240, 180, 41, 0.08);
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    color: $checkout-accent;
     font-size: 0.72rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     cursor: pointer;
-    transition: color 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+    i {
+      font-size: 0.68rem;
+    }
 
     &:hover {
+      border-color: $checkout-accent;
+      background: rgba(240, 180, 41, 0.18);
       color: $checkout-accent;
     }
   }
@@ -490,6 +501,9 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
 }
 
 .checkout-edit-cart {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: $checkout-accent;
@@ -498,6 +512,10 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
 
   &:hover {
     text-decoration: underline;
+  }
+
+  > .fa {
+    font-size: 0.7rem;
   }
 }
 
@@ -532,7 +550,7 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
 
 .checkout-item-product {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.55rem;
   min-width: 0;
 }
@@ -552,9 +570,17 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   word-break: break-word;
 }
 
+.checkout-item-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .checkout-item-variant {
-  opacity: 0.78;
+  opacity: 0.72;
   font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .checkout-item-price {
@@ -598,6 +624,99 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   vertical-align: middle;
 }
 
+/* Coupon entry, for the customer who reached checkout without passing through the cart. */
+.checkout-coupon-form {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border, rgba(255, 255, 255, 0.16));
+
+  &__label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  &__row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 2.35rem;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+  }
+
+  &__button {
+    flex: 0 0 auto;
+    min-width: 5.5rem;
+    height: 2.35rem;
+    padding: 0 0.9rem;
+    border: 0;
+    border-radius: 8px;
+    background: $checkout-accent;
+    color: #111111;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+
+    > .fa {
+      font-size: 0.85em;
+      line-height: 1;
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+
+/* One line per applied code, each removable on its own. */
+.checkout-coupon-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  &__message {
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+
+  &__remove {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-decoration: underline;
+    color: inherit;
+    opacity: 0.75;
+
+    &:hover {
+      opacity: 1;
+      color: $checkout-accent;
+    }
+  }
+
+  /* A refused code has to stand out: it blocks the order until removed. */
+  &--rejected .checkout-coupon-tag {
+    background: rgba(220, 53, 69, 0.18);
+    color: #f87171;
+  }
+}
+
+:host-context(body:not(.dark)) .checkout-coupon-line--rejected .checkout-coupon-tag {
+  background: rgba(220, 53, 69, 0.12);
+  color: #b91c1c;
+}
+
 .checkout-place-order-btn {
   width: 100%;
   min-height: 2.9rem;
@@ -612,6 +731,102 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   border-radius: 10px !important;
 }
 
+.checkout-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  margin: 0 0 0.85rem;
+  padding: 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.45);
+
+  &__step {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      color: $checkout-accent;
+    }
+
+    &--current {
+      color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
+  &__sep {
+    opacity: 0.55;
+  }
+}
+
+.checkout-pickup-panel {
+  margin: 0.45rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid $checkout-card-border;
+  background: rgba(255, 255, 255, 0.04);
+
+  &__title {
+    margin: 0 0 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  &__line {
+    margin: 0 0 0.2rem;
+    font-size: 0.74rem;
+    line-height: 1.4;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.8));
+  }
+
+  &__note {
+    margin: 0.45rem 0 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $checkout-accent;
+  }
+}
+
+.checkout-courier-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  flex-wrap: nowrap;
+  margin-top: 0.85rem;
+  min-width: 0;
+}
+
+.checkout-courier-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 1 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  opacity: 0.62;
+
+  &:hover {
+    color: $checkout-accent;
+    opacity: 1;
+  }
+}
+
+.checkout-courier-more__arrow {
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
 .checkout-legal-note,
 .checkout-security-note {
   margin: 0.35rem 0 0;
@@ -619,6 +834,18 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   line-height: 1.4;
   opacity: 0.72;
   text-align: center;
+}
+
+.checkout-legal-note__link {
+  color: $checkout-accent;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 1;
+
+  &:hover {
+    color: #ffd54d;
+  }
 }
 
 .checkout-security-note {
@@ -1109,6 +1336,25 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
       color: #8a5a00;
       box-shadow: 0 0 0 1px rgba(240, 180, 41, 0.35);
     }
+
+    &__check {
+      display: none;
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: $checkout-accent;
+    }
+
+    &--selected .checkout-chip__check {
+      display: inline-block;
+    }
+
+    &--payment.checkout-chip--selected .checkout-chip__text,
+    &--choice.checkout-chip--selected .checkout-chip__text {
+      background: rgba(0, 0, 0, 0.28);
+      color: inherit;
+      border-color: $checkout-accent;
+      box-shadow: inset 0 0 0 1px rgba(240, 180, 41, 0.25);
+    }
   }
 
   body.dark & .checkout-chip {
@@ -1128,8 +1374,16 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
 
     &--selected .checkout-chip__text {
       border-color: var(--primary) !important;
-      background: var(--primary) !important;
-      color: #111827 !important;
+      background: rgba(255, 196, 0, 0.1) !important;
+      color: var(--text-primary) !important;
+      box-shadow: inset 0 0 0 1px rgba(255, 196, 0, 0.28);
+    }
+
+    &--payment.checkout-chip--selected .checkout-chip__text,
+    &--choice.checkout-chip--selected .checkout-chip__text {
+      background: #141414 !important;
+      border-color: var(--primary) !important;
+      color: #fff !important;
     }
   }
 
@@ -1230,18 +1484,31 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
     }
 
     .checkout-order-total__label {
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.01em;
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
       color: inherit;
       opacity: 1;
     }
 
     .checkout-order-total__value {
-      font-size: 1rem !important;
+      font-size: 1.28rem !important;
       font-weight: 800 !important;
       color: $checkout-accent !important;
       line-height: 1.15;
+    }
+
+    &.checkout-order-total--provisional {
+      .checkout-order-total__label {
+        font-weight: 700;
+        opacity: 0.9;
+      }
+
+      .checkout-order-total__value {
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        opacity: 0.92;
+      }
     }
   }
 
@@ -1275,6 +1542,110 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
       font-size: 0.64rem;
       color: $checkout-accent;
     }
+  }
+
+  .checkout-courier-panel__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 193, 7, 0.08);
+    font-size: 0.64rem;
+    line-height: 1.35;
+    opacity: 0.95;
+
+    i {
+      margin-top: 0.1rem;
+      font-size: 0.66rem;
+      color: $checkout-accent;
+    }
+  }
+
+  .checkout-courier-optout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 0.85rem;
+  }
+
+  .checkout-courier-optout__btn {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.35rem;
+    padding: 0.32rem 0.6rem;
+    border: 1px dashed rgba(255, 193, 7, 0.5);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.64rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+
+    i {
+      font-size: 0.68rem;
+      color: $checkout-accent;
+    }
+
+    &:hover {
+      border-color: $checkout-accent;
+      background: rgba(255, 193, 7, 0.1);
+    }
+
+    &--active {
+      border-style: solid;
+      border-color: $checkout-accent;
+      background: rgba(255, 193, 7, 0.16);
+    }
+  }
+
+  .checkout-courier-optout__note {
+    margin: 0;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    opacity: 0.85;
+  }
+
+  .checkout-total-row__value--pending {
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  .checkout-total-row__value--free {
+    font-weight: 700;
+    color: var(--discount-text, #b8f5d0) !important;
+  }
+
+  .checkout-total-row--coupon-hint {
+    margin-top: -0.15rem;
+  }
+
+  .checkout-free-ship-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    opacity: 0.9;
+    color: var(--discount-text, #b8f5d0);
+
+    i {
+      font-size: 0.62rem;
+    }
+  }
+
+  .checkout-total-footnote {
+    margin: 0.25rem 0 0.4rem;
+    padding: 0;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    opacity: 0.82;
+    color: inherit;
   }
 
   .checkout-courier-grid {
@@ -1500,12 +1871,15 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   }
 
   .checkout-courier-panel__hint {
-    margin: 0.2rem 0 0;
-    padding-top: 0;
+    margin: 0 0 0 auto;
+    padding: 0;
     border-top: 0;
     font-size: 0.66rem;
     opacity: 0.88;
     line-height: 1.3;
+    text-align: right;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 }
 
@@ -1727,5 +2101,19 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
         font-size: 0.88rem;
       }
     }
+  }
+}
+
+body:not(.dark) {
+  .checkout-progress {
+    color: rgba(0, 0, 0, 0.4);
+
+    .checkout-progress__step--current {
+      color: rgba(0, 0, 0, 0.78);
+    }
+  }
+
+  .checkout-pickup-panel {
+    background: #fafafa;
   }
 }

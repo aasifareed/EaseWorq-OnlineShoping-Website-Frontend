@@ -2,16 +2,17 @@ import { Injectable } from '@angular/core';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-import { Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
 import { Product } from '../classes/product';
 
 import { AuthService } from './auth.service';
-import { AppliedShopCouponState } from './online-shop-checkout.service';
+
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 
 
@@ -110,6 +111,11 @@ export interface OnlineShopSaleOrderAddress {
 
   postalCode: string;
 
+  /** Resolved from Google Places; used by the store working-area check. */
+  latitude?: number | null;
+
+  longitude?: number | null;
+
 }
 
 
@@ -132,29 +138,26 @@ export interface CreateOnlineShopSaleOrderRequest {
 
   products: CreateOnlineShopSaleOrderProductLine[];
 
-  /** Applied coupon code (for order note / usage tracking). */
-  couponCode?: string | null;
-
-  /** Coupon discount from checkout ApplyCoupon API. */
-  couponDiscountAmount?: number;
-
-  /** Final shipping from checkout GetShippingRate API (0 for local pickup). */
-  shippingCharges?: number;
-
-  /** Total cart weight in KG for courier rate-card calculation. */
-  cartWeight?: number;
+  /** The codes the customer applied. The server revalidates them and owns the discounts. */
+  couponCodes?: string[] | null;
 
   /** Customer-selected courier from checkout shipping options. */
   selectedCourierCompany?: string | null;
   selectedCourierServiceType?: string | null;
 
+  /**
+   * The total last shown to the customer, so the server can refuse the order if pricing moved.
+   * It is never used to price anything.
+   */
+  clientExpectedTotal?: number | null;
+
 }
 
-export interface CheckoutOrderAmounts {
-  couponDiscountAmount: number;
-  shippingCharges: number;
+/** The courier the customer picked, plus the total they were shown when they picked it. */
+export interface CheckoutOrderSelection {
   selectedCourierCompany?: string | null;
   selectedCourierServiceType?: string | null;
+  clientExpectedTotal?: number | null;
 }
 
 
@@ -255,16 +258,35 @@ export interface PagedOnlineShopOrders {
   items: OnlineShopOrderListItem[];
 }
 
+/** A discount row captured on the order at purchase time. */
+export interface OnlineShopOrderAppliedDiscount {
+  scope: string;
+  description?: string | null;
+  couponCode?: string | null;
+  discountAmount: number;
+  sortOrder: number;
+}
+
 export interface OnlineShopOrderSuccessDetail {
   onlineShopSaleOrderId: string;
   onlineOrderNumber: string;
   orderDate: string;
   expectedDeliveryDate: string;
+  originalSubTotalAmount: number;
+  productDiscountAmount: number;
   subTotalAmount: number;
-  shippingCharges: number;
+  orderDiscountAmount: number;
+  netMerchandiseAmount: number;
   taxAmount: number;
+  originalShippingAmount: number;
+  shippingDiscountAmount: number;
+  shippingCharges: number;
+  /** Order-scope discount only. Total savings needs the product and shipping figures too. */
   discountAmount: number;
   totalAmount: number;
+  /** Weight of the ordered goods. 0 for orders placed before weights were recorded. */
+  totalWeightKg: number;
+  appliedDiscounts: OnlineShopOrderAppliedDiscount[];
   shippingMethod: OnlineShopShippingMethod;
   shippingMethodName: string;
   paymentMethod: OnlineShopPaymentMethod;
@@ -361,6 +383,10 @@ export interface CheckoutFormValues {
 
   paymentMethod: OnlineShopPaymentMethod;
 
+  billingLatitude?: number | null;
+
+  billingLongitude?: number | null;
+
 }
 
 
@@ -377,9 +403,36 @@ export class OnlineShopOrderService {
 
   private static readonly PENDING_ORDER_NO_KEY = 'pending_online_shop_order_number';
 
+  private readonly myOrderCount = new BehaviorSubject<number | null>(null);
+
 
 
   constructor(private http: HttpClient, private auth: AuthService) {}
+
+  /**
+   * How many orders the customer has placed with us, or null while unknown (signed out, or nothing
+   * fetched yet). Kept up to date by every unfiltered read of the customer's orders, so the header
+   * badge and the orders page cannot drift apart.
+   */
+  get myOrderCount$(): Observable<number | null> {
+    return this.myOrderCount.asObservable();
+  }
+
+  /** Fetches the count on its own, for callers that only want the figure. */
+  refreshMyOrderCount(customerEmail: string): void {
+    if (!customerEmail?.trim()) {
+      return;
+    }
+
+    this.getMyOrders(customerEmail, 0, 1, undefined, true).subscribe({
+      next: () => undefined,
+      error: () => undefined
+    });
+  }
+
+  clearMyOrderCount(): void {
+    this.myOrderCount.next(null);
+  }
 
 
 
@@ -471,7 +524,8 @@ export class OnlineShopOrderService {
 
   getMyOrderDetail(
     orderId: string,
-    customerEmail: string
+    customerEmail: string,
+    background = false,
   ): Observable<OnlineShopOrderSuccessDetail> {
     const path =
       environment.urls?.OnlineShopSaleOrder_GetMyOrderDetail ||
@@ -481,7 +535,7 @@ export class OnlineShopOrderService {
       .set('StoreId', this.auth.storeId)
       .set('CustomerEmail', customerEmail.trim());
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    return this.http.get<any>(url, { params }).pipe(
+    return this.http.get<any>(url, background ? asBackgroundRequest({ params }) : { params }).pipe(
       map((body) => this.normalizeSuccessDetail(body?.result ?? body))
     );
   }
@@ -489,6 +543,7 @@ export class OnlineShopOrderService {
   getMyOrderStatusTimeline(
     orderId: string,
     customerEmail: string,
+    background = false,
   ): Observable<OnlineShopOrderStatusTimeline> {
     const path = environment.urls?.OnlineShopSaleOrder_GetMyOrderStatusTimeline
       || 'OnlineShopSaleOrder/GetMyOnlineShopOrderStatusTimelineForCustomer';
@@ -497,7 +552,7 @@ export class OnlineShopOrderService {
       .set('StoreId', this.auth.storeId)
       .set('CustomerEmail', customerEmail.trim());
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    return this.http.get<any>(url, { params }).pipe(
+    return this.http.get<any>(url, background ? asBackgroundRequest({ params }) : { params }).pipe(
       map((body) => this.normalizeOrderStatusTimeline(body?.result ?? body))
     );
   }
@@ -505,11 +560,12 @@ export class OnlineShopOrderService {
   trackOrder(orderId: string, customerEmail: string): Observable<TrackOnlineShopOrderResult> {
     const path = environment.urls?.OnlineShopShipment_TrackOrder || 'OnlineShopShipment/TrackOrder';
     const url = `${this.apiRoot()}api/services/app/${path}`;
+    // A read dressed as a POST: the tracking panel shows its own progress.
     return this.http.post<any>(url, {
       onlineShopSaleOrderId: orderId,
       customerEmail: customerEmail.trim(),
       storeId: this.auth.storeId
-    }).pipe(
+    }, asBackgroundRequest()).pipe(
       map((body) => this.normalizeTrackResult(body?.result ?? body))
     );
   }
@@ -524,16 +580,21 @@ export class OnlineShopOrderService {
       onlineShopSaleOrderId: orderId,
       customerEmail: customerEmail.trim(),
       storeId: this.auth.storeId
-    }).pipe(
+    }, asBackgroundRequest()).pipe(
       map((body) => this.normalizeTrackResult(body?.result ?? body))
     );
   }
 
+  /**
+   * `background` is for refreshes the customer did not ask for — a status push arriving, a tab coming
+   * back into focus, the header count — which must not throw the busy overlay over the page.
+   */
   getMyOrders(
     customerEmail: string,
     skipCount: number,
     maxResultCount = 20,
     keyword?: string,
+    background = false,
   ): Observable<PagedOnlineShopOrders> {
     const path = environment.urls?.OnlineShopSaleOrder_GetMyOrders
       || 'OnlineShopSaleOrder/GetMyOnlineShopSaleOrdersForCustomer';
@@ -547,9 +608,30 @@ export class OnlineShopOrderService {
       params = params.set('Keyword', kw);
     }
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    return this.http.get<any>(url, { params }).pipe(
-      map((resp) => this.normalizePagedOrders(resp?.result ?? resp))
+    const options = background ? asBackgroundRequest({ params }) : { params };
+    return this.http.get<any>(url, options).pipe(
+      map((resp) => this.normalizePagedOrders(resp?.result ?? resp)),
+      // A searched total counts matches, not orders, so only unfiltered reads feed the count.
+      tap((result) => {
+        if (!kw) {
+          this.myOrderCount.next(result.totalCount);
+        }
+      })
     );
+  }
+
+  /**
+   * Takes the order off My Orders for this customer. The order itself stays for the store.
+   */
+  hideMyOrder(orderId: string, customerEmail: string): Observable<void> {
+    const path = environment.urls?.OnlineShopSaleOrder_HideMyOrder
+      || 'OnlineShopSaleOrder/HideMyOnlineShopSaleOrderForCustomer';
+    const url = `${this.apiRoot()}api/services/app/${path}`;
+    return this.http.post<any>(url, {
+      onlineShopSaleOrderId: orderId,
+      customerEmail: customerEmail.trim(),
+      storeId: this.auth.storeId,
+    }).pipe(map(() => undefined));
   }
 
   buildCreateOrderRequest(
@@ -560,13 +642,15 @@ export class OnlineShopOrderService {
 
     paymentMethod: OnlineShopPaymentMethod,
 
-    appliedCoupon?: AppliedShopCouponState | null,
+    appliedCouponCodes?: string[] | null,
 
-    checkoutAmounts?: CheckoutOrderAmounts
+    selection?: CheckoutOrderSelection
 
   ): CreateOnlineShopSaleOrderRequest {
 
     const billing = this.mapAddressFormToDto(form.billing);
+    billing.latitude = form.billingLatitude ?? null;
+    billing.longitude = form.billingLongitude ?? null;
 
     const shipping = form.shipToDifferentAddress && form.shipping
 
@@ -607,13 +691,9 @@ export class OnlineShopOrderService {
       throw new Error('Please sign in to place an order.');
     }
 
-    const couponCode =
-      appliedCoupon?.result?.isValid && appliedCoupon.couponCode
-        ? appliedCoupon.couponCode.trim()
-        : null;
-
-    const couponDiscountAmount = checkoutAmounts?.couponDiscountAmount ?? 0;
-    const shippingCharges = checkoutAmounts?.shippingCharges ?? 0;
+    const couponCodes = (appliedCouponCodes ?? [])
+      .map((code) => String(code ?? '').trim().toUpperCase())
+      .filter((code, index, all) => !!code && all.indexOf(code) === index);
 
     return {
 
@@ -633,17 +713,13 @@ export class OnlineShopOrderService {
 
       products,
 
-      couponCode,
+      couponCodes,
 
-      couponDiscountAmount,
+      selectedCourierCompany: selection?.selectedCourierCompany ?? null,
 
-      shippingCharges,
+      selectedCourierServiceType: selection?.selectedCourierServiceType ?? null,
 
-      cartWeight: this.calculateCartWeightKg(cartProducts),
-
-      selectedCourierCompany: checkoutAmounts?.selectedCourierCompany ?? null,
-
-      selectedCourierServiceType: checkoutAmounts?.selectedCourierServiceType ?? null
+      clientExpectedTotal: selection?.clientExpectedTotal ?? null
 
     };
 
@@ -668,15 +744,6 @@ export class OnlineShopOrderService {
   }
 
 
-
-  /** Default 0.5 kg per item when product weight is unavailable. */
-  calculateCartWeightKg(cartProducts: Product[]): number {
-    const totalPieces = cartProducts.reduce(
-      (sum, p) => sum + (Number(p.quantity) > 0 ? Number(p.quantity) : 1),
-      0
-    );
-    return Math.max(0.5, Math.round(totalPieces * 0.5 * 100) / 100);
-  }
 
   private mapAddressFormToDto(form: CheckoutAddressFormValues): OnlineShopSaleOrderAddress {
 
@@ -945,11 +1012,19 @@ export class OnlineShopOrderService {
       onlineOrderNumber: String(raw?.onlineOrderNumber ?? raw?.OnlineOrderNumber ?? ''),
       orderDate: String(raw?.orderDate ?? raw?.OrderDate ?? ''),
       expectedDeliveryDate: String(raw?.expectedDeliveryDate ?? raw?.ExpectedDeliveryDate ?? ''),
+      originalSubTotalAmount: Number(raw?.originalSubTotalAmount ?? raw?.OriginalSubTotalAmount ?? 0),
+      productDiscountAmount: Number(raw?.productDiscountAmount ?? raw?.ProductDiscountAmount ?? 0),
       subTotalAmount: Number(raw?.subTotalAmount ?? raw?.SubTotalAmount ?? 0),
-      shippingCharges: Number(raw?.shippingCharges ?? raw?.ShippingCharges ?? 0),
+      orderDiscountAmount: Number(raw?.orderDiscountAmount ?? raw?.OrderDiscountAmount ?? 0),
+      netMerchandiseAmount: Number(raw?.netMerchandiseAmount ?? raw?.NetMerchandiseAmount ?? 0),
       taxAmount: Number(raw?.taxAmount ?? raw?.TaxAmount ?? 0),
+      originalShippingAmount: Number(raw?.originalShippingAmount ?? raw?.OriginalShippingAmount ?? 0),
+      shippingDiscountAmount: Number(raw?.shippingDiscountAmount ?? raw?.ShippingDiscountAmount ?? 0),
+      shippingCharges: Number(raw?.shippingCharges ?? raw?.ShippingCharges ?? 0),
       discountAmount: Number(raw?.discountAmount ?? raw?.DiscountAmount ?? 0),
       totalAmount: Number(raw?.totalAmount ?? raw?.TotalAmount ?? 0),
+      totalWeightKg: Number(raw?.totalWeightKg ?? raw?.TotalWeightKg ?? 0),
+      appliedDiscounts: this.normalizeAppliedDiscounts(raw?.appliedDiscounts ?? raw?.AppliedDiscounts),
       shippingMethod: Number(raw?.shippingMethod ?? raw?.ShippingMethod ?? 0) as OnlineShopShippingMethod,
       shippingMethodName: String(raw?.shippingMethodName ?? raw?.ShippingMethodName ?? ''),
       paymentMethod: Number(raw?.paymentMethod ?? raw?.PaymentMethod ?? 0) as OnlineShopPaymentMethod,
@@ -967,6 +1042,20 @@ export class OnlineShopOrderService {
       billingAddress: mapAddr(raw?.billingAddress ?? raw?.BillingAddress),
       shippingAddress: mapAddr(raw?.shippingAddress ?? raw?.ShippingAddress)
     };
+  }
+
+  private normalizeAppliedDiscounts(raw: any): OnlineShopOrderAppliedDiscount[] {
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+
+    return raw.map((item) => ({
+      scope: String(item?.scope ?? item?.Scope ?? ''),
+      description: item?.description ?? item?.Description ?? null,
+      couponCode: item?.couponCode ?? item?.CouponCode ?? null,
+      discountAmount: Number(item?.discountAmount ?? item?.DiscountAmount ?? 0),
+      sortOrder: Number(item?.sortOrder ?? item?.SortOrder ?? 0)
+    }));
   }
 
 }

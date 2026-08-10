@@ -1,9 +1,9 @@
 <div class="collection-collapse-block" [class.open]="collapse" *ngIf="displayBrandList.length || loading">
     <h3 class="collapse-block-title" (click)="collapse = !collapse">Brands</h3>
     <div class="collection-collapse-block-content">
-      <div class="collection-brand-filter">
+      <div class="collection-brand-filter collection-brand-filter--expandable">
         <div class="custom-control custom-checkbox collection-filter-checkbox"
-            *ngFor="let brand of displayBrandList; let i = index">
+            *ngFor="let brand of visibleBrands; let i = index">
           <input
             type="checkbox"
             class="custom-control-input"
@@ -16,6 +16,12 @@
             <span class="microless-filter-count" *ngIf="brand.count">({{ brand.count }})</span>
           </label>
         </div>
+        <button type="button"
+                class="filter-show-more"
+                *ngIf="displayBrandList.length > previewLimit"
+                (click)="showAll = !showAll">
+          {{ showAll ? 'Show less' : 'Show more' }}
+        </button>
       </div>
     </div>
 </div>

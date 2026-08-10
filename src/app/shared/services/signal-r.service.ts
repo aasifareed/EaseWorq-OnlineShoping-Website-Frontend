@@ -1,5 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
+import { Observable, Subject } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
@@ -15,6 +16,8 @@ export class SignalRService {
   public signalRConnectionEnabled = false;
 
   private startInProgress = false;
+  private readonly orderUpdated = new Subject<ShopNotificationItem>();
+  private readonly connectionRestored = new Subject<void>();
 
   constructor(
     private authService: AuthService,
@@ -25,6 +28,24 @@ export class SignalRService {
 
   get unreadCount(): number {
     return this.signalrNotifications.filter((n) => !n.isRead).length;
+  }
+
+  /**
+   * Fires for every order update pushed by the hub, so screens showing order state can catch up
+   * without the customer reloading. The alert itself only carries the order id and the new status
+   * text, so subscribers that need the full picture — colours, amounts, payment state — should
+   * re-read the order rather than patch it from here.
+   */
+  get orderUpdated$(): Observable<ShopNotificationItem> {
+    return this.orderUpdated.asObservable();
+  }
+
+  /**
+   * Fires once the hub is talking to us again after a drop. Nothing tells us what we missed while we
+   * were away, so screens holding pushed state should re-read it rather than wait for the next event.
+   */
+  get connectionRestored$(): Observable<void> {
+    return this.connectionRestored.asObservable();
   }
 
   /** Match admin: connect only when logged in with encrypted token; load unread first. */
@@ -145,7 +166,10 @@ export class SignalRService {
 
     this.hubConnection.onreconnected((connectionId) => {
       console.log('[SignalR] reconnected:', connectionId);
-      this.ngZone.run(() => this.refreshNotifications());
+      this.ngZone.run(() => {
+        void this.refreshNotifications();
+        this.connectionRestored.next();
+      });
     });
 
     this.hubConnection.onclose((error) => {
@@ -191,6 +215,8 @@ export class SignalRService {
 
     const description = mapped.text || message || 'Your order status was updated.';
     this.toastr.info(description, mapped.title || 'Order Status Updated', { progressBar: true });
+
+    this.orderUpdated.next(mapped);
   }
 
   /** Admin-style base URL + online-shop query params. */

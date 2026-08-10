@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -51,6 +51,9 @@ import { LayoutBoxComponent } from './components/layout-box/layout-box.component
 // Tap To Top
 import { TapToTopComponent } from './components/tap-to-top/tap-to-top.component';
 
+// Screen-wide busy overlay
+import { BusyOverlayComponent } from './components/busy-overlay/busy-overlay.component';
+
 // Pipes
 import { DiscountPipe } from './pipes/discount.pipe';
 import { ShopCurrencyPipe } from './pipes/shop-currency.pipe';
@@ -58,6 +61,7 @@ import { ContrastTextPipe } from './pipes/contrast-text.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
 import { ExcerptPipe } from './pipes/excerpt.pipe';
 import { TopCategoriesSliderComponent } from './components/top-categories-slider/top-categories-slider.component';
+import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner/delivery-deals-banner.component';
 
 @NgModule({
   declarations: [
@@ -91,15 +95,18 @@ import { TopCategoriesSliderComponent } from './components/top-categories-slider
     SkeletonProductBoxComponent,
     LayoutBoxComponent,
     TapToTopComponent,
+    BusyOverlayComponent,
     DiscountPipe,
     ShopCurrencyPipe,
     ContrastTextPipe,
     RelativeTimePipe,
     ExcerptPipe,
     TopCategoriesSliderComponent,
+    DeliveryDealsBannerComponent,
   ],
   imports: [
     CommonModule,
+    NgOptimizedImage,
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
@@ -147,12 +154,14 @@ import { TopCategoriesSliderComponent } from './components/top-categories-slider
     SkeletonProductBoxComponent,
     LayoutBoxComponent,
     TapToTopComponent,
+    BusyOverlayComponent,
     DiscountPipe,
     ShopCurrencyPipe,
     ContrastTextPipe,
     RelativeTimePipe,
     ExcerptPipe,
     TopCategoriesSliderComponent,
+    DeliveryDealsBannerComponent,
   ]
 })
 export class SharedModule { }

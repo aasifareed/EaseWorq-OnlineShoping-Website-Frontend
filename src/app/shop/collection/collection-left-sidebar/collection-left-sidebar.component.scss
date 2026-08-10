@@ -1,28 +1,52 @@
 section.shop-layout-microless {
-  margin-top: var(--layout-header-content-gap, 1rem);
-  padding-top: var(--layout-content-top-gap, 1.25rem) !important;
+  margin-top: 1rem !important;
+  padding-top: 0.5rem !important;
 }
 
 .shop-layout-microless {
-  .microless-page-heading {
-    padding-top: 10px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--ml-page-heading-border);
-    margin-bottom: 0;
-  }
-
-  .collection-page-title {
-    margin: 0 0 10px;
-    font-size: 1.65rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--ml-page-title);
-    text-transform: none;
-    line-height: 1.2;
-  }
-
   .collection--microless {
     margin-top: 0;
+  }
+
+  .shop-page-heading {
+    margin: 0 0 10px !important;
+    padding: 0;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em;
+    color: #111111;
+    text-transform: none;
+  }
+
+  :host-context(body.dark) .shop-page-heading {
+    color: #ffffff;
+  }
+
+  .product-filter-tags {
+    margin: 0 !important;
+    padding: 0;
+
+    &:empty {
+      display: none !important;
+    }
+
+    &:not(:has(li)) {
+      display: none !important;
+      margin: 0 !important;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+  }
+
+  .filter-main-btn {
+    margin-bottom: 8px;
+  }
+
+  .page-main-content > .row {
+    margin-bottom: 0;
   }
 
   .collection-filter.shop-sidebar-microless {
@@ -74,7 +98,7 @@ section.shop-layout-microless {
   }
 
   .microless-stock-option__text {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 1.4;
     color: var(--ml-sidebar-text);
@@ -88,26 +112,6 @@ section.shop-layout-microless {
     color: var(--ml-sidebar-text-muted);
     font-size: 12px;
     font-weight: 600;
-  }
-
-  ::ng-deep .product-pagination {
-    border-color: var(--ml-surface-border);
-
-    .pagination .page-item .page-link {
-      color: var(--ml-surface-text);
-      background: var(--ml-surface-bg);
-      border-color: var(--ml-surface-border);
-    }
-
-    .pagination .page-item.active .page-link {
-      color: #111111;
-      background: var(--theme-deafult, #ffc107);
-      border-color: var(--theme-deafult, #ffc107);
-    }
-
-    .product-search-count-bottom h5 {
-      color: var(--ml-surface-text-muted);
-    }
   }
 }
 
@@ -147,6 +151,8 @@ section.shop-layout-microless {
 
   .collection-filter-checkbox label {
     color: var(--ml-sidebar-text) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
   }
 
   /* Match category count style — undo legacy circle badge on label spans */

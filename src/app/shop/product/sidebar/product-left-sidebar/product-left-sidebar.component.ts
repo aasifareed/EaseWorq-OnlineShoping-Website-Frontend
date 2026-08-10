@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Product } from '../../../../shared/classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
@@ -9,7 +9,7 @@ import { SizeModalComponent } from '../../../../shared/components/modal/size-mod
   templateUrl: './product-left-sidebar.component.html',
   styleUrls: ['./product-left-sidebar.component.scss']
 })
-export class ProductLeftSidebarComponent implements OnInit {
+export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
 
   public product: Product = {};
   public relatedProducts: Product[] = [];
@@ -19,32 +19,34 @@ export class ProductLeftSidebarComponent implements OnInit {
   public activeSlide = 0;
   public selectedSize: any;
   public active = 1;
-  public zoomActive = false;
-  public zoomOrigin = '50% 50%';
+  /** Lightbox popup (click main image) */
+  public lightboxOpen = false;
+  /** Stable gallery list — rebuilt only when product images change */
+  public galleryImages: { src: string; alt: string }[] = [];
 
   readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
   @ViewChild('sizeChart') SizeChart: SizeModalComponent;
 
   private touchStartX = 0;
+  private lightboxTouchStartX = 0;
 
   get displayImages(): { src: string; alt: string }[] {
-    const urls = this.productService.getProductImages(this.product);
-    const alt = this.product?.title || 'Product';
-    return urls.map((src) => ({ src, alt }));
+    return this.galleryImages;
   }
 
   get hasMultipleImages(): boolean {
-    return this.displayImages.length > 1;
+    return this.galleryImages.length > 1;
   }
 
   get currentImageSrc(): string {
-    return this.displayImages[this.activeSlide]?.src ?? this.placeholderImage;
+    return this.galleryImages[this.activeSlide]?.src ?? this.placeholderImage;
   }
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private cdr: ChangeDetectorRef,
     public productService: ProductService
   ) {}
 
@@ -52,7 +54,7 @@ export class ProductLeftSidebarComponent implements OnInit {
     this.route.data.subscribe((d) => {
       const initial = (d['data'] as Product) || {};
       this.product = { ...initial };
-      this.activeSlide = 0;
+      this.syncImageGallery(true);
     });
 
     this.route.paramMap.subscribe((params) => {
@@ -63,24 +65,71 @@ export class ProductLeftSidebarComponent implements OnInit {
     });
   }
 
-  selectGalleryImage(index: number): void {
-    if (index < 0 || index >= this.displayImages.length) {
+  ngOnDestroy(): void {
+    this.closeLightbox();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.lightboxOpen) {
+      this.closeLightbox();
+    }
+  }
+
+  trackByGalleryIndex(index: number): number {
+    return index;
+  }
+
+  openLightbox(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.galleryImages.length) {
+      return;
+    }
+    this.lightboxOpen = true;
+    document.body.style.overflow = 'hidden';
+    this.cdr.detectChanges();
+  }
+
+  closeLightbox(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.lightboxOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+    this.lightboxOpen = false;
+    document.body.style.overflow = '';
+    this.cdr.detectChanges();
+  }
+
+  selectGalleryImage(index: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (index < 0 || index >= this.galleryImages.length) {
+      return;
+    }
+    if (this.activeSlide === index) {
       return;
     }
     this.activeSlide = index;
-    this.zoomActive = false;
+    this.cdr.detectChanges();
   }
 
-  prevImage(): void {
-    const n = this.displayImages.length;
+  prevImage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const n = this.galleryImages.length;
     if (n <= 1) {
       return;
     }
     this.selectGalleryImage((this.activeSlide - 1 + n) % n);
   }
 
-  nextImage(): void {
-    const n = this.displayImages.length;
+  nextImage(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const n = this.galleryImages.length;
     if (n <= 1) {
       return;
     }
@@ -104,42 +153,64 @@ export class ProductLeftSidebarComponent implements OnInit {
     }
   }
 
-  onZoomMove(event: MouseEvent): void {
-    const el = event.currentTarget as HTMLElement;
-    if (!el) {
+  onLightboxTouchStart(event: TouchEvent): void {
+    this.lightboxTouchStartX = event.changedTouches[0]?.clientX ?? 0;
+  }
+
+  onLightboxTouchEnd(event: TouchEvent): void {
+    const endX = event.changedTouches[0]?.clientX ?? 0;
+    const delta = endX - this.lightboxTouchStartX;
+    if (Math.abs(delta) < 40) {
       return;
     }
-    const rect = el.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    this.zoomOrigin = `${x}% ${y}%`;
-    this.zoomActive = true;
-  }
-
-  onZoomLeave(): void {
-    this.zoomActive = false;
-  }
-
-  onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (img && img.src !== this.placeholderImage) {
-      img.src = this.placeholderImage;
+    if (delta > 0) {
+      this.prevImage();
+    } else {
+      this.nextImage();
     }
   }
 
-  private loadProductDetail(inventoryId: string): void {
+  onImageError(event: Event, index?: number): void {
+    const i = typeof index === 'number' ? index : this.activeSlide;
+    if (i < 0 || i >= this.galleryImages.length) {
+      return;
+    }
+    if (this.galleryImages[i].src === this.placeholderImage) {
+      return;
+    }
+    this.galleryImages[i] = {
+      ...this.galleryImages[i],
+      src: this.placeholderImage
+    };
+    this.cdr.markForCheck();
+  }
+
+  private syncImageGallery(resetSlide = false): void {
+    const urls = this.productService.getProductImages(this.product);
+    const alt = this.product?.title || 'Product';
+    this.galleryImages = urls.map((src) => ({ src, alt }));
+    if (resetSlide || this.activeSlide >= this.galleryImages.length) {
+      this.activeSlide = 0;
+    }
+    this.cdr.markForCheck();
+  }
+
+  private loadProductDetail(routeKey: string): void {
     this.detailLoading = true;
-    this.productService.getProductDetailForOnlineShop(inventoryId).subscribe({
+    this.productService.getProductDetailForOnlineShop(routeKey).subscribe({
       next: (resp) => {
         const item = resp?.result;
         if (item) {
           const mapped = this.productService.mapInventoryItemToProduct(item);
           this.product = { ...this.product, ...mapped };
-          this.activeSlide = 0;
+          this.syncImageGallery(true);
           this.resetCounter();
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
-          this.loadRelatedProducts(inventoryId);
+          const inventoryId = String(mapped.id || '');
+          if (inventoryId) {
+            this.loadRelatedProducts(inventoryId);
+          }
         }
         this.detailLoading = false;
       },
@@ -224,6 +295,97 @@ export class ProductLeftSidebarComponent implements OnInit {
     return this.productService.canIncrementSelectable(this.product, this.counter);
   }
 
+  get stockTone(): 'ok' | 'out' | 'cart' {
+    if (this.isFullyInCart) {
+      return 'cart';
+    }
+    if ((this.product?.stock ?? 0) <= 0 || this.selectableQuantity <= 0) {
+      return 'out';
+    }
+    return 'ok';
+  }
+
+  get stockStatusLine(): string {
+    if (this.isFullyInCart) {
+      return 'In cart · Full quantity already added';
+    }
+    if ((this.product?.stock ?? 0) <= 0 || this.selectableQuantity <= 0) {
+      return 'Out of Stock';
+    }
+    const qty = Number(this.product?.stock) || 0;
+    const qtyLabel = qty === 1 ? 'Only 1 left' : `Only ${qty} left`;
+    return `In Stock · ${qtyLabel}`;
+  }
+
+  get stockNote(): string | null {
+    if (this.isFullyInCart || (this.product?.stock ?? 0) <= 0) {
+      return null;
+    }
+    if (this.cartQuantity > 0 && this.selectableQuantity > 0) {
+      return `${this.cartQuantity} in cart — you can add up to ${this.selectableQuantity} more`;
+    }
+    return null;
+  }
+
+  get hasProductDescription(): boolean {
+    const text = (this.product?.description ?? '').toString().trim();
+    if (!text) {
+      return false;
+    }
+    // Ignore placeholder-like fallbacks stored as description
+    const normalized = text.toLowerCase().replace(/\s+/g, ' ');
+    return normalized !== 'no description available.'
+      && normalized !== 'no product description available.';
+  }
+
+  get productDescriptionFull(): string {
+    return String(this.product?.description ?? '').trim();
+  }
+
+  /** Prefer configured product display name (preserve Y69 / brand casing). */
+  get displayTitle(): string {
+    return (this.product?.title ?? '').toString().trim() || 'Product';
+  }
+
+  get isInWishlist(): boolean {
+    return this.productService.isInWishlist(this.product);
+  }
+
+  /** Breadcrumb: Home / Shop / Category / Brand / Product — only link crumbs that can filter shop. */
+  get breadcrumbTrail(): { label: string; routerLink?: any[]; queryParams?: Record<string, any>; current?: boolean }[] {
+    const trail: { label: string; routerLink?: any[]; queryParams?: Record<string, any>; current?: boolean }[] = [
+      { label: 'Home', routerLink: ['/home'] },
+      { label: 'Shop', routerLink: ['/shop'] }
+    ];
+
+    const category = (this.product?.category || this.product?.type || '').toString().trim();
+    const categoryId = (this.product as any)?.categoryId?.toString()?.trim();
+    if (category) {
+      trail.push({
+        label: category,
+        routerLink: ['/shop'],
+        queryParams: categoryId ? { category: categoryId } : undefined
+      });
+    }
+
+    const brand = (this.product?.brand || '').toString().trim();
+    const brandId = (this.product as any)?.brandId?.toString()?.trim();
+    if (brand && brand.toLowerCase() !== category.toLowerCase() && brandId) {
+      const queryParams: Record<string, string> = { brand: brandId };
+      if (categoryId) {
+        queryParams.category = categoryId;
+      }
+      trail.push({
+        label: brand,
+        routerLink: ['/shop'],
+        queryParams
+      });
+    }
+
+    trail.push({ label: this.displayTitle, current: true });
+    return trail;
+  }
+
   private resetCounter(): void {
     const max = this.selectableQuantity;
     this.counter = max > 0 ? 1 : 0;
@@ -242,7 +404,11 @@ export class ProductLeftSidebarComponent implements OnInit {
     }
   }
 
-  addToWishlist(product: any) {
+  toggleWishlist(product: any): void {
+    if (this.productService.isInWishlist(product)) {
+      this.productService.removeWishlistItem(product).subscribe();
+      return;
+    }
     this.productService.addToWishlist(product).subscribe();
   }
 }

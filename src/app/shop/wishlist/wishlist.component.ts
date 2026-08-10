@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ProductService } from "../../shared/services/product.service";
 import { Product } from "../../shared/classes/product";
+import { shopProductLink } from "../../shared/constants/storefront-routes";
 
 @Component({
   selector: 'app-wishlist',
@@ -38,7 +39,7 @@ export class WishlistComponent implements OnInit {
   }
 
   productLink(product: Product): (string | number)[] {
-    return ['/shop/product', String(product?.id ?? '')];
+    return shopProductLink(product || {});
   }
 
 }

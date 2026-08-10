@@ -1,12 +1,23 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  TemplateRef,
+  ViewChild
+} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { fromEvent, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, takeUntil } from 'rxjs/operators';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../../shared/services/auth.service';
 import {
+  OnlineShopOrderAppliedDiscount,
   OnlineShopOrderListItem,
   OnlineShopOrderService,
   OnlineShopOrderStatusTimeline,
@@ -16,9 +27,18 @@ import {
   ONLINE_SHOP_PAYMENT_STATUS_LABELS,
   OnlineShopShippingMethod,
 } from '../../shared/services/online-shop-order.service';
+import {
+  orderMerchandiseDiscountRows,
+  orderShippingBeforeDiscount,
+  orderShippingDiscountRows,
+  orderSubtotalBeforeDiscounts
+} from '../../shared/services/online-shop-order-summary.util';
 import { ProductService } from '../../shared/services/product.service';
+import { SignalRService } from '../../shared/services/signal-r.service';
+import { ShopNotificationItem } from '../../shared/models/notification.model';
 import { PayFastPaymentService } from '../../shop/checkout/pay-fast-payment.service';
 import { statusChipStyle } from '../../shared/utils/color-contrast.util';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-my-orders',
@@ -43,6 +63,7 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   orderDetail: OnlineShopOrderSuccessDetail | null = null;
   detailShipmentResyncLoading = false;
   retryingOrderId: string | null = null;
+  removingOrderId: string | null = null;
   trackingLoading = false;
   trackingError = '';
   orderTimeline: OnlineShopOrderStatusTimeline | null = null;
@@ -61,6 +82,7 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     windowClass: 'my-orders-modal-90',
   };
   private readonly destroy$ = new Subject<void>();
+  private readonly isBrowser: boolean;
 
   constructor(
     public auth: AuthService,
@@ -70,8 +92,12 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private modalService: NgbModal,
     private toastr: ToastrService,
     private route: ActivatedRoute,
-    private router: Router
-  ) {}
+    private router: Router,
+    private signalR: SignalRService,
+    @Inject(PLATFORM_ID) platformId: object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     if (this.auth.isLoggedIn()) {
@@ -94,6 +120,34 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadPage(1);
         }
       });
+
+    this.signalR.orderUpdated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((notification) => this.refreshAfterOrderUpdate(notification));
+
+    this.watchForMissedOrderUpdates();
+  }
+
+  /**
+   * Pushed updates only arrive while the hub is connected, so anything the shop changed during a drop
+   * would sit unseen until the customer reloaded. Both moments that end such a gap — the hub coming
+   * back, and the tab being looked at again after the browser put it to sleep — re-read the rows.
+   */
+  private watchForMissedOrderUpdates(): void {
+    this.signalR.connectionRestored$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.catchUpOnOrders());
+
+    if (!this.isBrowser) {
+      return;
+    }
+
+    fromEvent(document, 'visibilitychange')
+      .pipe(
+        filter(() => document.visibilityState === 'visible'),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.catchUpOnOrders());
   }
 
   ngAfterViewInit(): void {
@@ -110,38 +164,150 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
   }
 
+  /** First row number on the current page, 1-based; 0 when there is nothing to show. */
+  get pageRangeStart(): number {
+    return this.orders.length ? (this.currentPage - 1) * this.pageSize + 1 : 0;
+  }
+
+  /** Counts the rows actually returned, so a short last page reads correctly. */
+  get pageRangeEnd(): number {
+    return (this.currentPage - 1) * this.pageSize + this.orders.length;
+  }
+
+  /**
+   * The page buttons to render, windowed around the current page so a long order history cannot
+   * produce a strip of numbers wider than the table.
+   */
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    const maxButtons = 5;
+    if (total <= maxButtons) {
+      return Array.from({ length: total }, (_, index) => index + 1);
+    }
+
+    const half = Math.floor(maxButtons / 2);
+    const end = Math.min(total, Math.max(1, this.currentPage - half) + maxButtons - 1);
+    const start = Math.max(1, end - maxButtons + 1);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }
+
   get isLoggedIn(): boolean {
     return this.auth.isLoggedIn();
   }
 
-  loadPage(page: number): void {
+  /**
+   * A silent load refreshes the rows in place: no spinner and no error banner, because it is the page
+   * catching up on a status change the customer never asked for and a failed background attempt should
+   * leave the orders they can already see alone.
+   */
+  loadPage(page: number, options: { silent?: boolean } = {}): void {
     const email = this.auth.getCustomerEmail();
     if (!email) {
       this.errorMessage = 'Please log in to view your orders.';
       return;
     }
 
-    this.loading = true;
-    this.errorMessage = '';
+    const silent = options.silent === true;
+    if (!silent) {
+      this.loading = true;
+      this.errorMessage = '';
+    }
+
     this.currentPage = page;
     const skipCount = (page - 1) * this.pageSize;
 
     const keyword = String(this.orderSearchControl.value || '').trim();
-    this.onlineShopOrder.getMyOrders(email, skipCount, this.pageSize, keyword || undefined).subscribe({
-      next: (result) => {
-        this.loading = false;
-        this.orders = result.items;
-        this.totalCount = result.totalCount;
+    this.onlineShopOrder
+      .getMyOrders(email, skipCount, this.pageSize, keyword || undefined, silent)
+      .subscribe({
+        next: (result) => {
+          this.loading = false;
+          this.orders = result.items;
+          this.totalCount = result.totalCount;
+        },
+        error: (err) => {
+          this.loading = false;
+          if (silent) {
+            return;
+          }
+
+          this.errorMessage =
+            err?.error?.error?.message ||
+            err?.error?.message ||
+            err?.message ||
+            'Could not load your orders.';
+        }
+      });
+  }
+
+  /**
+   * The alert carries the new status text but not the badge colour, amounts or payment state, so the
+   * order is re-read rather than patched from it.
+   */
+  private refreshAfterOrderUpdate(notification: ShopNotificationItem): void {
+    this.catchUpOnOrders(notification?.sourceId?.trim() || undefined);
+  }
+
+  /**
+   * Re-reads the visible orders, keeping the page, search and pagination the customer chose. Given an
+   * order id, only a modal showing that order is refreshed with it; without one — a reconnect, where
+   * we cannot know what we missed — whatever is open is refreshed too.
+   */
+  private catchUpOnOrders(updatedOrderId?: string): void {
+    if (!this.isLoggedIn) {
+      return;
+    }
+
+    this.loadPage(this.currentPage, { silent: true });
+
+    const openDetailId = this.orderDetail?.onlineShopSaleOrderId;
+    if (openDetailId && (!updatedOrderId || this.isSameOrder(openDetailId, updatedOrderId))) {
+      this.refreshOpenOrderDetail(openDetailId);
+    }
+
+    if (this.trackingOrderId && (!updatedOrderId || this.isSameOrder(this.trackingOrderId, updatedOrderId))) {
+      this.refreshOpenOrderTimeline(this.trackingOrderId);
+    }
+  }
+
+  private refreshOpenOrderDetail(orderId: string): void {
+    const email = this.auth.getCustomerEmail();
+    if (!email) {
+      return;
+    }
+
+    this.onlineShopOrder.getMyOrderDetail(orderId, email, true).subscribe({
+      next: (detail) => {
+        // Guard against the customer having moved on while the request was in flight.
+        if (this.isSameOrder(this.orderDetail?.onlineShopSaleOrderId, orderId)) {
+          this.orderDetail = detail;
+        }
       },
-      error: (err) => {
-        this.loading = false;
-        this.errorMessage =
-          err?.error?.error?.message ||
-          err?.error?.message ||
-          err?.message ||
-          'Could not load your orders.';
-      }
+      error: () => undefined
     });
+  }
+
+  private refreshOpenOrderTimeline(orderId: string): void {
+    const email = this.auth.getCustomerEmail();
+    if (!email) {
+      return;
+    }
+
+    this.onlineShopOrder.getMyOrderStatusTimeline(orderId, email, true).subscribe({
+      next: (timeline) => {
+        if (this.isSameOrder(this.trackingOrderId, orderId)) {
+          this.orderTimeline = timeline;
+        }
+      },
+      error: () => undefined
+    });
+  }
+
+  /** Ids travel as text through the hub and the API, so casing cannot be relied on. */
+  private isSameOrder(left?: string | null, right?: string | null): boolean {
+    const a = left?.trim().toLowerCase();
+    const b = right?.trim().toLowerCase();
+    return !!a && a === b;
   }
 
   goToPage(page: number): void {
@@ -342,6 +508,22 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return ONLINE_SHOP_PAYMENT_STATUS_LABELS[status as OnlineShopPaymentStatus] ?? '—';
   }
 
+  get orderDetailSubtotal(): number {
+    return this.orderDetail ? orderSubtotalBeforeDiscounts(this.orderDetail) : 0;
+  }
+
+  get orderDetailShipping(): number {
+    return this.orderDetail ? orderShippingBeforeDiscount(this.orderDetail) : 0;
+  }
+
+  get orderDetailMerchandiseDiscounts(): OnlineShopOrderAppliedDiscount[] {
+    return this.orderDetail ? orderMerchandiseDiscountRows(this.orderDetail) : [];
+  }
+
+  get orderDetailShippingDiscounts(): OnlineShopOrderAppliedDiscount[] {
+    return this.orderDetail ? orderShippingDiscountRows(this.orderDetail) : [];
+  }
+
   hasShipmentSection(detail: OnlineShopOrderSuccessDetail | null): boolean {
     if (!detail) {
       return false;
@@ -402,7 +584,35 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * An order that has been cancelled, returned or refunded can never take another payment, even though
+   * its payment status may still read Pending from before it was closed.
+   *
+   * Order statuses are configured per store, so the name is what identifies a cancellation here.
+   */
+  private isClosedForPayment(order: OnlineShopOrderListItem): boolean {
+    if (
+      order.paymentStatus === OnlineShopPaymentStatus.Cancelled
+      || order.paymentStatus === OnlineShopPaymentStatus.Refunded
+      || order.paymentStatus === OnlineShopPaymentStatus.PartiallyRefunded
+    ) {
+      return true;
+    }
+
+    const orderStatus = `${order.orderStatusDisplayName ?? ''} ${order.orderStatusName ?? ''}`.toLowerCase();
+    if (orderStatus.includes('cancel')) {
+      return true;
+    }
+
+    const deliveryStatus = (this.deliveryStatusLabel(order.deliveryStatus) ?? '').toLowerCase();
+    return deliveryStatus.includes('cancel') || deliveryStatus.includes('return');
+  }
+
   canRetryPayment(order: OnlineShopOrderListItem): boolean {
+    if (this.isClosedForPayment(order)) {
+      return false;
+    }
+
     if (order.paymentMethod === OnlineShopPaymentMethod.GoPayFast) {
       return order.paymentStatus === OnlineShopPaymentStatus.Failed
         || order.paymentStatus === OnlineShopPaymentStatus.Pending;
@@ -419,6 +629,69 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isRetrying(orderId: string): boolean {
     return this.retryingOrderId === orderId;
+  }
+
+  isRemoving(orderId: string): boolean {
+    return this.removingOrderId === orderId;
+  }
+
+  /**
+   * Hides the order from My Orders only. The store still has it for fulfilment and support.
+   */
+  async removeFromList(order: OnlineShopOrderListItem): Promise<void> {
+    const email = this.auth.getCustomerEmail();
+    if (!order?.id || !email || this.removingOrderId) {
+      return;
+    }
+
+    const orderLabel = order.onlineOrderNumber || 'this order';
+    const result = await Swal.fire({
+      title: 'Remove from list?',
+      html: `<p style="margin:0 0 0.5rem;">Remove <strong>${this.escapeHtml(orderLabel)}</strong> from your orders list?</p>
+             <p style="margin:0;font-size:0.9rem;opacity:0.85;">You can still contact support about it. This does not cancel the order.</p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      focusCancel: true,
+      confirmButtonText: 'Yes, remove',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: {
+        popup: 'my-orders-swal',
+        confirmButton: 'btn btn-danger my-orders-swal__confirm',
+        cancelButton: 'btn btn-outline-secondary my-orders-swal__cancel',
+      },
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.removingOrderId = order.id;
+    this.onlineShopOrder.hideMyOrder(order.id, email).subscribe({
+      next: () => {
+        this.removingOrderId = null;
+        this.toastr.success(`${orderLabel} removed from your list.`);
+        const nextPage = this.orders.length === 1 && this.currentPage > 1
+          ? this.currentPage - 1
+          : this.currentPage;
+        this.loadPage(nextPage);
+      },
+      error: (err) => {
+        this.removingOrderId = null;
+        const msg = err?.error?.error?.message || err?.error?.message || err?.message;
+        this.toastr.error(msg || 'Could not remove this order. Please try again.');
+      }
+    });
+  }
+
+  private escapeHtml(value: string): string {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   retryPayment(order: OnlineShopOrderListItem): void {

@@ -1,7 +1,96 @@
-.slider-contain{
-    max-height: 350px !important;
+.slider-contain {
+  max-height: 350px !important;
+  height: 350px !important;
 }
-.home-slider .home, .center-slider .home {
-    max-height: 350px !important;
 
+.home-slider .home,
+.center-slider .home {
+  max-height: 350px !important;
+  height: 350px !important;
+  border-radius: 10px;
+  overflow: hidden;
 }
+
+.home-hero-slide-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.home-hero-slide {
+  position: relative;
+}
+
+.slider-contain__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 20px 32px;
+  text-align: left;
+}
+
+.slider-contain__inner h4,
+.slider-contain__inner h1 {
+  display: none;
+}
+
+.home-hero-cta {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 22px !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  background: #FFC400 !important;
+  border: 1px solid #FFC400 !important;
+  color: #111111 !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.home-hero-slide-link:hover .home-hero-cta {
+  background: #ffd54d !important;
+  border-color: #ffd54d !important;
+  transform: translateY(-1px);
+}
+
+.home-slider .home .slider-contain {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+body.dark .home-hero-cta {
+  color: #111111 !important;
+}
+
+@media (max-width: 575px) {
+  .slider-contain,
+  .home-slider .home,
+  .center-slider .home {
+    height: 220px !important;
+    max-height: 220px !important;
+  }
+
+  .slider-contain__inner {
+    padding: 16px 14px 20px;
+  }
+
+  .home-hero-cta {
+    min-height: 38px;
+    padding: 8px 16px !important;
+    font-size: 0.78rem !important;
+  }
+}
+

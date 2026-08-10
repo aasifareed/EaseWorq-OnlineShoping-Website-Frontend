@@ -1,40 +1,479 @@
 @import '../../../styles/product-image-gallery';
+@import '../../../styles/product-lightbox';
 
-.close.float-end {
-  background: unset !important;
-}
+/* --------------------------------------------------------------------------
+   Quick View — polished ecommerce popup (not a full-page dialog)
+   Styles target body-attached NgbModal via .Quickview windowClass.
+   -------------------------------------------------------------------------- */
 
-::ng-deep .Quickview .product-image-gallery {
-  display: flex;
-  flex-direction: column;
-}
+::ng-deep .Quickview {
+  .modal-dialog {
+    max-width: 960px;
+    width: calc(100% - 32px);
+    margin: 1.5rem auto;
+  }
 
-::ng-deep .Quickview .product-image-gallery .gallery-main.is-single {
-  height: 100%;
-  flex: 1 1 auto;
-}
+  .modal-content.quick-view-modal,
+  .quick-view-modal.modal-content {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    background: #ffffff;
+  }
 
-::ng-deep .Quickview .quick-view-modal .quick-view-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
+  .quick-view-modal .modal-body {
+    position: relative;
+    padding: 24px 24px 16px;
+    background: #ffffff !important;
+    background-image: none !important;
+  }
 
-  a.btn {
-    flex: 1 1 calc(50% - 6px);
-    min-height: 44px;
-    margin: 0 !important;
-    padding: 10px 20px;
+  .qv-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 5;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    line-height: 1.25;
-    box-sizing: border-box;
-    white-space: nowrap;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #374151;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: #111111;
+      border-color: #111111;
+      color: #ffffff;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #FFC400;
+      outline-offset: 2px;
+    }
   }
 
-  a.btn:last-child {
-    flex: 1 1 100%;
+  .qv-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 28px;
+  }
+
+  .qv-gallery {
+    flex: 0 0 46%;
+    max-width: 46%;
+    min-width: 0;
+  }
+
+  .qv-info {
+    flex: 1 1 54%;
+    min-width: 0;
+    padding-top: 4px;
+    padding-right: 24px;
+  }
+
+  .product-image-gallery {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-image-gallery .gallery-main,
+  .product-image-gallery .gallery-main.is-single {
+    height: 320px;
+    max-height: 320px;
+    min-height: 260px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  .product-image-gallery .gallery-zoom-stage {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .product-image-gallery .gallery-main-img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .product-image-gallery .gallery-thumbs {
+    margin-top: 12px;
+  }
+
+  .qv-title {
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #111111;
+    text-transform: none;
+  }
+
+  .qv-price {
+    margin: 0 0 14px;
+    padding: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #111111;
+
+    del {
+      margin-left: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #9ca3af;
+    }
+  }
+
+  .qv-stock {
+    margin: 0 0 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    &--ok {
+      color: #b45309;
+    }
+
+    &--out {
+      color: #b91c1c;
+    }
+
+    &--cart {
+      color: #4b5563;
+    }
+  }
+
+  .qv-stock-note {
+    margin: -10px 0 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  .qv-details {
+    margin: 16px 0 18px;
+    padding: 0;
+    border: 0;
+  }
+
+  .qv-section-label {
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  .qv-description {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.55;
+    color: #4b5563;
+
+    &--fallback {
+      color: #9ca3af;
+      font-size: 0.875rem; /* 14px */
+      font-style: normal;
+    }
+  }
+
+  .qv-qty {
+    margin: 0 0 20px;
+  }
+
+  .qv-qty-box {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .qv-qty-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #f9fafb;
+    color: #111111;
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: #FFC400;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .qv-qty-input {
+    width: 48px;
+    min-height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-left: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    background: #ffffff;
+    color: #111111;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: none !important;
+  }
+
+  .qv-actions.quick-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    .qv-btn {
+      flex: 1 1 calc(50% - 5px);
+      min-height: 44px;
+      margin: 0 !important;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-decoration: none !important;
+      line-height: 1.25;
+      box-sizing: border-box;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+      > .fa {
+        font-size: 0.95em;
+        line-height: 1;
+      }
+    }
+
+    .qv-btn--primary {
+      background: #FFC400 !important;
+      border: 1px solid #FFC400 !important;
+      color: #111111 !important;
+
+      &:hover:not(.disabled) {
+        background: #ffd54d !important;
+        border-color: #ffd54d !important;
+        color: #111111 !important;
+      }
+    }
+
+    .qv-btn--secondary {
+      background: #111111 !important;
+      border: 1px solid #6b7280 !important;
+      color: #ffffff !important;
+
+      &:hover:not(.disabled) {
+        background: #2a2a2a !important;
+        border-color: #9ca3af !important;
+        color: #ffffff !important;
+      }
+    }
+
+    .qv-btn--ghost {
+      flex: 1 1 100%;
+      background: transparent !important;
+      border: 1px solid #d1d5db !important;
+      color: #111111 !important;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0.01em;
+
+      &:hover {
+        border-color: #111111 !important;
+        background: #f9fafb !important;
+        color: #111111 !important;
+      }
+    }
+
+    .qv-btn.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .qv-layout {
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .qv-gallery,
+    .qv-info {
+      flex: 1 1 auto;
+      max-width: 100%;
+      padding-right: 0;
+    }
+
+    .product-image-gallery .gallery-main,
+    .product-image-gallery .gallery-main.is-single {
+      height: 280px;
+      max-height: 280px;
+    }
+
+    .qv-info {
+      padding-top: 0;
+    }
+
+    .qv-close {
+      top: 8px;
+      right: 8px;
+    }
+  }
+}
+
+/* Dark theme Quick View */
+::ng-deep body.dark .Quickview {
+  .modal-content.quick-view-modal,
+  .quick-view-modal.modal-content {
+    background: #181c24;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .quick-view-modal .modal-body {
+    background: #181c24 !important;
+  }
+
+  .qv-close {
+    background: #1f2430;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #e5e7eb;
+
+    &:hover {
+      background: #FFC400;
+      border-color: #FFC400;
+      color: #111111;
+    }
+  }
+
+  .qv-title,
+  .qv-price {
+    color: #f5f7fa;
+  }
+
+  .qv-price del {
+    color: #9ca3af;
+  }
+
+  .qv-stock--ok {
+    color: #FFC400;
+  }
+
+  .qv-stock--out {
+    color: #f07167;
+  }
+
+  .qv-stock--cart,
+  .qv-stock-note,
+  .qv-section-label {
+    color: #b8c0cc;
+  }
+
+  .qv-description {
+    color: #c5ccd8;
+
+    &--fallback {
+      color: #8b93a1 !important;
+      font-size: 0.875rem;
+    }
+  }
+
+  .qv-qty-box {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: #1f2430;
+  }
+
+  .qv-qty-btn {
+    background: #262c38;
+    color: #f5f7fa;
+
+    &:hover:not(:disabled) {
+      background: #FFC400;
+      color: #111111;
+    }
+  }
+
+  .qv-qty-input {
+    background: #1f2430;
+    border-left-color: rgba(255, 255, 255, 0.1);
+    border-right-color: rgba(255, 255, 255, 0.1);
+    color: #f5f7fa;
+  }
+
+  .qv-actions {
+    .qv-btn--primary {
+      background: #FFC400 !important;
+      border-color: #FFC400 !important;
+      color: #111111 !important;
+    }
+
+    .qv-btn--secondary {
+      background: transparent !important;
+      border: 1px solid #6b7280 !important;
+      color: #f5f7fa !important;
+
+      &:hover:not(.disabled) {
+        border-color: #9ca3af !important;
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.04) !important;
+      }
+    }
+
+    .qv-btn--ghost {
+      background: transparent !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      color: #e5e7eb !important;
+
+      &:hover {
+        border-color: #FFC400 !important;
+        color: #FFC400 !important;
+        background: transparent !important;
+      }
+    }
   }
 }

@@ -1,105 +1,65 @@
+@import '../../../shared/styles/image-frames';
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Full-width equal tiles with a tight gap — no carousel spacing. */
+.brand-logo-grid {
+  display: grid;
+  width: 100%;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
 .product-image {
-    text-align: center;
-    line-height: normal;
-    margin: 0 auto;
-    max-width: 220px;
-    overflow: hidden;
-    position: relative;
-    padding: 0;
-    background: #fff;
-    border-radius: 8px;
-    margin-right: 12px !important;
+  text-align: center;
+  line-height: normal;
+  width: 100%;
+  max-width: none;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+  background: #fff;
+  border-radius: 8px;
+  margin: 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 196, 0, 0.55);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .brand-logo-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 
-/* Fixed, uniform tile: every brand image fills the same shape/size, regardless
-   of its original resolution (square vs rectangular). */
-.brand-logo-media {
-    position: relative;
-    width: 100%;
-    height: 120px;
-    overflow: hidden;
-}
-
-.brand-logo-media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-}
-
-/* Brand name overlay — appears centered on hover over the image. */
-.brand-logo-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.6);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-}
-
-.brand-logo-link:hover .brand-logo-overlay,
-.brand-logo-link:focus .brand-logo-overlay {
-    opacity: 1;
-}
-
-.brand-logo-overlay__text {
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.3;
-    text-transform: uppercase;
-    text-align: center;
-    color: #fff;
-    word-break: break-word;
-}
-
-/* No image: show the brand name in the same fixed tile size. */
 .brand-logo-fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 120px;
-    width: 100%;
-    padding: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.3;
-    text-transform: uppercase;
-    text-align: center;
-    color: #222;
-    word-break: break-word;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #222;
+  word-break: break-word;
 }
 
-// ::ng-deep .owl-next {
-//     opacity: 1;
-//     right: 10px !important;
-//     transform: scale(1);
-//     transition: all 0.5s ease;
-//     margin-top: -10px;
-//     border-radius: 100% !important;
-//     display: flex !important;
-//     align-items: center;
-//     justify-content: center;
-//     background: rgba(255, 255, 255, 0.5) !important;
-// }
-// ::ng-deep .owl-prev {
-//     opacity: 1;
-//     left: 0 !important;
-//     transform: scale(1);
-//     transition: all 0.5s ease;
-//     margin-top: -10px;
-//     border-radius: 100% !important;
-//     display: flex !important;
-//     align-items: center;
-//     justify-content: center;
-//     background: rgba(255, 255, 255, 0.5) !important;
-// }
+body.dark .product-image {
+  background: #fff;
+}
+
+@media (max-width: 575px) {
+  .brand-logo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .brand-logo-fallback {
+    font-size: 12px;
+  }
+}

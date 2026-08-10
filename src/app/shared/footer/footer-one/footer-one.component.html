@@ -1,11 +1,17 @@
-<footer [class]="class">
-  <section class="section-b-space light-layout">
+<footer [ngClass]="[class, 'footer-brand-dark']">
+  <section class="section-b-space footer-main">
     <div class="container">
       <div class="row footer-theme partition-f">
         <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
           <div class="sub-title">
-            <div class="footer-title">
-              <h4>ABOUT {{ storeName | uppercase }}</h4>
+            <div class="footer-brand-block">
+              <a [routerLink]="['/home']" class="footer-logo-link" *ngIf="logoSrc">
+                <img [src]="logoSrc" [alt]="storeName" class="footer-logo-img" />
+              </a>
+              <!-- The logo already carries the name; this is only a fallback when it is missing. -->
+              <div class="footer-title" *ngIf="!logoSrc">
+                <h4>{{ storeName }}</h4>
+              </div>
             </div>
             <div class="footer-contant">
               <p>
@@ -19,7 +25,7 @@
         <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
           <div class="sub-title">
             <div class="footer-title">
-              <h4>QUICK LINKS</h4>
+              <h4>Quick Links</h4>
             </div>
             <div class="footer-contant">
               <ul class="list-unstyled footer-quick-links">
@@ -34,7 +40,7 @@
         <div class="col-lg-4 col-md-6">
           <div class="sub-title">
             <div class="footer-title">
-              <h4>CONTACT US</h4>
+              <h4>Customer Support</h4>
             </div>
             <div class="footer-contant">
               <ul class="list-unstyled footer-contact-list" *ngIf="hasContactInfo; else noContact">
@@ -77,25 +83,30 @@
     </div>
   </section>
 
-  <div class="footer-payment-row py-3 light-layout" *ngIf="hasPaymentMethods">
+  <div class="footer-payment-row" *ngIf="hasPaymentMethods">
     <div class="container">
-      <div class="d-flex flex-wrap align-items-center gap-3">
-        <span class="footer-payment-label">Payment methods:</span>
-        <div class="payment-method-badges d-flex flex-wrap gap-2">
-          <span class="payment-method-badge" *ngIf="showCashOnDelivery">
-            <i class="fa fa-money" aria-hidden="true"></i>
-            Cash on Delivery
-          </span>
-          <span class="payment-method-badge payment-method-badge--gopay" *ngIf="showGoPayFast">
-            <i class="fa fa-credit-card" aria-hidden="true"></i>
-            GoPayFast
-          </span>
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex flex-wrap align-items-center gap-3">
+          <span class="footer-payment-label">We accept</span>
+          <div class="payment-method-badges d-flex flex-wrap gap-2">
+            <span class="payment-method-badge" *ngIf="showCashOnDelivery">
+              <i class="fa fa-money" aria-hidden="true"></i>
+              Cash on Delivery
+            </span>
+            <span class="payment-method-badge payment-method-badge--gopay" *ngIf="showGoPayFast">
+              <i class="fa fa-credit-card" aria-hidden="true"></i>
+              GoPayFast
+            </span>
+          </div>
         </div>
+        <p class="mb-0 footer-copyright-text">
+          &copy; {{ today | date:'y' }} {{ storeName }}. All Rights Reserved.
+        </p>
       </div>
     </div>
   </div>
 
-  <div class="sub-footer py-3 border-top border-warning border-4">
+  <div class="sub-footer" *ngIf="!hasPaymentMethods">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-12 text-center">

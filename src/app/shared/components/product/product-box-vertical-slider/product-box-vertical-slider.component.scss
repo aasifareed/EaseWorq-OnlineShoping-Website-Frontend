@@ -2,23 +2,34 @@
   display: block;
 }
 
+.home-section-head {
+  margin-top: 32px;
+  margin-bottom: 18px;
+}
+
 h2 {
   font-size: 20px !important;
   font-weight: 700 !important;
   line-height: 30px !important;
   text-transform: uppercase !important;
   color: var(--ml-page-title) !important;
+  margin: 0 !important;
 }
 
 .see-more-link {
-  color: var(--ml-sidebar-text);
-  font-weight: 700;
-  font-size: 14px;
-  text-decoration: underline;
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+  text-decoration: none;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease;
 
-  &:hover {
-    color: var(--theme-deafult, #ffc107);
+  &:hover,
+  &:focus {
+    color: var(--theme-deafult, #ffc400);
+    text-decoration: none;
   }
 }
 

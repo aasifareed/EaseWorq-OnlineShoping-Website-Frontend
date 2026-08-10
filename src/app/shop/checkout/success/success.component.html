@@ -12,7 +12,10 @@
             <div class="col-sm-12">
                 <div class="error-section">
                     <h2>Order not found</h2>
-                    <a [routerLink]="'/home'" class="btn btn-solid">back to home</a>
+                    <a [routerLink]="'/home'" class="btn btn-solid">
+                      <i class="fa fa-home me-2" aria-hidden="true"></i>
+                      back to home
+                    </a>
                 </div>
             </div>
         </div>
@@ -67,13 +70,17 @@
                     </div>
                     <div class="total-sec">
                         <ul>
-                            <li>Subtotal <span>{{ order.subTotalAmount | shopCurrency:productService?.Currency.currency }}</span></li>
-                            <li *ngIf="order.discountAmount > 0" class="order-success-discount">
-                                Coupon discount
-                                <span>−{{ order.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
+                            <li>Subtotal <span>{{ orderSubtotal | shopCurrency:productService?.Currency.currency }}</span></li>
+                            <li *ngFor="let discount of merchandiseDiscountRows" class="order-success-discount">
+                                {{ discount.description || 'Discount' }}
+                                <span>−{{ discount.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
                             </li>
-                            <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | shopCurrency:productService?.Currency.currency }}</span></li>
-                            <li>Tax <span>{{ order.taxAmount | shopCurrency:productService?.Currency.currency }}</span></li>
+                            <li>Shipping ({{ order.shippingMethodName }}) <span>{{ orderShippingAmount | shopCurrency:productService?.Currency.currency }}</span></li>
+                            <li *ngFor="let discount of shippingDiscountRows" class="order-success-discount">
+                                {{ discount.description || 'Delivery discount' }}
+                                <span>−{{ discount.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
+                            </li>
+                            <li *ngIf="order.taxAmount > 0">Tax <span>{{ order.taxAmount | shopCurrency:productService?.Currency.currency }}</span></li>
                         </ul>
                     </div>
                     <div class="final-total">

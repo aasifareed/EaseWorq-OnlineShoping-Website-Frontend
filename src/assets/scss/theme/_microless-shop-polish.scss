@@ -1,0 +1,290 @@
+/* Shop UI polish — compact cards, no sidebar-stretch gap, pagination */
+
+/* Remove inner filter scrollbars; use Show more instead */
+.shop-sidebar-microless,
+.shop-layout-microless {
+  .collection-brand-filter,
+  .collection-collapse-block-content .collection-brand-filter {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .filter-show-more {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      color: #111111;
+    }
+  }
+}
+
+/* Sidebar must NOT stretch the product column (that caused the huge blank before footer) */
+.shop-layout-microless > .collection-wrapper > .container-fluid > .row {
+  align-items: flex-start !important;
+}
+
+@media (min-width: 992px) {
+  .shop-layout-microless > .collection-wrapper > .container-fluid > .row {
+    column-gap: 20px;
+  }
+
+  /* Fixed rather than the grid's 25%, so the filters keep a readable measure at any window
+     width. 250px wrapped category names such as "Mobile Covers & Protection" over three lines. */
+  .shop-layout-microless > .collection-wrapper > .container-fluid > .row > .col-lg-3 {
+    flex: 0 0 320px;
+    max-width: 320px;
+    width: 320px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .shop-layout-microless > .collection-wrapper > .container-fluid > .row > .col-lg-3 {
+    flex: 0 0 350px;
+    max-width: 350px;
+    width: 350px;
+  }
+}
+
+/* Toolbar → product grid spacing (~14–18px) */
+.shop-layout-microless .collection--microless {
+  .product-top-filter--microless {
+    margin-bottom: 16px !important;
+  }
+
+  .product-wrapper-grid {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+
+    .product-box {
+      margin-top: 0 !important;
+    }
+  }
+}
+
+/* Product grid: compact cards, no equal-height stretch */
+.shop-layout-microless .product-wrapper-grid:not(.list-view) {
+  .row {
+    --bs-gutter-x: 1.15rem;
+    --bs-gutter-y: 1.875rem; /* ~30px vertical row gap */
+    align-items: flex-start !important;
+  }
+
+  .col-grid-box {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto !important;
+  }
+
+  .product-box {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  app-product-box-one {
+    display: block;
+    height: auto !important;
+  }
+
+  .mc-card {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .mc-card__info {
+    flex: 0 0 auto !important;
+    flex-grow: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  .mc-card__name {
+    margin-top: 0 !important;
+    flex-grow: 0 !important;
+  }
+
+  .mc-card__prices {
+    margin-top: 6px !important;
+    flex-grow: 0 !important;
+  }
+
+  .mc-card__cart-btn {
+    margin-top: 9px !important;
+    flex-grow: 0 !important;
+  }
+
+  .mc-card__sale {
+    color: #FFC400 !important;
+  }
+}
+
+/* Tighten blank space before footer */
+app-collection-left-sidebar > section.section-b-space.shop-layout-microless,
+app-collection-left-sidebar > section.shop-layout-microless,
+.shop-layout-microless.section-b-space {
+  padding-bottom: 1.5rem !important;
+  min-height: 0 !important;
+}
+
+.shop-layout-microless {
+  .collection-wrapper,
+  .page-main-content,
+  .collection-content,
+  .collection-product-wrapper {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+}
+
+/* Pagination strip */
+.shop-layout-microless .product-pagination,
+.collection--microless .product-pagination,
+.product-pagination {
+  margin-top: 22px !important;
+  margin-bottom: 1.25rem !important;
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box;
+
+  .theme-paggination-block,
+  .container-fluid,
+  .row {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  .product-search-count-bottom {
+    border: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  .product-pagination__inner {
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .product-pagination__summary {
+    right: 0 !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    text-align: right;
+  }
+}
+
+/* Page background */
+body:not(.dark) {
+  background-color: #f6f7f9;
+}
+
+/* Yellow nav category labels — title case friendly */
+.main-menu .menu-horizontal > li > a,
+.sm-horizontal .mobile-back,
+header .main-nav .nav-link {
+  text-transform: none !important;
+}
+
+/* ==========================================================================
+   Dark theme — Shop readability pass only (contrast, no layout changes)
+   ========================================================================== */
+body.dark {
+  /* 1. Toolbar secondary text — muted but readable */
+  .product-top-filter--microless {
+    .shop-toolbar__count {
+      color: #e8eaed !important;
+    }
+
+    .shop-toolbar__bread,
+    .shop-toolbar__bread a,
+    .shop-toolbar__bread .current {
+      color: #b8c0cc !important;
+    }
+
+    .shop-toolbar__bread a:hover {
+      color: #e8eaed !important;
+    }
+
+    .shop-toolbar__sort-label {
+      color: #b8c0cc !important;
+    }
+
+    .shop-toolbar__bar {
+      border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+    }
+  }
+
+  /* 2. Brand labels — clearer than before, still quieter than titles */
+  .mc-card__brand,
+  .shop-list-card__brand {
+    color: #a8b0bd !important;
+  }
+
+  /* 3. Sidebar "Show more" — look interactive */
+  .shop-sidebar-microless .filter-show-more,
+  .shop-layout-microless .filter-show-more,
+  .filter-show-more {
+    color: #c5ccd8 !important;
+
+    &:hover {
+      color: #ffc400 !important;
+      text-decoration: underline;
+    }
+  }
+
+  /* 5. Pagination summary — flush to content column right edge */
+  .shop-layout-microless .product-pagination,
+  .collection--microless .product-pagination {
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box;
+
+    .product-pagination__inner {
+      width: 100% !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+
+    .product-pagination__summary {
+      right: 0 !important;
+      left: auto !important;
+      margin-right: 0 !important;
+      padding-right: 0 !important;
+      text-align: right;
+      color: #b8c0cc !important;
+    }
+  }
+
+  /* 6. Search field — slightly clearer on black header */
+  .microless-header .search-wrapper {
+    background: #333333 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: none !important;
+
+    input.form-control,
+    input {
+      color: #ffffff !important;
+
+      &::placeholder {
+        color: #b0b0b0 !important;
+      }
+    }
+  }
+}

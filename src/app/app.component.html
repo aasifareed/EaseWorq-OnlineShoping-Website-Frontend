@@ -1,10 +1,19 @@
-<div id="storefront-bootstrap-loader" class="loader-wrapper" *ngIf="bootstrapping$ | async">
-
-  <div class="loader"></div>
-
+<div class="sk-boot sk-boot--app" *ngIf="bootstrapping$ | async" aria-live="polite" aria-busy="true">
+  <div class="sk-boot__glow" aria-hidden="true"></div>
+  <div class="sk-boot__content">
+    <div class="sk-boot__mark" aria-hidden="true">
+      <span class="sk-boot__mark-cart"></span>
+    </div>
+    <p class="sk-boot__brand">Sasta <span>Khareedo</span></p>
+    <p class="sk-boot__tagline">Smart Shopping. Honest Prices.</p>
+    <div class="sk-boot__track" role="progressbar" aria-label="Loading store">
+      <span class="sk-boot__bar"></span>
+    </div>
+    <p class="sk-boot__status">Preparing your store</p>
+  </div>
 </div>
 
-<ngx-loading-bar></ngx-loading-bar>
+<app-busy-overlay></app-busy-overlay>
 
 <router-outlet></router-outlet>
 
@@ -13,4 +22,3 @@
 <!-- Theme layout customizer (gear icon) hidden for storefront -->
 
 <!-- <app-layout-box></app-layout-box> -->
-

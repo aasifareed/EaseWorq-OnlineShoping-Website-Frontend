@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { NgbModal, ModalDismissReasons, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ProductService } from "../../../services/product.service";
 import { Product } from "../../../classes/product";
+import { shopProductLink } from "../../../constants/storefront-routes";
 
 @Component({
   selector: 'app-cart-modal',
@@ -27,6 +28,10 @@ export class CartModalComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+  }
+
+  productLink(product: Product): (string | number)[] {
+    return shopProductLink(product || {});
   }
 
   ngAfterViewInit(): void {

@@ -1,25 +1,27 @@
 <owl-carousel-o [options]="HomeSliderConfig" class="home-slider" [ngClass]="class">
-	<ng-container *ngFor="let slider of sliders">
-	  <ng-template carouselSlide>
-	    <div class="home" [ngClass]="textClass" [ngStyle]="{'background-image': 'url('+slider.image+')'}">
-	      <div class="container">
-	        <div class="row">
-	          <div class="col">
-	            <div class="slider-contain">
-	              <div>
-	                <h4>{{slider.title}}</h4>
-	                <h1>{{slider.subTitle}}</h1>
-	                <!-- <a [routerLink]="['/shop']" 
-	                   [queryParams]="{ category: category}" 
-	                   class="btn btn-solid" [ngClass]="buttonClass">
-	                   {{buttonText}}
-	                </a> -->
-	              </div>
-	            </div>
-	          </div>
-	        </div>
-	      </div>
-	    </div>
-	  </ng-template>
-	</ng-container>
+  <ng-container *ngFor="let slider of sliders">
+    <ng-template carouselSlide>
+      <a class="home-hero-slide-link"
+         [routerLink]="slideLink(slider)"
+         [queryParams]="slideQueryParams(slider)"
+         [attr.href]="isExternalLink(slider) ? externalHref(slider) : null"
+         (click)="onSlideClick($event, slider)">
+        <div class="home home-hero-slide" [ngClass]="textClass" [ngStyle]="{'background-image': 'url('+slider.image+')'}">
+          <div class="container">
+            <div class="row">
+              <div class="col">
+                <div class="slider-contain">
+                  <div class="slider-contain__inner">
+                    <span class="btn btn-solid home-hero-cta" [ngClass]="buttonClass">
+                      {{ buttonText || 'Shop Now' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </ng-template>
+  </ng-container>
 </owl-carousel-o>

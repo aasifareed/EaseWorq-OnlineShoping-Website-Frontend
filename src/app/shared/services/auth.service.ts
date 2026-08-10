@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ShopContextService } from './shop-context.service';
@@ -56,6 +56,8 @@ export class AuthService {
   private static readonly TENANT_KEY = 'shop_tenant_id';
   private static readonly TENANCY_NAME_KEY = 'shop_tenancy_name';
 
+  private readonly loggedIn = new BehaviorSubject<boolean>(this.isLoggedIn());
+
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -85,6 +87,11 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  /** The current sign-in state and every change to it, for views that show customer-specific figures. */
+  get isLoggedIn$(): Observable<boolean> {
+    return this.loggedIn.asObservable();
   }
 
   getToken(): string | null {
@@ -429,6 +436,7 @@ export class AuthService {
     if (customerEmail) {
       this.saveCustomerProfile({ customerEmail });
     }
+    this.loggedIn.next(true);
   }
 
   seedShopContextFromEnvironment(): void {
@@ -450,6 +458,7 @@ export class AuthService {
     localStorage.removeItem(AuthService.USER_ID_KEY);
     localStorage.removeItem(AuthService.EMAIL_KEY);
     localStorage.removeItem(AuthService.PROFILE_KEY);
+    this.loggedIn.next(false);
     if (navigateToLogin) {
       this.router.navigate(['/pages/login']);
     }

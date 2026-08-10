@@ -1,0 +1,62 @@
+.related-products-section {
+  .product-related h2 {
+    margin-bottom: 1.25rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  &--sparse {
+    padding-bottom: 1.5rem !important;
+  }
+}
+
+.related-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem 1.15rem;
+  align-items: start;
+  max-width: 100%;
+
+  &__item {
+    min-width: 0;
+  }
+
+  .product-box {
+    height: auto;
+    margin: 0;
+  }
+
+  /* Avoid a huge empty band when only a few related products exist */
+  &--count-1 {
+    max-width: 260px;
+    grid-template-columns: 1fr;
+  }
+
+  &--count-2 {
+    max-width: 540px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &--count-3 {
+    max-width: 820px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .related-products-grid {
+    &--count-2,
+    &--count-3 {
+      max-width: 100%;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  .related-products-grid:not([class*='--count-']) {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}

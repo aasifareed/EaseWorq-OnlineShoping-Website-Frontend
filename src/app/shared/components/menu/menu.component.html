@@ -22,8 +22,7 @@
         *ngFor="let menuItem of menuItems"
         [class.mega-menu]="menuItem.megaMenu"
         [class.mega-menu-open]="menuItem.megaMenu && isMegaOpen(menuItem)"
-        (mouseenter)="menuItem.megaMenu && openMegaMenu(menuItem)"
-        (mouseleave)="menuItem.megaMenu && onMegaHoverZoneLeave($event)"
+        [class.mega-menu--compact]="menuItem.megaMenu && isCompactDropdown(menuItem)"
       >
         <!-- Home, Shop, etc. -->
         <ng-container *ngIf="!menuItem.megaMenu">
@@ -50,32 +49,74 @@
           </a>
         </ng-container>
 
-        <!-- Mega menu categories -->
-        <div *ngIf="menuItem.megaMenu" class="mega-menu-hover-zone">
-          <a href="javascript:void(0)" class="nav-link nav-link--has-dropdown" (click)="toggletNavActive(menuItem)">
+        <!-- Category dropdowns: trigger + panel share one hover zone -->
+        <div
+          *ngIf="menuItem.megaMenu"
+          class="mega-menu-hover-zone"
+          (mouseenter)="onHoverZoneEnter(menuItem)"
+          (mouseleave)="onHoverZoneLeave(menuItem, $event)"
+        >
+          <a
+            href="javascript:void(0)"
+            class="nav-link nav-link--has-dropdown"
+            role="button"
+            [attr.aria-expanded]="isMegaOpen(menuItem)"
+            [attr.aria-haspopup]="true"
+            [attr.aria-controls]="panelId(menuItem)"
+            (click)="onTriggerClick(menuItem, $event)"
+            (keydown)="onTriggerKeydown(menuItem, $event)"
+          >
             <span class="nav-link__text">{{ menuLabel(menuItem) }}</span>
-            <i class="fa fa-angle-down nav-caret" *ngIf="menuItem.children?.length" aria-hidden="true"></i>
+            <i
+              class="fa nav-caret"
+              [class.fa-angle-down]="!isMegaOpen(menuItem)"
+              [class.fa-angle-up]="isMegaOpen(menuItem)"
+              *ngIf="menuItem.children?.length"
+              aria-hidden="true"
+            ></i>
           </a>
 
+          <!-- Compact: single list under the nav item -->
           <div
-            class="mega-menu-bridge"
-            *ngIf="isMegaOpen(menuItem)"
-            (mouseenter)="openMegaMenu(menuItem)"
-            aria-hidden="true"
-          ></div>
-
-          <div
-            class="store-mega-panel"
-            *ngIf="menuItem.children?.length"
+            class="store-mega-panel store-mega-panel--compact"
+            *ngIf="menuItem.children?.length && isCompactDropdown(menuItem)"
+            [id]="panelId(menuItem)"
             [class.is-open]="isMegaOpen(menuItem)"
-            (mouseenter)="openMegaMenu(menuItem)"
+            role="menu"
+            [attr.aria-label]="menuLabel(menuItem) + ' menu'"
+          >
+            <div class="store-mega-panel__inner">
+              <ul class="store-mega-panel__compact-list">
+                <li *ngFor="let link of getCompactLinks(menuItem); let first = first" role="none">
+                  <a
+                    [routerLink]="link.path"
+                    [queryParams]="link.queryParams || null"
+                    routerLinkActive="active"
+                    class="store-mega-panel__link"
+                    [class.store-mega-panel__link--primary]="first"
+                    role="menuitem"
+                    (click)="onCompactLinkClick()"
+                  >
+                    <span class="store-mega-panel__link-text">{{ menuLabel(link) }}</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Mega: multi-column only when enough content -->
+          <div
+            class="store-mega-panel store-mega-panel--wide"
+            *ngIf="menuItem.children?.length && !isCompactDropdown(menuItem)"
+            [id]="panelId(menuItem)"
+            [class.is-open]="isMegaOpen(menuItem)"
             role="region"
             [attr.aria-label]="menuLabel(menuItem) + ' menu'"
           >
             <div class="store-mega-panel__inner">
-              <div class="store-mega-panel__grid">
+              <div class="store-mega-panel__grid" [attr.data-cols]="getVisibleColumns(menuItem).length">
                 <div
-                  *ngFor="let column of menuItem.children"
+                  *ngFor="let column of getVisibleColumns(menuItem)"
                   class="store-mega-panel__col"
                   [class.store-mega-panel__col--shop-all]="column.megaColumnType === 'shop-all'"
                   [class.store-mega-panel__col--categories]="column.megaColumnType === 'categories'"
@@ -83,7 +124,10 @@
                 >
                   <h6 class="store-mega-panel__heading">
                     {{ menuLabel(column) }}
-                    <span class="store-mega-panel__loading" *ngIf="column.megaColumnType === 'popular' && popularProductsLoading">...</span>
+                    <span
+                      class="store-mega-panel__loading"
+                      *ngIf="column.megaColumnType === 'popular' && popularProductsLoading"
+                    >...</span>
                   </h6>
                   <ul
                     class="store-mega-panel__links"
@@ -98,9 +142,7 @@
                         class="store-mega-panel__link"
                         [class.store-mega-panel__link--primary]="column.megaColumnType === 'shop-all'"
                         [class.store-mega-panel__link--product]="column.megaColumnType === 'popular'"
-                        [class.store-mega-panel__link--sub-active]="column.megaColumnType === 'categories' && isSubcategorySelected(link)"
-                        (mouseenter)="column.megaColumnType === 'shop-all' && onShopAllHover(menuItem)"
-                        (click)="onMegaPanelLinkClick($event, link, menuItem, column)"
+                        (click)="onMegaLinkClick()"
                       >
                         <span class="store-mega-panel__link-text">{{ menuLabel(link) }}</span>
                         <i
@@ -123,7 +165,7 @@
           [class.opensubmenu]="menuItem.active"
           *ngIf="menuItem.megaMenu && menuItem.children"
         >
-          <li *ngFor="let column of menuItem.children" class="nav-submenu__group">
+          <li *ngFor="let column of getMobileColumns(menuItem)" class="nav-submenu__group">
             <a
               href="javascript:void(0)"
               class="nav-submenu__heading"

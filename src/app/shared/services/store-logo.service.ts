@@ -2,9 +2,10 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ShopContextService } from './shop-context.service';
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 interface StoreLogoCacheEntry {
   tenantId: number;
@@ -17,7 +18,7 @@ interface StoreLogoCacheEntry {
 })
 export class StoreLogoService {
   private readonly logoSubject = new BehaviorSubject<string | null>(null);
-  private initialized = false;
+  private initializeRequest$: Observable<string | null> | null = null;
   private readonly isBrowser: boolean;
 
   readonly logoUrl$ = this.logoSubject.asObservable();
@@ -36,8 +37,8 @@ export class StoreLogoService {
 
   /** Call once on app start / refresh to fetch logo from API and cache locally. */
   initialize(tenantId?: number, storeId?: string): Observable<string | null> {
-    if (this.initialized) {
-      return of(this.snapshot);
+    if (this.initializeRequest$) {
+      return this.initializeRequest$;
     }
 
     const resolvedTenantId = tenantId ?? this.shopContext.resolveTenantId();
@@ -56,7 +57,7 @@ export class StoreLogoService {
     const q = `TenantId=${resolvedTenantId}&StoreId=${encodeURIComponent(resolvedStoreId)}`;
     const url = `${this.apiRoot()}api/services/app/${path}?${q}`;
 
-    return this.http.get(url).pipe(
+    this.initializeRequest$ = this.http.get(url, asBackgroundRequest()).pipe(
       map((resp: { result?: Record<string, unknown> }) => {
         const row = resp?.result ?? {};
         const logoUrl = String(row.url ?? row.Url ?? '').trim() || null;
@@ -65,17 +66,18 @@ export class StoreLogoService {
       }),
       tap((logoUrl) => {
         this.logoSubject.next(logoUrl);
-        this.initialized = true;
       }),
       catchError(() => {
         if (cached === undefined) {
           this.logoSubject.next(null);
           this.writeCache(resolvedTenantId, resolvedStoreId, null);
         }
-        this.initialized = true;
         return of(this.snapshot);
       }),
+      shareReplay(1),
     );
+
+    return this.initializeRequest$;
   }
 
   /** Read cached logo for current tenant/store without calling the API. */

@@ -3,7 +3,10 @@
     <div *ngIf="!isLoggedIn" class="login-prompt orders-panel text-center p-5">
       <h3>Please log in</h3>
       <p class="orders-muted mb-4">Sign in with your email to see orders placed on this store.</p>
-      <button type="button" class="btn btn-solid" (click)="goToLogin()">Log In</button>
+      <button type="button" class="btn btn-solid" (click)="goToLogin()">
+        <i class="fa fa-sign-in me-2" aria-hidden="true"></i>
+        Log In
+      </button>
     </div>
 
     <div *ngIf="isLoggedIn">
@@ -55,7 +58,11 @@
               <td>{{ order.totalAmount | number:'1.2-2' }}</td>
               <td>{{ order.paidAmount | number:'1.2-2' }}</td>
               <td class="text-end order-actions">
-                <div ngbDropdown placement="bottom-end" container="body" class="order-actions-menu">
+                <div
+                  ngbDropdown
+                  [placement]="['bottom-end', 'top-end']"
+                  container="body"
+                  class="order-actions-menu">
                   <button
                     type="button"
                     class="btn btn-sm btn-order-more"
@@ -100,6 +107,15 @@
                       <i class="fa fa-refresh" aria-hidden="true"></i>
                       <span>{{ isRetrying(order.id) ? 'Redirecting…' : 'Retry Payment' }}</span>
                     </button>
+                    <div class="dropdown-divider"></div>
+                    <button
+                      type="button"
+                      class="dropdown-item dropdown-item-remove"
+                      [disabled]="isRemoving(order.id)"
+                      (click)="removeFromList(order)">
+                      <i class="fa fa-trash-o" aria-hidden="true"></i>
+                      <span>{{ isRemoving(order.id) ? 'Removing…' : 'Remove from list' }}</span>
+                    </button>
                   </div>
                 </div>
               </td>
@@ -108,20 +124,41 @@
         </table>
       </div>
 
-      <div *ngIf="!loading && totalCount > pageSize" class="d-flex justify-content-between align-items-center mt-4 orders-pagination">
-        <span class="orders-muted">
-          Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ (currentPage - 1) * pageSize + orders.length }} of {{ totalCount }}
+      <div *ngIf="!loading && orders.length" class="orders-pagination">
+        <span class="orders-muted orders-pagination-summary">
+          Showing {{ pageRangeStart }}–{{ pageRangeEnd }} of {{ totalCount }} {{ totalCount === 1 ? 'order' : 'orders' }}
         </span>
-        <nav>
+        <nav *ngIf="totalPages > 1" aria-label="Orders pagination">
           <ul class="pagination mb-0">
             <li class="page-item" [class.disabled]="currentPage <= 1">
-              <button type="button" class="page-link" (click)="goToPage(currentPage - 1)">Previous</button>
+              <button
+                type="button"
+                class="page-link"
+                [disabled]="currentPage <= 1"
+                (click)="goToPage(currentPage - 1)">
+                Previous
+              </button>
             </li>
-            <li class="page-item disabled">
-              <span class="page-link">{{ currentPage }} / {{ totalPages }}</span>
+            <li
+              *ngFor="let page of pageNumbers"
+              class="page-item"
+              [class.active]="page === currentPage">
+              <button
+                type="button"
+                class="page-link"
+                [attr.aria-current]="page === currentPage ? 'page' : null"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
             </li>
             <li class="page-item" [class.disabled]="currentPage >= totalPages">
-              <button type="button" class="page-link" (click)="goToPage(currentPage + 1)">Next</button>
+              <button
+                type="button"
+                class="page-link"
+                [disabled]="currentPage >= totalPages"
+                (click)="goToPage(currentPage + 1)">
+                Next
+              </button>
             </li>
           </ul>
         </nav>
@@ -135,27 +172,27 @@
     <h5 class="modal-title" id="order-detail-modal-title">
       Order {{ orderDetail?.onlineOrderNumber || 'Details' }}
     </h5>
-    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+    <button type="button" class="order-modal-close" aria-label="Close" (click)="modal.dismiss()">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
   </div>
   <div class="modal-body order-detail-modal-body">
     <div *ngIf="detailLoading" class="text-center py-4 orders-muted">Loading order details…</div>
     <div *ngIf="!detailLoading && detailError" class="alert alert-danger mb-0">{{ detailError }}</div>
 
-    <div *ngIf="!detailLoading && orderDetail && !detailError">
-      <div class="order-detail-header mb-3">
-        <p class="orders-muted mb-2">
+    <div *ngIf="!detailLoading && orderDetail && !detailError" class="order-detail-stack">
+      <div class="order-detail-header">
+        <p class="orders-muted mb-0">
           Placed on {{ formatShortDate(orderDetail.orderDate) }}
         </p>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <span
-            class="order-status-badge"
-            [ngStyle]="statusChipStyles(orderDetail.orderStatusColorCode)">
-            {{ orderDetail.orderStatusDisplayName || '—' }}
-          </span>
-        </div>
+        <span
+          class="order-status-badge"
+          [ngStyle]="statusChipStyles(orderDetail.orderStatusColorCode)">
+          {{ orderDetail.orderStatusDisplayName || '—' }}
+        </span>
       </div>
 
-      <div class="order-detail-info-grid mb-4">
+      <div class="order-detail-info-grid">
         <div class="order-detail-info-card">
           <div class="order-detail-info-label">Payment method</div>
           <div class="order-detail-info-value">{{ orderDetail.paymentMethodName || '—' }}</div>
@@ -184,12 +221,12 @@
         </div>
       </div>
 
-      <div *ngIf="hasShipmentSection(orderDetail)" class="order-detail-shipment-section mb-4">
+      <div *ngIf="hasShipmentSection(orderDetail)" class="order-detail-shipment-section">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
           <h6 class="order-detail-section-title mb-0">Shipment</h6>
           <button
             type="button"
-            class="btn btn-sm btn-outline-primary"
+            class="btn btn-sm order-modal-action"
             *ngIf="canResyncDetailShipment()"
             [disabled]="detailShipmentResyncLoading"
             (click)="resyncDetailShipment()"
@@ -220,66 +257,81 @@
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-3 orders-detail-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th class="text-center">Qty</th>
-              <th class="text-end">Unit</th>
-              <th class="text-end">Line total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let line of orderDetail.products">
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  <img [src]="productImage(line.productImageUrl)" alt="" class="order-detail-thumb" />
-                  <span>{{ line.productName }}</span>
-                </div>
-              </td>
-              <td class="text-center">{{ line.quantity }}</td>
-              <td class="text-end">{{ line.unitPrice | number:'1.2-2' }}</td>
-              <td class="text-end">{{ line.lineTotal | number:'1.2-2' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div class="order-detail-columns">
+        <div class="order-detail-items">
+          <h6 class="order-detail-section-title mb-2">Items</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 orders-detail-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Unit</th>
+                  <th class="text-end">Line total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let line of orderDetail.products">
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <img [src]="productImage(line.productImageUrl)" alt="" class="order-detail-thumb" />
+                      <span>{{ line.productName }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">{{ line.quantity }}</td>
+                  <td class="text-end">{{ line.unitPrice | number:'1.2-2' }}</td>
+                  <td class="text-end">{{ line.lineTotal | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      <ul class="list-unstyled order-detail-totals mb-0">
-        <li class="d-flex justify-content-between">
-          <span>Subtotal</span>
-          <span>{{ orderDetail.subTotalAmount | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between">
-          <span>Shipping ({{ orderDetail.shippingMethodName }})</span>
-          <span>{{ orderDetail.shippingCharges | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between">
-          <span>Tax</span>
-          <span>{{ orderDetail.taxAmount | number:'1.2-2' }}</span>
-        </li>
-        <li *ngIf="(orderDetail.discountAmount || 0) > 0" class="d-flex justify-content-between">
-          <span>Discount</span>
-          <span>-{{ orderDetail.discountAmount | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between">
-          <span>Paid</span>
-          <span>{{ orderDetail.paidAmount | number:'1.2-2' }}</span>
-        </li>
-        <li *ngIf="(orderDetail.remainingAmount || 0) > 0" class="d-flex justify-content-between">
-          <span>Remaining</span>
-          <span>{{ orderDetail.remainingAmount | number:'1.2-2' }}</span>
-        </li>
-        <li class="d-flex justify-content-between fw-bold fs-5 mt-2 pt-2 order-detail-total-row">
-          <span>Total</span>
-          <span>{{ orderDetail.totalAmount | number:'1.2-2' }}</span>
-        </li>
-      </ul>
+        <aside class="order-detail-summary">
+          <h6 class="order-detail-section-title mb-2">Summary</h6>
+          <ul class="list-unstyled order-detail-totals mb-0">
+            <li>
+              <span>Subtotal</span>
+              <span>{{ orderDetailSubtotal | number:'1.2-2' }}</span>
+            </li>
+            <li *ngFor="let discount of orderDetailMerchandiseDiscounts">
+              <span>{{ discount.description || 'Discount' }}</span>
+              <span>-{{ discount.discountAmount | number:'1.2-2' }}</span>
+            </li>
+            <li>
+              <span>Shipping ({{ orderDetail.shippingMethodName }})</span>
+              <span>{{ orderDetailShipping | number:'1.2-2' }}</span>
+            </li>
+            <li *ngFor="let discount of orderDetailShippingDiscounts">
+              <span>{{ discount.description || 'Delivery discount' }}</span>
+              <span>-{{ discount.discountAmount | number:'1.2-2' }}</span>
+            </li>
+            <li *ngIf="(orderDetail.taxAmount || 0) > 0">
+              <span>Tax</span>
+              <span>{{ orderDetail.taxAmount | number:'1.2-2' }}</span>
+            </li>
+            <li>
+              <span>Paid</span>
+              <span>{{ orderDetail.paidAmount | number:'1.2-2' }}</span>
+            </li>
+            <li *ngIf="(orderDetail.remainingAmount || 0) > 0">
+              <span>Remaining</span>
+              <span>{{ orderDetail.remainingAmount | number:'1.2-2' }}</span>
+            </li>
+            <li class="order-detail-total-row">
+              <span>Total</span>
+              <span>{{ orderDetail.totalAmount | number:'1.2-2' }}</span>
+            </li>
+          </ul>
+        </aside>
+      </div>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">
+      <i class="fa fa-times me-1" aria-hidden="true"></i>
+      Close
+    </button>
   </div>
 </ng-template>
 
@@ -288,7 +340,9 @@
     <h5 class="modal-title" id="track-order-modal-title">
       Track Order {{ trackingOrderNumber }}
     </h5>
-    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+    <button type="button" class="order-modal-close" aria-label="Close" (click)="modal.dismiss()">
+      <i class="fa fa-times" aria-hidden="true"></i>
+    </button>
   </div>
   <div class="modal-body order-tracking-modal-body">
     <div *ngIf="trackingLoading" class="text-center py-4 orders-muted">Loading order status history…</div>
@@ -327,6 +381,9 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close()">Close</button>
+    <button type="button" class="btn btn-secondary" (click)="modal.close()">
+      <i class="fa fa-times me-1" aria-hidden="true"></i>
+      Close
+    </button>
   </div>
 </ng-template>

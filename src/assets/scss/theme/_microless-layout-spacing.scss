@@ -4,16 +4,17 @@
    ========================================================================== */
 
 :root {
-  --layout-header-content-gap: 1rem;
-  --layout-breadcrumb-padding-y: 1rem;
-  --layout-content-top-gap: 1.25rem;
+  --layout-header-content-gap: 0.75rem;
+  --layout-breadcrumb-padding-y: 0.4rem;
+  --layout-content-top-gap: 0.85rem;
+  --layout-content-bottom-gap: 1.5rem;
 }
 
 @media (min-width: 768px) {
   :root {
-    --layout-header-content-gap: 1.25rem;
-    --layout-breadcrumb-padding-y: 1.1rem;
-    --layout-content-top-gap: 1.5rem;
+    --layout-header-content-gap: 0.85rem;
+    --layout-breadcrumb-padding-y: 0.45rem;
+    --layout-content-top-gap: 0.95rem;
   }
 }
 
@@ -29,10 +30,24 @@ app-breadcrumb .breadcrumb-section,
   padding-bottom: var(--layout-breadcrumb-padding-y) !important;
 }
 
-/* --- Main content after breadcrumb (margin survives component encapsulation) --- */
+/* --- Main content after breadcrumb (override global section { padding-top: 70px }) --- */
 app-breadcrumb + section.section-b-space,
 app-breadcrumb + section {
   margin-top: var(--layout-content-top-gap) !important;
+  padding-top: var(--layout-content-top-gap) !important;
+}
+
+/* Product detail pages — tighter gap under title bar */
+app-product-left-sidebar > section.product-detail-page,
+app-product-left-sidebar > section.section-b-space,
+app-product-right-sidebar > section.section-b-space,
+app-product-no-sidebar > section.section-b-space,
+app-three-column > section.section-b-space,
+app-four-image > section.section-b-space,
+app-image-outside > section.section-b-space,
+app-bundle-product > section.section-b-space {
+  margin-top: 0.75rem !important;
+  padding-top: 0.85rem !important;
 }
 
 /* --- Checkout (no breadcrumb, compact top gap) --- */
@@ -48,8 +63,10 @@ app-collection-right-sidebar > section.section-b-space,
 app-collection-no-sidebar > section.section-b-space,
 app-collection-infinitescroll > section.section-b-space,
 app-cms-page > section.section-b-space {
-  margin-top: var(--layout-header-content-gap) !important;
-  padding-top: var(--layout-content-top-gap) !important;
+  /* Breath under fixed header — modest gap, not the old 70px section padding */
+  margin-top: 1rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: var(--layout-content-bottom-gap, 1.5rem) !important;
 }
 
 /* --- Home hero slider — gap below header menu --- */
@@ -62,25 +79,50 @@ section.home-hero-slider.container {
   padding-right: 20px !important;
 }
 
+/* Tighter gap when free-shipping announce sits above the hero */
+app-fashion-one > section.home-hero-slider.home-hero-slider--after-promo.container,
+section.home-hero-slider.home-hero-slider--after-promo.container {
+  margin-top: 22px !important;
+}
+
 /* --- Inner home sections after hero --- */
 app-fashion-one > section.p-t-0:not(.home-hero-slider) {
   margin-top: var(--layout-content-top-gap) !important;
 }
 
 /* --- Home page content alignment (match header container-fluid 16px) --- */
-.home-content-wrap {
-  padding-left: 16px;
-  padding-right: 16px;
-  max-width: 100%;
-}
-
 .home-section-title {
   font-size: 20px;
   font-weight: 700;
   line-height: 1.3;
   text-transform: uppercase;
   color: var(--ml-page-title, var(--text-primary, #fff));
-  margin: 0 0 12px;
+  margin: 0 0 18px;
   padding-left: 12px;
   border-left: 4px solid #f5b800;
+}
+
+.home-content-wrap {
+  padding-left: 16px;
+  padding-right: 16px;
+  max-width: 100%;
+
+  > .row > .col > app-product-box-vertical-slider + app-product-box-vertical-slider {
+    display: block;
+  }
+}
+
+/* Homepage section rhythm */
+.home-content-wrap ~ app-top-categories-slider,
+.home-content-wrap app-top-categories-slider {
+  display: block;
+}
+
+section.p-t-0 {
+  padding-top: 0 !important;
+}
+
+.container.section-t-space,
+.section-t-space {
+  margin-top: 32px !important;
 }

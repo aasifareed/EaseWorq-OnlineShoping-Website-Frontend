@@ -1,53 +1,48 @@
 <div class="product-top-filter product-top-filter--microless">
-    <div class="row g-0">
-        <div class="col-12">
-            <div class="product-filter-content">
-                <div class="microless-toolbar">
-                    <div class="microless-toolbar__left">
-                        <div class="microless-toolbar__range">
-                            {{ rangeStart }}-{{ rangeEnd }} of {{ TotalCount }}
-                        </div>
-                        <nav class="microless-toolbar__bread" aria-label="Breadcrumb" *ngIf="breadcrumbTrail?.length">
-                            <ng-container *ngFor="let crumb of breadcrumbTrail; let first = first">
-                                <span class="sep" *ngIf="!first"> &gt; </span>
-                                <a *ngIf="crumb.routerLink && !crumb.current"
-                                    [routerLink]="crumb.routerLink"
-                                    [queryParams]="crumb.queryParams || {}">
-                                    {{ crumb.label }}
-                                </a>
-                                <span *ngIf="!crumb.routerLink || crumb.current"
-                                    [class.current]="crumb.current">{{ crumb.label }}</span>
-                            </ng-container>
-                        </nav>
-                    </div>
-                    <div class="microless-toolbar__controls">
-                        <div class="microless-sort">
-                            <label class="microless-sort__label" for="microless-sort-select">Sort by</label>
-                            <select id="microless-sort-select" (change)="sorting($event)" aria-label="Sort by">
-                                <option value="ascending" [selected]="sortBy == 'ascending'">Popularity</option>
-                                <option value="a-z" [selected]="sortBy == 'a-z'">Alphabetically A-Z</option>
-                                <option value="z-a" [selected]="sortBy == 'z-a'">Alphabetically Z-A</option>
-                                <option value="low" [selected]="sortBy == 'low'">Price Low to High</option>
-                                <option value="high" [selected]="sortBy == 'high'">Price High to Low</option>
-                            </select>
-                        </div>
-                        <div class="microless-view-toggle" role="group" aria-label="Product view">
-                            <button type="button" class="microless-view-btn"
-                                [class.microless-view-btn--active]="layoutView === 'list-view'"
-                                (click)="setLayoutView('list-view')">
-                                <i class="fa fa-list-ul" aria-hidden="true"></i>
-                                <span>List</span>
-                            </button>
-                            <button type="button" class="microless-view-btn"
-                                [class.microless-view-btn--active]="layoutView === 'grid-view'"
-                                (click)="setLayoutView('grid-view')">
-                                <i class="fa fa-th" aria-hidden="true"></i>
-                                <span>Grid</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="shop-toolbar__bar">
+    <div class="shop-toolbar__meta">
+      <span class="shop-toolbar__count" *ngIf="TotalCount">
+        {{ rangeStart }}-{{ rangeEnd }} of {{ TotalCount }}
+      </span>
+      <nav class="shop-toolbar__bread" aria-label="Breadcrumb" *ngIf="breadcrumbTrail?.length">
+        <ng-container *ngFor="let crumb of breadcrumbTrail; let first = first">
+          <span class="sep" *ngIf="!first"> &gt; </span>
+          <a *ngIf="crumb.routerLink && !crumb.current"
+             [routerLink]="crumb.routerLink"
+             [queryParams]="crumb.queryParams || {}">{{ crumb.label }}</a>
+          <span *ngIf="!crumb.routerLink || crumb.current"
+                [class.current]="crumb.current">{{ crumb.label }}</span>
+        </ng-container>
+      </nav>
     </div>
+
+    <div class="shop-toolbar__controls">
+      <div class="shop-toolbar__sort">
+        <label class="shop-toolbar__sort-label" for="microless-sort-select">Sort by</label>
+        <select id="microless-sort-select" (change)="sorting($event)" aria-label="Sort by">
+          <option value="ascending" [selected]="sortBy == 'ascending'">Popularity</option>
+          <option value="a-z" [selected]="sortBy == 'a-z'">Alphabetically A-Z</option>
+          <option value="z-a" [selected]="sortBy == 'z-a'">Alphabetically Z-A</option>
+          <option value="low" [selected]="sortBy == 'low'">Price Low to High</option>
+          <option value="high" [selected]="sortBy == 'high'">Price High to Low</option>
+        </select>
+      </div>
+      <div class="shop-toolbar__views" role="group" aria-label="Product view">
+        <button type="button"
+                class="shop-toolbar__view-btn"
+                [class.shop-toolbar__view-btn--active]="layoutView === 'list-view'"
+                (click)="setLayoutView('list-view')">
+          <i class="fa fa-list-ul" aria-hidden="true"></i>
+          <span>List</span>
+        </button>
+        <button type="button"
+                class="shop-toolbar__view-btn"
+                [class.shop-toolbar__view-btn--active]="layoutView === 'grid-view'"
+                (click)="setLayoutView('grid-view')">
+          <i class="fa fa-th" aria-hidden="true"></i>
+          <span>Grid</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

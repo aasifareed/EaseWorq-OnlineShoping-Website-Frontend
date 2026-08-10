@@ -27,7 +27,7 @@ export class CartVariationComponent implements OnInit, OnDestroy {
   }
 
   get getTotal(): Observable<number> {
-    return this.productService.cartTotalAmount();
+    return this.productService.cartCatalogueDisplayTotal();
   }
 
   removeItem(product: any) {

@@ -16,8 +16,14 @@
           <p *ngIf="notFound">We could not match this payment return to an order. Your cart items may still be available.</p>
           <p *ngIf="!notFound">The order linked to this payment could not be loaded.</p>
           <div class="failure-actions">
-            <a [routerLink]="'/shop'" class="btn btn-solid">Continue shopping</a>
-            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">My orders</a>
+            <a [routerLink]="'/shop'" class="btn btn-solid">
+              <i class="fa fa-shopping-bag me-2" aria-hidden="true"></i>
+              Continue shopping
+            </a>
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">
+              <i class="fa fa-list-alt me-2" aria-hidden="true"></i>
+              My orders
+            </a>
           </div>
         </div>
       </div>
@@ -63,13 +69,23 @@
           </ul>
           <div class="failure-actions" *ngIf="order.canRetryPayment">
             <button type="button" class="btn btn-solid" [disabled]="retrying" (click)="retryPayment()">
+              <i class="fa" [ngClass]="retrying ? 'fa-spinner fa-spin me-2' : 'fa-credit-card me-2'" aria-hidden="true"></i>
               {{ retrying ? 'Redirecting to PayFast…' : 'Try payment again' }}
             </button>
-            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">View my orders</a>
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-outline-light ms-2">
+              <i class="fa fa-list-alt me-2" aria-hidden="true"></i>
+              View my orders
+            </a>
           </div>
           <div class="failure-actions" *ngIf="!order.canRetryPayment">
-            <a [routerLink]="'/pages/my-orders'" class="btn btn-solid">View my orders</a>
-            <a [routerLink]="'/shop'" class="btn btn-outline-light ms-2">Continue shopping</a>
+            <a [routerLink]="'/pages/my-orders'" class="btn btn-solid">
+              <i class="fa fa-list-alt me-2" aria-hidden="true"></i>
+              View my orders
+            </a>
+            <a [routerLink]="'/shop'" class="btn btn-outline-light ms-2">
+              <i class="fa fa-shopping-bag me-2" aria-hidden="true"></i>
+              Continue shopping
+            </a>
           </div>
         </div>
       </div>
@@ -102,13 +118,17 @@
           </div>
           <div class="total-sec">
             <ul>
-              <li>Subtotal <span>{{ order.subTotalAmount | shopCurrency:productService?.Currency.currency }}</span></li>
-              <li *ngIf="order.discountAmount > 0" class="order-success-discount">
-                Coupon discount
-                <span>−{{ order.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
+              <li>Subtotal <span>{{ orderSubtotal | shopCurrency:productService?.Currency.currency }}</span></li>
+              <li *ngFor="let discount of merchandiseDiscountRows" class="order-success-discount">
+                {{ discount.description || 'Discount' }}
+                <span>−{{ discount.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
               </li>
-              <li>Shipping ({{ order.shippingMethodName }}) <span>{{ order.shippingCharges | shopCurrency:productService?.Currency.currency }}</span></li>
-              <li>Tax <span>{{ order.taxAmount | shopCurrency:productService?.Currency.currency }}</span></li>
+              <li>Shipping ({{ order.shippingMethodName }}) <span>{{ orderShippingAmount | shopCurrency:productService?.Currency.currency }}</span></li>
+              <li *ngFor="let discount of shippingDiscountRows" class="order-success-discount">
+                {{ discount.description || 'Delivery discount' }}
+                <span>−{{ discount.discountAmount | shopCurrency:productService?.Currency.currency }}</span>
+              </li>
+              <li *ngIf="order.taxAmount > 0">Tax <span>{{ order.taxAmount | shopCurrency:productService?.Currency.currency }}</span></li>
             </ul>
           </div>
           <div class="final-total">

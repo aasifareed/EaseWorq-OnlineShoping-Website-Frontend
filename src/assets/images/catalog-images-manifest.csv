@@ -1,0 +1,174 @@
+type,id,name,file
+category,0e6c09f5-73c2-4423-fc6d-08de415581ba,Airbuds / TWS (True Wireless),categories/airbuds-tws-true-wireless.svg
+category,4237313d-ed01-4edf-051c-08de42b75922,Airbuds/Watch Batteries,categories/airbuds-watch-batteries.svg
+category,41fbf15f-606b-4a0a-29d3-08de3faac42f,Audio Accessories,categories/audio-accessories.svg
+category,27ab26c7-2042-48b9-9c67-08de40632efb,Back Covers,categories/back-covers.svg
+category,2b8d80b4-65ee-4820-29d4-08de3faac42f,Cables,categories/cables.svg
+category,a1179a79-dc95-46e9-9dbe-08de6c60dbab,Charger,categories/charger.svg
+category,032aee52-ee64-4b98-29f7-08de3faac42f,Charger Jack,categories/charger-jack.svg
+category,e6fcd629-8135-4bb6-9dc4-08de6c60dbab,Charger M,categories/charger-m.svg
+category,fd2f2c6b-e483-487b-29d1-08de3faac42f,Chargers / Adaptors,categories/chargers-adaptors.svg
+category,db6a72e9-6e77-4f64-29d7-08de3faac42f,Charging Flex,categories/charging-flex.svg
+category,38e93d93-46d2-4913-29ea-08de3faac42f,Computer Accessories,categories/computer-accessories.svg
+category,9194fb2f-59c6-40b6-9a35-08de41f98380,DC Power Supply,categories/dc-power-supply.svg
+category,00427e27-4278-4928-29dc-08de3faac42f,Electronics Accessories,categories/electronics-accessories.svg
+category,37c1d269-1375-436f-bcf7-08de6b25470f,Embrodered Cotton,categories/embrodered-cotton.svg
+category,d6419a11-055d-4985-29e8-08de3faac42f,Feature Phones / Keypad Mobiles,categories/feature-phones-keypad-mobiles.svg
+category,a299141e-1424-45ad-29f0-08de3faac42f,Flower Cables,categories/flower-cables.svg
+category,fbeb2423-9918-449d-9c68-08de40632efb,Full-Body Cases,categories/full-body-cases.svg
+category,64b20e6e-18c8-4226-ff6f-08de3f9d3698,Handsfree,categories/handsfree.svg
+category,de4259bd-ee90-44d8-9a36-08de41f98380,Headphone,categories/headphone.svg
+category,2dadeb9d-c2d1-454f-29db-08de3faac42f,Heat Guns,categories/heat-guns.svg
+category,00126505-4c1e-4af2-9c69-08de40632efb,Inner,categories/inner.svg
+category,f7e2166a-b2c2-4970-ee68-08de6c73246b,iphone 15 pro max,categories/iphone-15-pro-max.svg
+category,6aa855ed-36dd-411b-7d48-08de40896725,Keypad Batteries,categories/keypad-batteries.svg
+category,af2fc4bb-6445-4dd5-7d49-08de40896725,Keypad Bodies,categories/keypad-bodies.svg
+category,0a160ffa-8b0c-4862-29d5-08de3faac42f,Keypad Mobile LCD,categories/keypad-mobile-lcd.svg
+category,a0c4ff36-8d1c-4be7-310b-08de46d6ced0,Khata,categories/khata.svg
+category,0deb90cb-95b7-4ffb-29d9-08de3faac42f,LCD Cleaning Liquid,categories/lcd-cleaning-liquid.svg
+category,ab63e492-525a-4e46-29de-08de3faac42f,LCD Remote,categories/lcd-remote.svg
+category,0e741336-09fb-42f5-29e4-08de3faac42f,Memory Cards,categories/memory-cards.svg
+category,5f4d75fd-e6f6-4cd9-29f1-08de3faac42f,Mobile Accessories,categories/mobile-accessories.svg
+category,ff8eaf74-5bc2-4142-9dc3-08de6c60dbab,Mobile Accessories M,categories/mobile-accessories-m.svg
+category,6c7a66a9-9ea0-4ce0-d20f-08de43eb53cb,Mobile Camera,categories/mobile-camera.svg
+category,dd51ad28-27fc-44e2-29d0-08de3faac42f,Mobile Covers & Protection,categories/mobile-covers-protection.svg
+category,c04bd6f3-1b48-4534-9dc1-08de6c60dbab,Mobile M,categories/mobile-m.svg
+category,a4653af4-87e9-4f1f-29f5-08de3faac42f,Mobile Parts,categories/mobile-parts.svg
+category,13522fa1-4b93-481b-29f2-08de3faac42f,Mobile Stands,categories/mobile-stands.svg
+category,200fcaac-b24a-4c39-29d6-08de3faac42f,Mobile Touch Glass,categories/mobile-touch-glass.svg
+category,4bfa9a0b-fb9a-4944-29e7-08de3faac42f,Mobiles / Smartphones,categories/mobiles-smartphones.svg
+category,eca76041-74cd-4be2-29eb-08de3faac42f,Mouse,categories/mouse.svg
+category,9c736fad-0d7d-4972-29d2-08de3faac42f,MP3,categories/mp3.svg
+category,7424a274-b992-4e44-29e0-08de3faac42f,MP3 Remote,categories/mp3-remote.svg
+category,2ee0cdbc-640d-4d61-29e2-08de3faac42f,Neckband Handsfree,categories/neckband-handsfree.svg
+category,5c83b102-2b02-4b32-6748-08de456b81ad,OCA Glass,categories/oca-glass.svg
+category,e54c8248-dff4-4bff-6749-08de456b81ad,OCA Paper,categories/oca-paper.svg
+category,a86813ec-7c11-48d7-29e1-08de3faac42f,OTG Connector,categories/otg-connector.svg
+category,b78a2bf1-51c5-4c7c-29d8-08de3faac42f,Power & Volume Flex,categories/power-volume-flex.svg
+category,1d74db3b-d341-4576-29e6-08de3faac42f,Power Banks,categories/power-banks.svg
+category,da0f1003-7a85-4fe5-29ee-08de3faac42f,Power Cable,categories/power-cable.svg
+category,a394d5e1-568f-4b2f-29df-08de3faac42f,Receiver Remote,categories/receiver-remote.svg
+category,fc820f2c-d5bc-4421-29f8-08de3faac42f,Remote Cells,categories/remote-cells.svg
+category,6fc60d88-9e71-4c10-29dd-08de3faac42f,Remote Controls,categories/remote-controls.svg
+category,1b12f00f-3baf-472a-29e9-08de3faac42f,Repair Gum,categories/repair-gum.svg
+category,e5d4aef6-d231-4868-29da-08de3faac42f,Repair Tools & Equipment,categories/repair-tools-equipment.svg
+category,b607eec7-8fe2-4673-7d47-08de40896725,Ring Back,categories/ring-back.svg
+category,ee580e33-72fb-47ef-9dbf-08de6c60dbab,Samsung,categories/samsung.svg
+category,aee9552f-68d4-483e-29f4-08de3faac42f,Selfie Sticks,categories/selfie-sticks.svg
+category,a9800a71-948f-4606-29f6-08de3faac42f,SIM / SD Tray,categories/sim-sd-tray.svg
+category,7d894a30-79d8-4a06-9dc2-08de6c60dbab,Smart phone M,categories/smart-phone-m.svg
+category,99f2a1ed-9974-465b-6870-08de420c97a8,Smart Watch,categories/smart-watch.svg
+category,6a16ff46-7ce5-43ed-ff6d-08de3f9d3698,Smartphone Batteries,categories/smartphone-batteries.svg
+category,0d0d0eab-934b-4c7a-29f3-08de3faac42f,Stands & Holders,categories/stands-holders.svg
+category,cb804cef-e919-46b3-29e3-08de3faac42f,Storage / Data Accessories,categories/storage-data-accessories.svg
+category,ccf3c9d6-b86e-4adf-bcf6-08de6b25470f,Summer Collection,categories/summer-collection.svg
+category,e49e2e13-1fbb-4b38-d20e-08de43eb53cb,Tiktok Mic,categories/tiktok-mic.svg
+category,da6d4ca7-bfee-4781-77e4-08de60a69505,Tool Charges,categories/tool-charges.svg
+category,59a4c2db-3e16-42bf-ff6e-08de3f9d3698,Units,categories/units.svg
+category,399723e3-f288-4573-29e5-08de3faac42f,USB Drives,categories/usb-drives.svg
+category,97f31976-8887-48b7-29ef-08de3faac42f,VGA Cable,categories/vga-cable.svg
+category,3a273d60-c4c1-477b-9dc0-08de6c60dbab,Vivo,categories/vivo.svg
+category,538716be-8006-4df8-29ec-08de3faac42f,Wired,categories/wired.svg
+category,f93f8cd0-5fbd-4e30-29ed-08de3faac42f,Wireless,categories/wireless.svg
+brand,1593e723-e541-482e-d6b9-08de712ae6b3,1 Plus,brands/1-plus.svg
+brand,664967d5-2d6c-47a3-0b33-08de3fbad2da,A.T,brands/a-t.svg
+brand,60ab0445-9e53-4395-0b34-08de3fbad2da,A.T Alfa,brands/a-t-alfa.svg
+brand,ce9e9d1d-a368-4e17-71ff-08de4517b798,AL Catel,brands/al-catel.svg
+brand,a625808d-721b-4fb8-18bc-08de415653a5,ANC,brands/anc.svg
+brand,4d5d4bdb-f2e3-4d07-0aeb-08de41f11bb1,AORAX,brands/aorax.svg
+brand,d79ed6d1-30b1-418b-b2f5-08de42d31a7f,Asus,brands/asus.svg
+brand,bac343bb-5000-434c-18be-08de415653a5,Ayunwish,brands/ayunwish.svg
+brand,a7749f5f-944c-44e0-7764-08de42e978fa,Bloves,brands/bloves.svg
+brand,dbfd9ae8-6c90-480b-e4f3-08de43dc3d47,Boya,brands/boya.svg
+brand,74dcbd4e-7d54-4725-7aa5-08de42dfdf58,Calme,brands/calme.svg
+brand,f2a4e873-641a-4da0-aa7d-08de60a69de9,Charges,brands/charges.svg
+brand,274a1ea0-52e9-4689-0b2f-08de3fbad2da,Club,brands/club.svg
+brand,a8671155-ff8b-49c9-0b3e-08de3fbad2da,Dell,brands/dell.svg
+brand,476d5b59-533c-4405-0b42-08de3fbad2da,DG,brands/dg.svg
+brand,366bf635-c0b9-4f71-71fa-08de4517b798,Digit/Jazz,brands/digit-jazz.svg
+brand,4375cb30-1a18-411a-0aed-08de41f11bb1,EFINIYA,brands/efiniya.svg
+brand,4ea19833-8532-48f5-0b2a-08de3fbad2da,E-Tachi,brands/e-tachi.svg
+brand,fc6e4872-5380-4d49-0b26-08de3fbad2da,F.M.A,brands/f-m-a.svg
+brand,12fe96b9-b329-4fd1-0b23-08de3fbad2da,Fast X,brands/fast-x.svg
+brand,189aa6ea-c037-400b-0b2b-08de3fbad2da,FAYWA,brands/faywa.svg
+brand,840f9825-4c04-4e09-0b29-08de3fbad2da,Geman,brands/geman.svg
+brand,a91d5a8d-feb4-4f80-71fd-08de4517b798,GFive,brands/gfive.svg
+brand,5b5ff27f-121d-4462-18c1-08de415653a5,Good Life,brands/good-life.svg
+brand,51e9b4a3-d6c4-48df-e4f2-08de43dc3d47,Gresso,brands/gresso.svg
+brand,efc1dcce-5fd5-42e1-0b36-08de3fbad2da,GTS,brands/gts.svg
+brand,2a15655e-9df7-4913-bf08-08de6b2614bb,Gull Jee,brands/gull-jee.svg
+brand,a4c56b47-642f-4657-0ae9-08de41f11bb1,Haino Teko,brands/haino-teko.svg
+brand,f80edd76-6c1e-4c7d-2257-08de4146bd8a,HH Yes I'M,brands/hh-yes-i-m.svg
+brand,4ba92115-c766-4bff-18c2-08de415653a5,HI-FI,brands/hi-fi.svg
+brand,accba36c-942b-4750-5507-08de41387899,Hi-Tech,brands/hi-tech.svg
+brand,c5347e7d-a7c1-4c3a-0b32-08de3fbad2da,Hotmai,brands/hotmai.svg
+brand,73a36205-4082-49a4-0b3f-08de3fbad2da,HP,brands/hp.svg
+brand,5a4dd875-cdf5-4948-0b1b-08de3fbad2da,Huawei,brands/huawei.svg
+brand,e22cd970-bbc2-4421-ac2a-08de412ca10d,IJM,brands/ijm.svg
+brand,080baf4b-7947-4339-0b17-08de3fbad2da,Infinix,brands/infinix.svg
+brand,da232f1c-8c12-4800-2256-08de4146bd8a,Intec,brands/intec.svg
+brand,4ba42a36-16df-4aeb-0b1d-08de3fbad2da,iPhone,brands/iphone.svg
+brand,0bb31e47-8e88-4d04-6846-08de6c6aa28b,IPhone M,brands/iphone-m.svg
+brand,0b98e6b2-4d44-459f-0b39-08de3fbad2da,IT,brands/it.svg
+brand,8d5adc72-4b2a-4027-0b19-08de3fbad2da,Itel,brands/itel.svg
+brand,9dd43139-efe0-4a24-0b3b-08de3fbad2da,Jazz,brands/jazz.svg
+brand,b622216d-e6e1-43fe-0b38-08de3fbad2da,JBL,brands/jbl.svg
+brand,5e340fa0-6979-4fd4-0b28-08de3fbad2da,Jcell,brands/jcell.svg
+brand,99517d5d-efec-41f6-7204-08de4517b798,JECK,brands/jeck.svg
+brand,da212f6b-cb4b-4603-0aee-08de41f11bb1,JOYROOM,brands/joyroom.svg
+brand,8d4d98e8-0734-4ee8-0b22-08de3fbad2da,KADA,brands/kada.svg
+brand,28c71b4b-13b5-4c9d-0b40-08de3fbad2da,KT,brands/kt.svg
+brand,c3efbfd3-eebe-4900-0b35-08de3fbad2da,KTS,brands/kts.svg
+brand,81c3f23d-1ba3-460f-d6bc-08de712ae6b3,L G  M,brands/l-g-m.svg
+brand,eedda3f4-f4b3-45f5-18bd-08de415653a5,Langsdom,brands/langsdom.svg
+brand,1b186435-e06a-4065-71fb-08de4517b798,Lava,brands/lava.svg
+brand,cf8de12a-07cf-4f4b-18c0-08de415653a5,LELISU,brands/lelisu.svg
+brand,480e8fe8-1035-4c08-0b20-08de3fbad2da,LMA,brands/lma.svg
+brand,10784772-11ff-448c-0aef-08de41f11bb1,LOT,brands/lot.svg
+brand,83860c02-a0ca-4908-0b25-08de3fbad2da,Mechanic,brands/mechanic.svg
+brand,2b3e5706-cf3d-4233-71fc-08de4517b798,Motrola,brands/motrola.svg
+brand,ca81aa0d-c9c5-4dab-0b3d-08de3fbad2da,MT,brands/mt.svg
+brand,1802c3b8-0e0b-4279-2259-08de4146bd8a,MTK,brands/mtk.svg
+brand,1b40386e-d361-43d2-0b1f-08de3fbad2da,Nokia,brands/nokia.svg
+brand,b9a7c104-5fa2-432b-7200-08de4517b798,OCA,brands/oca.svg
+brand,d1322f16-3957-408f-02ac-08de46d6d898,Odhar,brands/odhar.svg
+brand,e7ce4d48-0da9-4d73-8ee3-08de420b104b,OG Crown,brands/og-crown.svg
+brand,ee034fff-ba37-44fb-0b15-08de3fbad2da,Oppo,brands/oppo.svg
+brand,30e01202-4a1c-4fdc-0b27-08de3fbad2da,Oteam,brands/oteam.svg
+brand,6fbf465a-00f8-454b-e88d-08de413fe9b1,OVO Plus,brands/ovo-plus.svg
+brand,367c4617-a4da-4070-0af0-08de41f11bb1,PORTPONICS,brands/portponics.svg
+brand,b9f8e0ef-5ec2-43ce-0b3a-08de3fbad2da,Power X,brands/power-x.svg
+brand,339fc796-6432-4a0d-0b37-08de3fbad2da,QMobile,brands/qmobile.svg
+brand,ec76a266-d115-4a3d-0b1c-08de3fbad2da,Realme,brands/realme.svg
+brand,a3774530-2b17-483d-0b1a-08de3fbad2da,Samsung,brands/samsung.svg
+brand,fdc6b0f1-d37f-41f6-6847-08de6c6aa28b,Samsung M,brands/samsung-m.svg
+brand,faf3f790-b5bc-4cf5-0b2c-08de3fbad2da,SEGO,brands/sego.svg
+brand,bd2db850-58e2-4f2e-7201-08de4517b798,SIM Tray,brands/sim-tray.svg
+brand,1d35cb50-b996-4863-0b30-08de3fbad2da,Sparx,brands/sparx.svg
+brand,6a1f68a7-2b4e-4cab-e4f1-08de43dc3d47,Stereo,brands/stereo.svg
+brand,0a71a88a-5ca1-4619-8ee1-08de420b104b,Sunlong,brands/sunlong.svg
+brand,0c66a133-93a8-4b73-8ee5-08de420b104b,Sunwei,brands/sunwei.svg
+brand,87eab458-4d7a-491c-0b18-08de3fbad2da,Tecno,brands/tecno.svg
+brand,469f1326-3b76-4011-d6ba-08de712ae6b3,Tecno M,brands/tecno-m.svg
+brand,90216603-888e-44c7-0b24-08de3fbad2da,Telelink,brands/telelink.svg
+brand,ffc60326-875f-48af-8ee2-08de420b104b,TG,brands/tg.svg
+brand,80dc89a3-3384-486d-0af1-08de41f11bb1,TITAN,brands/titan.svg
+brand,26b4ae9c-c67c-410e-0dad-08de42b34eb9,TLG,brands/tlg.svg
+brand,29f3e3c0-3e9a-4d25-7202-08de4517b798,Touch Glass,brands/touch-glass.svg
+brand,853dc3fe-46b9-4e07-0aec-08de41f11bb1,TWS,brands/tws.svg
+brand,bc093d61-b814-41b8-e88c-08de413fe9b1,Ven-Dens,brands/ven-dens.svg
+brand,cf8e902f-0585-45b6-0b2e-08de3fbad2da,VGO TEL,brands/vgo-tel.svg
+brand,8e5abc4b-8e4f-4163-0b2d-08de3fbad2da,Villaon,brands/villaon.svg
+brand,ef39182f-badf-4e42-0b16-08de3fbad2da,Vivo,brands/vivo.svg
+brand,64a99547-68e5-4bbb-d6bb-08de712ae6b3,Vivo M,brands/vivo-m.svg
+brand,1b20e1ab-bfba-42f8-8ee4-08de420b104b,Volder,brands/volder.svg
+brand,3a8880fa-b1e5-425f-7203-08de4517b798,Volume On/Off,brands/volume-on-off.svg
+brand,74056ddf-2edb-46b9-0aea-08de41f11bb1,Wiwo Bird,brands/wiwo-bird.svg
+brand,468925c7-128a-483a-0b1e-08de3fbad2da,Xiaomi/Redmi,brands/xiaomi-redmi.svg
+brand,31dafb97-bb27-4fd1-18bf-08de415653a5,YSDBBC,brands/ysdbbc.svg
+brand,5dc60aa2-7d5c-4ae4-0b41-08de3fbad2da,ZAN,brands/zan.svg
+brand,7fd6997f-147d-49dd-2258-08de4146bd8a,ZIRUIMAX,brands/ziruimax.svg
+brand,08a8bf9d-6f93-4e85-0b31-08de3fbad2da,ZMB,brands/zmb.svg
+brand,99b87110-9e24-4877-0b3c-08de3fbad2da,Zong,brands/zong.svg
+brand,abb54163-adf4-40f3-71fe-08de4517b798,ZTE,brands/zte.svg
+brand,05bdfee8-78a1-4b17-0b21-08de3fbad2da,ZUK,brands/zuk.svg

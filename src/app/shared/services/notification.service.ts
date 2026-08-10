@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, map, of, tap, catchError, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
+import { asBackgroundRequest } from '../interceptors/background-request';
 import { NotificationApiDto, ShopNotificationItem } from '../models/notification.model';
 
 export interface CustomerNotificationContext {
@@ -47,10 +48,18 @@ export class NotificationService {
     });
   }
 
+  /**
+   * The bell dropdown polls in the background and reports on itself, so nothing it does should take
+   * the screen away from whatever the customer is reading.
+   */
+  private quietRequestOptions() {
+    return asBackgroundRequest({ headers: this.tenantHeaders() });
+  }
+
   loadNotifications(): Observable<ShopNotificationItem[]> {
     const path = environment.urls?.Notification_GetAll || 'Notification/GetNotifications';
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    return this.http.get<any>(url, { headers: this.tenantHeaders() }).pipe(
+    return this.http.get<any>(url, this.quietRequestOptions()).pipe(
       map((resp) => this.mapResponseItems(resp))
     );
   }
@@ -75,7 +84,7 @@ export class NotificationService {
       .set('tenantId', String(ctx.tenantId));
     const url = `${this.apiRoot()}api/services/app/${path}`;
 
-    return this.http.get<any>(url, { headers: this.tenantHeaders(), params }).pipe(
+    return this.http.get<any>(url, asBackgroundRequest({ headers: this.tenantHeaders(), params })).pipe(
       tap((resp) => {
         const items = resp?.result?.items ?? resp?.result ?? resp?.items ?? [];
         const count = Array.isArray(items) ? items.length : 0;
@@ -104,7 +113,7 @@ export class NotificationService {
       tenantId: ctx.tenantId
     };
 
-    return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
+    return this.http.post<any>(url, body, this.quietRequestOptions()).pipe(
       map((resp) => !!(resp?.result ?? resp))
     );
   }
@@ -124,7 +133,7 @@ export class NotificationService {
       tenantId: ctx.tenantId,
     };
 
-    return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
+    return this.http.post<any>(url, body, this.quietRequestOptions()).pipe(
       map((resp) => !!(resp?.result ?? resp)),
       switchMap((ok) => (ok ? of(true) : this.markAllViaLegacyEndpoint(fallbackIds))),
       catchError(() => this.markAllViaLegacyEndpoint(fallbackIds)),
@@ -147,7 +156,7 @@ export class NotificationService {
       tenantId: ctx.tenantId,
     };
 
-    return this.http.post<any>(url, body, { headers: this.tenantHeaders() }).pipe(
+    return this.http.post<any>(url, body, this.quietRequestOptions()).pipe(
       map((resp) => !!(resp?.result ?? resp)),
       switchMap((ok) => (ok ? of(true) : this.markEachNotificationAsRead(fallbackIds))),
       catchError(() => this.markEachNotificationAsRead(fallbackIds)),

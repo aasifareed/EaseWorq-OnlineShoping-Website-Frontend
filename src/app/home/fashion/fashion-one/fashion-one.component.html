@@ -1,8 +1,44 @@
 <app-header-one [sticky]="true"></app-header-one>
 
+<!-- Free shipping announcement — under yellow nav, scrolls away with page -->
+<div
+  class="free-ship-announce"
+  *ngIf="freeShippingPromo as promo"
+  role="status"
+  [attr.aria-label]="promoAnnounceLabel">
+  <div class="free-ship-announce__viewport">
+    <div class="free-ship-announce__track">
+      <div class="free-ship-announce__group">
+        <p class="free-ship-announce__copy">
+          <span class="free-ship-announce__icon" aria-hidden="true">
+            <i class="fa fa-truck"></i>
+          </span>
+          <span class="free-ship-announce__headline free-ship-announce__headline--desktop">{{ promoHeadline }}</span>
+          <span class="free-ship-announce__headline free-ship-announce__headline--mobile">{{ promoHeadlineMobile }}</span>
+          <ng-container *ngIf="promo.code">
+            <span class="free-ship-announce__use free-ship-announce__use--desktop">Use code</span>
+            <span class="free-ship-announce__use free-ship-announce__use--mobile">· Code:</span>
+            <button
+              type="button"
+              class="free-ship-announce__code"
+              [class.free-ship-announce__code--copied]="codeCopied"
+              [attr.aria-label]="codeCopied ? 'Coupon code copied' : 'Copy coupon code ' + promo.code"
+              (click)="copyPromoCode()">
+              {{ codeCopied ? 'Copied!' : promo.code }}
+            </button>
+          </ng-container>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delivery deals: shown here only on small screens; the top header carries them on desktop -->
+<app-delivery-deals-banner class="home-delivery-deals"></app-delivery-deals-banner>
+
 <!-- Home slider start-->
-<section class="py-0 container home-hero-slider">
-  <app-slider [sliders]="sliders" [textClass]="'text-center'" [category]="'fashion'" [buttonText]="'shop now'">
+<section class="py-0 container home-hero-slider" [class.home-hero-slider--after-promo]="!!freeShippingPromo">
+  <app-slider [sliders]="sliders" [textClass]="'p-left'" [buttonText]="'Shop Now'">
   </app-slider>
 </section>
 <!-- Home slider End -->
@@ -65,16 +101,12 @@
             </ng-template>
           </ng-container>
         </owl-carousel-o> -->
-        <ng-container *ngIf="loadingCategorySliders">
-          <p class="text-center py-3">Loading categories…</p>
-        </ng-container>
         <ng-container *ngFor="let slider of categorySliders">
           <app-product-box-vertical-slider
-            [title]="slider.categoryName"
+            [title]="displayCategoryName(slider.categoryName)"
             [categoryId]="slider.categoryId"
             [products]="slider.products">
           </app-product-box-vertical-slider>
-          <br>
         </ng-container>
       </div>
     </div>
@@ -222,9 +254,10 @@
     </div>
     <app-top-categories-slider
       *ngIf="!loadingCategorySliders"
-      [title]="'EXPLORE OTHER CATEGORIES'"
+      [title]="'EXPLORE CATEGORIES'"
       [categoryFilter]="'nonPopular'"
-      [excludeCategoryIds]="popularSliderCategoryIds">
+      [excludeCategoryIds]="popularSliderCategoryIds"
+      [maxItems]="4">
     </app-top-categories-slider>
   </div>
 </section>
@@ -312,9 +345,9 @@
 
 <!--  logo section start-->
 <!-- <section class="section-b-space"> -->
-  <div class="container-fluid home-content-wrap">
+  <div class="container-fluid home-content-wrap home-brands-section">
     <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
-      <div class="col-md-12" style="margin-bottom: 20px;">
+      <div class="col-md-12">
         <h2 class="home-section-title">TOP BRANDS</h2>
         <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
       </div>

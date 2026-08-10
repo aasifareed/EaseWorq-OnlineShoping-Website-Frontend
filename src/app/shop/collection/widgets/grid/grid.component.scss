@@ -1,194 +1,266 @@
+/* Microless-inspired Shop toolbar — control strip only (page title lives outside) */
+
 .product-top-filter--microless {
-  border-top: 1px solid var(--ml-toolbar-border);
-  border-bottom: 1px solid var(--ml-toolbar-border);
-  background: var(--ml-toolbar-bg);
+  border: 0;
+  background: transparent;
+  margin: 0 0 16px !important;
+  padding: 0;
 
-  .product-filter-content {
-    border: 0;
-    padding: 0;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: flex-start !important;
-    align-items: stretch !important;
-    width: 100% !important;
-
-    > .microless-toolbar {
-      flex: 1 1 auto;
-      min-width: 0;
-      max-width: 100%;
-    }
-  }
-
-  .microless-toolbar {
+  /* Single aligned control strip */
+  .shop-toolbar__bar {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 16px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--ml-toolbar-text);
-    width: 100%;
-    min-width: 0;
+    min-height: 44px;
+    padding: 10px 0 12px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 0;
     box-sizing: border-box;
   }
 
-  .microless-toolbar__left {
+  .shop-toolbar__meta {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 10px 14px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 14px; /* ~12–16px between count and breadcrumb */
     flex: 1 1 auto;
     min-width: 0;
-    max-width: 100%;
   }
 
-  .microless-toolbar__range {
+  .shop-toolbar__count {
     flex: 0 0 auto;
+    margin: 0;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--ml-toolbar-text-strong);
+    line-height: 1.2;
+    color: #374151;
     white-space: nowrap;
   }
 
-  .microless-toolbar__bread {
+  .shop-toolbar__bread {
     flex: 0 1 auto;
-    text-align: left;
-    color: var(--ml-toolbar-text-muted);
     min-width: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.2;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     a {
-      color: var(--ml-toolbar-text);
+      color: #9ca3af;
       text-decoration: none;
+
       &:hover {
+        color: #6b7280;
         text-decoration: underline;
-        color: var(--ml-toolbar-text-strong);
       }
     }
 
     .current {
-      color: var(--ml-toolbar-text-strong);
-      font-weight: 600;
+      color: #9ca3af;
+      font-weight: 500;
     }
 
     .sep {
-      margin: 0 5px;
-      color: var(--ml-toolbar-text-sep);
+      margin: 0 4px;
+      color: #d1d5db;
       user-select: none;
     }
   }
 
-  .microless-toolbar__controls {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 12px 16px;
-    flex: 0 0 auto;
-    margin-left: auto;
-    flex-shrink: 0;
-  }
-
-  @media (max-width: 767px) {
-    .microless-toolbar {
-      flex-wrap: wrap;
-    }
-
-    .microless-toolbar__controls {
-      margin-left: 0;
-      width: 100%;
-      justify-content: flex-end;
-    }
-  }
-
-  .microless-sort {
+  .shop-toolbar__controls {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-end;
+    gap: 12px 16px;
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+    padding: 0;
+  }
+
+  .shop-toolbar__sort {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
 
     select {
-      min-width: 160px;
-      padding: 8px 30px 8px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--ml-toolbar-input-border);
-      background: var(--ml-toolbar-input-bg);
-      color: var(--ml-toolbar-input-text);
+      min-width: 150px;
+      height: 36px;
+      padding: 0 30px 0 10px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background-color: #ffffff;
+      color: #111111;
       cursor: pointer;
       font-size: 13px;
+      line-height: 36px;
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23666666' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 10px center;
+
+      &:focus {
+        outline: none;
+        border-color: #FFC400;
+        box-shadow: 0 0 0 2px rgba(255, 196, 0, 0.25);
+      }
     }
   }
 
-  .microless-sort__label {
+  .shop-toolbar__sort-label {
+    margin: 0;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--ml-toolbar-text-faint);
-    margin: 0;
-    flex: 0 0 auto;
+    color: #9ca3af;
     white-space: nowrap;
     line-height: 1;
-    padding-top: 1px;
-
-    :host-context(body.dark) & {
-      color: #ffffff !important;
-    }
   }
 
-  .microless-view-toggle {
+  .shop-toolbar__views {
     display: inline-flex;
-    border: 1px solid var(--ml-toolbar-input-border);
-    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     overflow: hidden;
-    background: var(--ml-toolbar-toggle-bg);
+    background: #ffffff;
   }
 
-  .microless-view-btn {
+  .shop-toolbar__view-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 8px 12px;
+    height: 36px;
+    padding: 0 12px;
     border: 0;
     background: transparent;
-    color: var(--ml-toolbar-text-muted);
+    color: #6b7280;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.15s ease, color 0.15s ease;
 
-    + .microless-view-btn {
-      border-left: 1px solid var(--ml-toolbar-border);
+    + .shop-toolbar__view-btn {
+      border-left: 1px solid #e5e7eb;
     }
 
     &:hover {
-      color: var(--ml-toolbar-text-strong);
-      background: var(--ml-toolbar-toggle-hover);
+      color: #111111;
+      background: #f3f4f6;
     }
 
     &--active {
-      color: #111;
-      background: #f5c400;
+      color: #111111;
+      background: #FFC400;
     }
 
     &--active:hover {
-      color: #111;
+      color: #111111;
       background: #ffd54d;
     }
   }
 
+  @media (max-width: 767px) {
+    .shop-toolbar__bar {
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 10px 0 12px;
+    }
+
+    .shop-toolbar__meta {
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+    }
+
+    .shop-toolbar__controls {
+      width: 100%;
+      margin-left: 0;
+      justify-content: space-between;
+    }
+
+    .shop-toolbar__sort select {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+  }
+
+  /* Legacy hooks (unused after redesign) */
   .search-count {
     display: none;
   }
 }
 
-body.dark .product-top-filter--microless .microless-sort select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23ffffff' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+body.dark .product-top-filter--microless {
+  .shop-toolbar__bar {
+    background: transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .shop-toolbar__count {
+    color: #e8eaed;
+  }
+
+  .shop-toolbar__bread {
+    color: #b8c0cc;
+
+    a,
+    .current {
+      color: #b8c0cc;
+    }
+
+    a:hover {
+      color: #e8eaed;
+    }
+  }
+
+  .shop-toolbar__sort-label {
+    color: #b8c0cc;
+  }
+
+  .shop-toolbar__sort select {
+    background-color: var(--surface, #1a1a1a);
+    border-color: var(--border, #444);
+    color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%23ffffff' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  }
+
+  .shop-toolbar__views {
+    border-color: var(--border, #444);
+    background: var(--surface, #1a1a1a);
+  }
+
+  .shop-toolbar__view-btn {
+    color: #d1d5db;
+
+    + .shop-toolbar__view-btn {
+      border-left-color: var(--border, #444);
+    }
+
+    &:hover {
+      background: #2a2a2a;
+      color: #ffffff;
+    }
+
+    &--active {
+      color: #111111;
+      background: #FFC400;
+    }
+  }
 }

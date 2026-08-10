@@ -144,6 +144,30 @@ export class GoogleAddressService {
     return place;
   }
 
+  /** Coordinates for an address the customer typed (or one restored from their profile). */
+  async geocodeAddressText(addressText: string): Promise<{ latitude: number; longitude: number } | null> {
+    const text = addressText?.trim();
+    if (!text) {
+      return null;
+    }
+
+    const ready = await this.ensureService();
+    if (!ready) {
+      return null;
+    }
+
+    const geocoder = new google.maps.Geocoder();
+    return new Promise((resolve) => {
+      geocoder.geocode(
+        { address: text, componentRestrictions: { country: PAKISTAN_COUNTRY_CODE } },
+        (results, status) => {
+          const location = status === google.maps.GeocoderStatus.OK ? results?.[0]?.geometry?.location : null;
+          resolve(location ? { latitude: location.lat(), longitude: location.lng() } : null);
+        }
+      );
+    });
+  }
+
   clearSuggestions(): void {
     this.suggestions$.next([]);
   }

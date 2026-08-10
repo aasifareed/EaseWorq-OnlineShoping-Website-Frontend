@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TenantService } from './tenant.service';
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 export interface SearchProductSuggestion {
   /** @deprecated Use productInventoryId */
@@ -65,7 +66,8 @@ export class OnlineShopSearchService {
           .set('Q', q);
 
         const url = `${environment.baseUrl}api/services/app/${environment.urls.OnlineShopSearch_GetSuggestions}`;
-        return this.http.get<{ result: unknown }>(url, { params }).pipe(
+        // Fires while the customer is still typing; the dropdown must never take the screen.
+        return this.http.get<{ result: unknown }>(url, asBackgroundRequest({ params })).pipe(
           map((resp) => this.normalize(resp?.result)),
         );
       }),

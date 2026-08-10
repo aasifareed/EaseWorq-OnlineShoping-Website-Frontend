@@ -1,3 +1,11 @@
+/* Qualified with `section` so it outranks the global `section { padding-top: 70px }` and
+   `.section-b-space { padding-bottom: 70px }`: this page has no breadcrumb bar to fill that space,
+   so the header would otherwise sit above a large void. */
+section.my-orders-page {
+  padding-top: 1rem;
+  padding-bottom: var(--layout-content-bottom-gap, 1.5rem);
+}
+
 .my-orders-page {
   color: var(--ml-surface-text, #333333);
 
@@ -171,23 +179,58 @@
         color: #000000;
       }
     }
+
+    .dropdown-item-remove {
+      color: #b42318;
+
+      i {
+        color: #b42318;
+      }
+
+      &:hover:not(:disabled),
+      &:focus:not(:disabled) {
+        background: rgba(180, 35, 24, 0.08);
+        color: #912018;
+      }
+    }
   }
 
   .orders-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-top: 1.25rem;
+
+    .orders-pagination-summary {
+      font-size: 0.875rem;
+    }
+
     .pagination {
       gap: 0.35rem;
       margin-bottom: 0;
+      flex-wrap: wrap;
 
       .page-link {
         border-radius: 8px;
         padding: 0.45rem 0.95rem;
         font-weight: 600;
         font-size: 0.875rem;
+        min-width: 2.5rem;
+        text-align: center;
         transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .page-item.active .page-link {
+        background: #ffcc00;
+        border-color: #ffcc00;
+        color: #111111;
       }
 
       .page-item.disabled .page-link {
         opacity: 0.65;
+        pointer-events: none;
       }
     }
   }
@@ -196,8 +239,44 @@
 .order-detail-modal-body {
   color: var(--ml-surface-text, #333333);
 
+  /* One gap rule for the whole body, so sections cannot drift apart as they change. */
+  .order-detail-stack {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .order-detail-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+  }
+
   .orders-muted {
     color: var(--ml-surface-text-muted, #777777);
+  }
+
+  /* Items take the width they need; the summary keeps a readable fixed column beside them. */
+  .order-detail-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (min-width: 992px) {
+    .order-detail-columns {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 22rem);
+    }
+  }
+
+  .order-detail-items,
+  .order-detail-summary {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--ml-page-heading-border, #e5e5ea);
+    border-radius: 8px;
+    background: var(--ml-toolbar-bg, #f8f8f9);
   }
 
   .orders-detail-table {
@@ -208,22 +287,51 @@
     thead th {
       color: var(--ml-toolbar-text-strong, #111111);
       border-bottom-color: var(--ml-page-heading-border, #e5e5ea);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    td,
+    th {
+      padding: 0.45rem 0.5rem;
     }
   }
 
   .order-detail-thumb {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     object-fit: cover;
     border-radius: 4px;
+    flex: 0 0 auto;
   }
 
   .order-detail-totals li {
-    padding: 0.2rem 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.28rem 0;
     color: var(--ml-surface-text, #333333);
+
+    /* Amounts line up column-wise however long the label is. */
+    span:last-child {
+      flex: 0 0 auto;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
   }
 
   .order-detail-total-row {
+    margin-top: 0.35rem;
+    padding-top: 0.6rem !important;
+    font-size: 1.05rem;
+    font-weight: 700;
     border-top: 1px solid var(--ml-page-heading-border, #e5e5ea) !important;
   }
 
@@ -239,7 +347,7 @@
   }
 
   .order-detail-info-card {
-    padding: 0.75rem 0.9rem;
+    padding: 0.6rem 0.8rem;
     border: 1px solid var(--ml-page-heading-border, #e5e5ea);
     border-radius: 8px;
     background: var(--ml-toolbar-bg, #f8f8f9);
@@ -265,7 +373,7 @@
   }
 
   .order-detail-shipment-section {
-    padding: 1rem;
+    padding: 0.9rem 1rem;
     border: 1px solid var(--ml-page-heading-border, #e5e5ea);
     border-radius: 8px;
     background: var(--ml-toolbar-bg, #f8f8f9);
@@ -421,10 +529,6 @@
       color: var(--ml-page-title, #222222);
       font-weight: 700;
     }
-
-    .btn-close {
-      filter: none;
-    }
   }
 
   .modal-footer {
@@ -460,11 +564,37 @@ body.dark {
         color: #ffcc00;
       }
     }
+
+    .order-actions-dropdown .dropdown-item-remove {
+      color: #f97066;
+
+      i {
+        color: #f97066;
+      }
+
+      &:hover:not(:disabled),
+      &:focus:not(:disabled) {
+        background: rgba(249, 112, 102, 0.12);
+        color: #fda29b;
+      }
+    }
   }
 
-  ::ng-deep .my-orders-detail-modal {
-    .btn-close {
-      filter: invert(1) grayscale(100%) brightness(200%);
+  ::ng-deep .my-orders-detail-modal,
+  ::ng-deep .my-orders-tracking-modal {
+    .order-modal-close,
+    .order-modal-action {
+      color: var(--text-primary, #ffffff);
+
+      /* The hover fill stays yellow in both themes, so the glyph must go dark with it. */
+      &:hover,
+      &:focus-visible {
+        color: #111111;
+      }
+    }
+
+    .order-modal-close {
+      border-color: var(--border-strong, rgba(255, 255, 255, 0.18));
     }
 
     .modal-footer .btn-secondary {
@@ -498,6 +628,91 @@ body.dark {
 
     span {
       flex: 1 1 auto;
+    }
+  }
+
+  .dropdown-item-remove {
+    color: #b42318;
+
+    i {
+      color: #b42318;
+      opacity: 1;
+    }
+
+    &:hover:not(:disabled),
+    &:focus:not(:disabled) {
+      background: rgba(180, 35, 24, 0.08);
+      color: #912018;
+    }
+  }
+}
+
+/* The stock Bootstrap close is a background image tinted by a filter, which reads as blue-grey on the
+   dark surface. A plain icon button carries the store's yellow accent instead, in both themes. */
+::ng-deep .my-orders-detail-modal,
+::ng-deep .my-orders-tracking-modal {
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .modal-title {
+      flex: 1 1 auto;
+      margin-bottom: 0;
+    }
+  }
+
+  .order-modal-close {
+    flex: 0 0 auto;
+    /* Bootstrap pushed its own .btn-close right with an auto margin; this replaces it. */
+    margin-left: auto;
+    align-self: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--ml-page-heading-border, #e5e5ea);
+    background: transparent;
+    color: var(--ml-surface-text, #333333);
+    line-height: 1;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+    i {
+      font-size: 16px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: #ffcc00;
+      border-color: #ffcc00;
+      color: #111111;
+      outline: none;
+    }
+  }
+
+  .order-modal-action {
+    border-radius: 6px;
+    border: 1px solid #ffcc00;
+    background: transparent;
+    color: var(--ml-surface-text, #333333);
+    font-weight: 600;
+
+    i {
+      margin-right: 0.35rem;
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: #ffcc00;
+      border-color: #ffcc00;
+      color: #111111;
+    }
+
+    &:disabled {
+      opacity: 0.65;
     }
   }
 }
@@ -603,6 +818,12 @@ body.dark {
     .page-item.disabled .page-link {
       color: var(--text-muted) !important;
       background: var(--bg-secondary) !important;
+    }
+
+    .page-item.active .page-link {
+      background: #ffcc00 !important;
+      border-color: #ffcc00 !important;
+      color: #111111 !important;
     }
   }
 }

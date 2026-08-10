@@ -39,6 +39,8 @@ export class BrandsComponent implements OnInit, OnDestroy, OnChanges {
   public displayBrandList: ShopBrandDisplayOption[] = [];
   public collapse = true;
   public loading = false;
+  public showAll = false;
+  public readonly previewLimit = 6;
 
   private routeSub?: Subscription;
   private category: string | null = null;
@@ -87,6 +89,13 @@ export class BrandsComponent implements OnInit, OnDestroy, OnChanges {
       checked: (this.selectedBrandIds || []).some((id) => this.sameId(id, b.id)),
     }));
     this.cdr.markForCheck();
+  }
+
+  get visibleBrands(): ShopBrandDisplayOption[] {
+    if (this.showAll || this.displayBrandList.length <= this.previewLimit) {
+      return this.displayBrandList;
+    }
+    return this.displayBrandList.slice(0, this.previewLimit);
   }
 
   private loadBrands(): void {

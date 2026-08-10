@@ -1,4 +1,7 @@
-<app-breadcrumb [title]="product?.title" [breadcrumb]="'Product'"></app-breadcrumb>
+<app-breadcrumb
+  [showTitle]="false"
+  [trail]="breadcrumbTrail">
+</app-breadcrumb>
 <!-- section start -->
 <section class="section-b-space product-detail-page">
   <div class="collection-wrapper">
@@ -6,197 +9,154 @@
       <div class="row">
         <div class="col-12">
           <div class="container-fluid p-0">
-            <div class="row">
-              <div class="col-lg-6 product-detail-gallery product-image-gallery" *ngIf="displayImages.length">
+            <div class="row pdp-main-row">
+              <div class="col-lg-6 product-detail-gallery product-image-gallery" *ngIf="galleryImages.length">
                 <div class="gallery-main"
                      (touchstart)="onGalleryTouchStart($event)"
                      (touchend)="onGalleryTouchEnd($event)">
-                  <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage()" aria-label="Previous image">
+                  <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage($event)" aria-label="Previous image">
                     <i class="ti-angle-left"></i>
                   </button>
-                  <div class="gallery-zoom-stage"
-                       (mousemove)="onZoomMove($event)"
-                       (mouseleave)="onZoomLeave()">
-                    <img [src]="currentImageSrc"
-                         [alt]="displayImages[activeSlide]?.alt || product?.title"
+                  <div class="gallery-zoom-stage gallery-zoom-stage--clickable"
+                       role="button"
+                       tabindex="0"
+                       aria-label="Open image gallery"
+                       (click)="openLightbox($event)"
+                       (keydown.enter)="openLightbox($event)">
+                    <img *ngFor="let slide of [activeSlide]"
+                         [src]="galleryImages[slide]?.src || placeholderImage"
+                         [alt]="galleryImages[slide]?.alt || product?.title"
                          class="gallery-main-img"
-                         [class.is-zoomed]="zoomActive"
-                         [style.transform-origin]="zoomOrigin"
-                         (error)="onImageError($event)">
+                         (error)="onImageError($event, slide)">
                   </div>
-                  <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage()" aria-label="Next image">
+                  <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage($event)" aria-label="Next image">
                     <i class="ti-angle-right"></i>
                   </button>
                 </div>
                 <div class="gallery-thumbs" *ngIf="hasMultipleImages">
                   <button type="button"
                           class="gallery-thumb-btn"
-                          *ngFor="let image of displayImages; index as i"
+                          *ngFor="let image of galleryImages; index as i; trackBy: trackByGalleryIndex"
                           [class.active]="activeSlide === i"
-                          (click)="selectGalleryImage(i)"
+                          (click)="selectGalleryImage(i, $event)"
                           [attr.aria-label]="'Show image ' + (i + 1)">
-                    <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event)">
+                    <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event, i)">
                   </button>
                 </div>
               </div>
               <div class="col-lg-6 rtl-text">
-                <div class="product-right">
-                  <h2>{{ product?.title }}</h2>
-                  <h4 *ngIf="product?.discount">
-                      <del>{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
-                      <span>{{ product?.discount }}% off</span>
-                  </h4>
-                  <h3>
+                <div class="product-right pdp-info">
+                  <h1 class="pdp-title">{{ displayTitle }}</h1>
+                  <p class="pdp-price" *ngIf="!product?.discount">
+                    {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
+                  </p>
+                  <div class="pdp-price-wrap" *ngIf="product?.discount">
+                    <p class="pdp-price">
                       {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
-                  </h3>
+                    </p>
+                    <p class="pdp-price-was">
+                      <del>{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
+                      <span class="pdp-discount">{{ product?.discount }}% off</span>
+                    </p>
+                  </div>
+
                   <ul class="color-variant" *ngIf="Color(product?.variants).length">
                     <li [class]="color" [class.active]="activeSlide === i"
                         *ngFor="let color of Color(product?.variants); index as i"
                         [ngStyle]="{'background-color': color}"
-                        (click)="selectGalleryImage(i < displayImages.length ? i : 0)">
+                        (click)="selectGalleryImage(i < galleryImages.length ? i : 0)">
                     </li>
                   </ul>
-                  <app-stock-inventory [stock]="product?.stock"></app-stock-inventory>
-                  <div class="product-description border-product">
-                    <h6 class="product-title size-text" *ngIf="Size(product.variants).length">
-                        select size
-                        <span>
-                          <a href="javascrip:void(0)" (click)="SizeChart.openModal()">size chart</a>
-                        </span>
+
+                  <p class="pdp-stock"
+                     [class.pdp-stock--ok]="stockTone === 'ok'"
+                     [class.pdp-stock--out]="stockTone === 'out'"
+                     [class.pdp-stock--cart]="stockTone === 'cart'">
+                    {{ stockStatusLine }}
+                  </p>
+                  <p class="pdp-stock-note" *ngIf="stockNote">{{ stockNote }}</p>
+
+                  <div class="pdp-size" *ngIf="Size(product?.variants).length">
+                    <h6 class="pdp-section-label">
+                      Select size
+                      <a href="javascript:void(0)" (click)="SizeChart.openModal()">Size chart</a>
                     </h6>
-                    <div class="size-box" *ngIf="Size(product.variants).length">
+                    <div class="size-box">
                       <ul>
-                          <li [class.active]="selectedSize == size"
-                              *ngFor="let size of Size(product.variants)">
-                              <a href="javascript:void(0)" (click)="selectSize(size)">
-                                {{ size | titlecase }}
-                              </a>
-                          </li>
+                        <li [class.active]="selectedSize == size"
+                            *ngFor="let size of Size(product?.variants)">
+                          <a href="javascript:void(0)" (click)="selectSize(size)">
+                            {{ size | titlecase }}
+                          </a>
+                        </li>
                       </ul>
                     </div>
-                    <h5 class="avalibility" *ngIf="isFullyInCart"><span>In cart</span></h5>
-                    <h5 class="avalibility" *ngIf="!isFullyInCart && selectableQuantity > 0 && counter <= selectableQuantity"><span>In Stock</span></h5>
-                    <h5 class="avalibility" *ngIf="!isFullyInCart && (selectableQuantity <= 0 || counter > selectableQuantity)"><span>Out of Stock</span></h5>
-                    <p class="product-stock-available" *ngIf="product?.stock > 0">
-                      Available quantity: <strong>{{ product?.stock }}</strong>
-                      <span class="product-stock-in-cart" *ngIf="isFullyInCart"> · Already in your cart</span>
-                      <span class="product-stock-partial" *ngIf="!isFullyInCart && cartQuantity > 0 && selectableQuantity > 0">
-                        · {{ cartQuantity }} in cart, add up to {{ selectableQuantity }} more
-                      </span>
-                    </p>
-                    <h6 class="product-title" *ngIf="!isFullyInCart">quantity</h6>
-                    <div class="qty-box" *ngIf="!isFullyInCart">
-                      <div class="input-group">
-                        <span class="input-group-prepend">
-                          <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement()" [disabled]="counter <= 1">
-                            <i class="ti-angle-left"></i>
-                          </button>
-                        </span>
-                        <input type="text" name="quantity" class="form-control input-number" [value]="counter" disabled/>
-                        <span class="input-group-prepend">
-                          <button type="button" class="btn quantity-right-plus" data-type="plus" (click)="increment()" [disabled]="!canIncrementCounter">
-                            <i class="ti-angle-right"></i>
-                          </button>
-                        </span>
-                      </div>
+                  </div>
+
+                  <div class="pdp-qty" *ngIf="!isFullyInCart">
+                    <h6 class="pdp-section-label">Quantity</h6>
+                    <div class="pdp-qty-box" role="group" aria-label="Quantity">
+                      <button type="button"
+                              class="pdp-qty-btn"
+                              (click)="decrement()"
+                              [disabled]="counter <= 1"
+                              aria-label="Decrease quantity">−</button>
+                      <input type="text"
+                             name="quantity"
+                             class="pdp-qty-input"
+                             [value]="counter"
+                             disabled
+                             aria-label="Selected quantity"/>
+                      <button type="button"
+                              class="pdp-qty-btn"
+                              (click)="increment()"
+                              [disabled]="!canIncrementCounter"
+                              aria-label="Increase quantity">+</button>
                     </div>
                   </div>
-                  <!-- class="wishlist-btn" -->
-                  <div class="product-buttons product-detail-actions">
-                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="addToCart(product)">add to cart</a>
-                    <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="buyNow(product)">buy now</a>
-                    <a href="javascript:void(0)" class="btn btn-solid" (click)="addToWishlist(product)">
-                      <i class="fa fa-heart"></i>
-                      <span class="title-font">Add To WishList</span>
+
+                  <div class="product-buttons product-detail-actions pdp-actions">
+                    <a href="javascript:void(0)"
+                       class="btn pdp-btn pdp-btn--primary"
+                       [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity"
+                       (click)="addToCart(product)">
+                      <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                      <span>Add to Cart</span>
+                    </a>
+                    <a href="javascript:void(0)"
+                       class="btn pdp-btn pdp-btn--secondary"
+                       [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity"
+                       (click)="buyNow(product)">
+                      <i class="fa fa-bolt" aria-hidden="true"></i>
+                      <span>Buy Now</span>
+                    </a>
+                    <a href="javascript:void(0)"
+                       class="btn pdp-btn pdp-btn--wishlist"
+                       [class.pdp-btn--wishlist-active]="isInWishlist"
+                       (click)="toggleWishlist(product)">
+                      <i class="fa" [ngClass]="isInWishlist ? 'fa-heart' : 'fa-heart-o'" aria-hidden="true"></i>
+                      <span>{{ isInWishlist ? 'Added to Wishlist' : 'Add to Wishlist' }}</span>
                     </a>
                   </div>
-                  <div class="border-product">
-                    <h6 class="product-title">product details</h6>
-                    <p>{{ (product?.description || '').toString().substring(0, 200) }}{{ (product?.description || '').toString().length > 200 ? '...' : '' }}</p>
-                  </div>
-                  <!-- <div class="border-product">
-                    <h6 class="product-title">share it</h6>
-                    <div class="product-icon">
-                      <app-social></app-social>
-                      <form class="d-inline-block">
-                        <button class="wishlist-btn" (click)="addToWishlist(product)">
-                          <i class="fa fa-heart"></i>
-                          <span class="title-font">Add To WishList</span>
-                        </button>
-                      </form>
-                    </div>
-                  </div> -->
-                  <!-- <div class="border-product">
-                    <app-countdown [date]="'Apr 21 2021'"></app-countdown>
-                  </div> -->
                 </div>
               </div>
             </div>
           </div>
-          <section class="tab-product m-0">
+
+          <section class="tab-product m-0 pdp-tabs" *ngIf="hasProductDescription">
             <div class="row">
               <div class="col-sm-12 col-lg-12">
-                <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+                <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs pdp-nav-tabs">
                   <li [ngbNavItem]="1">
                     <a ngbNavLink>Description</a>
-                        <ng-template ngbNavContent>
-                          <p>{{ product?.description }}</p>
-                        </ng-template>
-                    </li>
-                    <!-- Video tab — hidden for now
-                    <li [ngbNavItem]="2">
-                      <a ngbNavLink>Video</a>
-                        <ng-template ngbNavContent>
-                          <div class="mt-3 text-center">
-                            <iframe width="560" height="315" src="https://www.youtube.com/embed/BUWzX78Ye_8" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                          </div>
-                        </ng-template>
-                    </li>
-                    <li [ngbNavItem]="3">
-                      <a ngbNavLink>Write Review</a>
-                        <ng-template ngbNavContent>
-                          <form class="theme-form">
-                            <div class="row">
-                              <div class="col-md-12 ">
-                                <div class="media rating-sec">
-                                  <label>Rating</label>
-                                  <div class="media-body ms-3">
-                                    <div class="rating three-star">
-                                      <i class="fa fa-star"></i>
-                                      <i class="fa fa-star"></i>
-                                      <i class="fa fa-star"></i>
-                                      <i class="fa fa-star"></i>
-                                      <i class="fa fa-star"></i>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              <div class="col-md-6">
-                                <label for="name">Name</label>
-                                <input type="text" class="form-control" id="name" placeholder="Enter Your name" required>
-                              </div>
-                              <div class="col-md-6">
-                                <label for="email">Email</label>
-                                <input type="text" class="form-control" id="email" placeholder="Email" required>
-                              </div>
-                              <div class="col-md-12">
-                                <label for="review">Review Title</label>
-                                <input type="text" class="form-control" id="review" placeholder="Enter your Review Subjects" required>
-                              </div>
-                              <div class="col-md-12">
-                                <label for="review">Review Title</label>
-                                <textarea class="form-control" placeholder="Wrire Your Testimonial Here" id="exampleFormControlTextarea1" rows="6"></textarea>
-                              </div>
-                              <div class="col-md-12">
-                                <button class="btn btn-solid" type="submit">Submit YOur Review</button>
-                              </div>
-                            </div>
-                          </form>
-                        </ng-template>
-                    </li>
-                    -->
-                  </ul>
-                  <div [ngbNavOutlet]="nav" class="mt-2"></div>
+                    <ng-template ngbNavContent>
+                      <div class="pdp-tab-panel">
+                        <p class="pdp-description">{{ productDescriptionFull }}</p>
+                      </div>
+                    </ng-template>
+                  </li>
+                </ul>
+                <div [ngbNavOutlet]="nav" class="mt-2"></div>
               </div>
             </div>
           </section>
@@ -216,4 +176,69 @@
   <app-services></app-services>
 -->
 <app-size-modal #sizeChart [product]="product"></app-size-modal>
+
+<!-- Image lightbox popup -->
+<div class="product-lightbox"
+     *ngIf="lightboxOpen"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Product image gallery">
+  <div class="product-lightbox__backdrop" (click)="closeLightbox($event)"></div>
+  <div class="product-lightbox__dialog"
+       (click)="$event.stopPropagation()"
+       (touchstart)="onLightboxTouchStart($event)"
+       (touchend)="onLightboxTouchEnd($event)">
+    <div class="product-lightbox__header">
+      <div class="product-lightbox__title-wrap">
+        <span class="product-lightbox__title">{{ displayTitle }}</span>
+        <span class="product-lightbox__counter" *ngIf="galleryImages.length">
+          {{ activeSlide + 1 }} / {{ galleryImages.length }}
+        </span>
+      </div>
+      <button type="button"
+              class="product-lightbox__close"
+              (click)="closeLightbox($event)"
+              aria-label="Close gallery">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="product-lightbox__stage">
+      <button type="button"
+              class="product-lightbox__nav product-lightbox__nav--prev"
+              *ngIf="hasMultipleImages"
+              (click)="prevImage($event)"
+              aria-label="Previous image">
+        <i class="ti-angle-left"></i>
+      </button>
+
+      <div class="product-lightbox__image-frame">
+        <img *ngFor="let slide of [activeSlide]"
+             class="product-lightbox__image"
+             [src]="galleryImages[slide]?.src || placeholderImage"
+             [alt]="galleryImages[slide]?.alt || product?.title"
+             (error)="onImageError($event, slide)">
+      </div>
+
+      <button type="button"
+              class="product-lightbox__nav product-lightbox__nav--next"
+              *ngIf="hasMultipleImages"
+              (click)="nextImage($event)"
+              aria-label="Next image">
+        <i class="ti-angle-right"></i>
+      </button>
+    </div>
+
+    <div class="product-lightbox__thumbs" *ngIf="hasMultipleImages">
+      <button type="button"
+              class="product-lightbox__thumb"
+              *ngFor="let image of galleryImages; index as i; trackBy: trackByGalleryIndex"
+              [class.active]="activeSlide === i"
+              (click)="selectGalleryImage(i, $event)"
+              [attr.aria-label]="'Show image ' + (i + 1)">
+        <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event, i)">
+      </button>
+    </div>
+  </div>
+</div>
 <!-- Section ends -->

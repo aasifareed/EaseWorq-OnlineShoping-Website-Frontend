@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, map, startWith, delay, switchMap } from 'rxjs/operators';
+import { catchError, map, shareReplay, startWith, delay, switchMap, tap } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { Product } from '../classes/product';
 import {
@@ -13,15 +13,12 @@ import { AuthService } from './auth.service';
 import { TenantService } from './tenant.service';
 import { isValidStoreGuid } from '../utils/shop-context.util';
 import { OnlineShopStorefront } from '../models/online-shop-storefront.model';
-import {
-  AppliedShopCouponState,
-  ApplyOnlineShopCouponResult,
-  CartCouponItemDto,
-  OnlineShopCheckoutService
-} from './online-shop-checkout.service';
+import { asBackgroundRequest } from '../interceptors/background-request';
+import { OnlineShopCartLineInput } from './online-shop-checkout.service';
 import { SearchProductSuggestion } from './online-shop-search.service';
 
-const ONLINE_SHOP_CART_VERSION = 2;
+// Bumped with the pricing engine conversion so carts holding cached money are discarded.
+const ONLINE_SHOP_CART_VERSION = 3;
 const ONLINE_SHOP_CART_VERSION_KEY = 'onlineShopCartVersion';
 
 function loadCartFromStorage(): Product[] {
@@ -55,7 +52,7 @@ const state = {
 })
 export class ProductService {
 
-  public Currency = { name: 'PKR', currency: 'RS', price: 1 } // Default Currency
+  public Currency = { name: 'PKR', currency: 'Rs.', price: 1 } // Default Currency
   // public Currency = { name: 'Dollar', currency: 'USD', price: 1 } // Default Currency
   public OpenCart: boolean = false;
   public Products:any;
@@ -75,18 +72,28 @@ export class ProductService {
 
     this.Currency = {
       name: name || this.Currency.name,
-      currency: symbol || name || this.Currency.currency,
+      currency: this.normalizeCurrencySymbol(symbol || name || this.Currency.currency),
       price: 1,
     };
   }
 
+  private normalizeCurrencySymbol(raw: string): string {
+    const s = (raw || '').trim();
+    if (!s || /^rs\.?$/i.test(s) || /^pkr$/i.test(s)) {
+      return 'Rs.';
+    }
+    return s;
+  }
+
   private readonly wishlistChanged = new BehaviorSubject<Product[]>(state.wishlist);
   private readonly cartChanged = new BehaviorSubject<Product[]>([...state.cart]);
-  private readonly appliedCouponChanged = new BehaviorSubject<AppliedShopCouponState | null>(
-    ProductService.readStoredCoupon()
+  private readonly appliedCouponCodesChanged = new BehaviorSubject<string[]>(
+    ProductService.readStoredCouponCodes()
   );
   private static readonly APPLIED_COUPON_KEY = 'appliedShopCoupon';
-  private couponRecalcInFlight = false;
+
+  /** Matches the server's cap, so a code the engine would ignore is never even sent. */
+  private static readonly MAX_APPLIED_COUPONS = 10;
 
   /** In-memory index of last shop grid (API) products by inventory id. */
   private readonly shopProductById = new Map<string, Product>();
@@ -170,12 +177,16 @@ export class ProductService {
     return this.getRemainingStock(productId, stock) >= addQty;
   }
 
-  /** Remember shop listing rows for detail / resolver when URL uses inventory id. */
+  /** Remember shop listing rows for detail / resolver (by inventory id and slug). */
   cacheShopProducts(products: Product[]): void {
     this.shopProductById.clear();
     for (const p of products || []) {
       if (p?.id !== undefined && p?.id !== null) {
         this.shopProductById.set(String(p.id), p);
+      }
+      const slug = String(p?.slug || '').trim().toLowerCase();
+      if (slug) {
+        this.shopProductById.set(slug, p);
       }
     }
   }
@@ -184,20 +195,28 @@ export class ProductService {
     if (id === undefined || id === null) {
       return undefined;
     }
-    const row = this.shopProductById.get(String(id));
+    const key = String(id).trim();
+    const row =
+      this.shopProductById.get(key) ||
+      this.shopProductById.get(key.toLowerCase());
     return row ? { ...row } : undefined;
   }
 
-  /** Survives refresh on detail page for id-based products. */
+  /** Survives refresh on detail page for id- or slug-based URLs. */
   persistShopProduct(product: Product): void {
     if (product?.id === undefined || product?.id === null) {
       return;
     }
     try {
+      const payload = JSON.stringify(product);
       sessionStorage.setItem(
         ProductService.SHOP_PRODUCT_SS_PREFIX + String(product.id),
-        JSON.stringify(product)
+        payload
       );
+      const slug = String(product.slug || '').trim().toLowerCase();
+      if (slug) {
+        sessionStorage.setItem(ProductService.SHOP_PRODUCT_SS_PREFIX + slug, payload);
+      }
     } catch {
       /* ignore quota / private mode */
     }
@@ -208,7 +227,10 @@ export class ProductService {
       return undefined;
     }
     try {
-      const raw = sessionStorage.getItem(ProductService.SHOP_PRODUCT_SS_PREFIX + String(id));
+      const key = String(id).trim();
+      const raw =
+        sessionStorage.getItem(ProductService.SHOP_PRODUCT_SS_PREFIX + key) ||
+        sessionStorage.getItem(ProductService.SHOP_PRODUCT_SS_PREFIX + key.toLowerCase());
       return raw ? (JSON.parse(raw) as Product) : undefined;
     } catch {
       return undefined;
@@ -233,7 +255,6 @@ export class ProductService {
     private toastrService: ToastrService,
     private auth: AuthService,
     private tenantService: TenantService,
-    private onlineShopCheckout: OnlineShopCheckoutService,
   ) { }
 
   private shopIds(): { tenantId: number; storeId: string } {
@@ -258,11 +279,22 @@ private apiRoot(): string {
     ---------------------------------------------
   */
 
-  // Product
+  // Product — legacy demo JSON (cached once; do not double-subscribe)
   private get products(): Observable<Product[]> {
-    this.Products = this.http.get<Product[]>('assets/data/products.json').pipe(map(data => data));
-    this.Products.subscribe((next:any) => { localStorage['products'] = JSON.stringify(next) });
-    return this.Products = this.Products.pipe(startWith(JSON.parse(localStorage['products'] || '[]')));
+    if (!this.Products) {
+      this.Products = this.http.get<Product[]>('assets/data/products.json', asBackgroundRequest()).pipe(
+        tap((next) => {
+          try {
+            localStorage['products'] = JSON.stringify(next);
+          } catch {
+            // ignore quota errors
+          }
+        }),
+        startWith(JSON.parse(localStorage['products'] || '[]') as Product[]),
+        shareReplay(1),
+      );
+    }
+    return this.Products;
   }
 
   // Get Products
@@ -281,6 +313,10 @@ private apiRoot(): string {
         if (item.id !== undefined && item.id !== null && String(item.id).toLowerCase() === norm) {
           return true;
         }
+        const productSlug = String(item.slug ?? '').trim().toLowerCase();
+        if (productSlug && productSlug === norm) {
+          return true;
+        }
         const titleSlug = String(item.title ?? '').replace(/\s+/g, '-').toLowerCase();
         return titleSlug === norm;
       });
@@ -297,6 +333,14 @@ private apiRoot(): string {
   // Get Wishlist Items
   public get wishlistItems(): Observable<Product[]> {
     return this.wishlistChanged.asObservable();
+  }
+
+  /** True when product id is already in the local wishlist snapshot. */
+  isInWishlist(product: any): boolean {
+    if (product?.id == null) {
+      return false;
+    }
+    return state.wishlist.some((item) => this.sameLineId(item.id, product.id));
   }
 
   private syncWishlistLocal(products: Product[]): void {
@@ -344,7 +388,10 @@ private apiRoot(): string {
     }
 
     const path = `${environment.urls.OnlineShopWishlist_GetWishlistForOnlineShop}`;
-    return this.http.get(`${this.apiRoot()}api/services/app/${path}`, { params: this.wishlistQueryParams() }).pipe(
+    return this.http.get(
+      `${this.apiRoot()}api/services/app/${path}`,
+      asBackgroundRequest({ params: this.wishlistQueryParams() })
+    ).pipe(
       map((resp: any) => {
         const rows = resp?.result ?? [];
         const products = rows
@@ -382,7 +429,12 @@ private apiRoot(): string {
     }
 
     const path = `${environment.urls.OnlineShopWishlist_AddToWishlistForOnlineShop}`;
-    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, this.buildWishlistRequest(inventoryId)).pipe(
+    // A wishlist tap is confirmed by a toast; it does not warrant taking the page over.
+    return this.http.post(
+      `${this.apiRoot()}api/services/app/${path}`,
+      this.buildWishlistRequest(inventoryId),
+      asBackgroundRequest()
+    ).pipe(
       map(() => {
         this.addToWishlistLocal(product);
         this.toastrService.success('Product has been added to wishlist.');
@@ -411,7 +463,11 @@ private apiRoot(): string {
     }
 
     const path = `${environment.urls.OnlineShopWishlist_RemoveFromWishlistForOnlineShop}`;
-    return this.http.post(`${this.apiRoot()}api/services/app/${path}`, this.buildWishlistRequest(inventoryId)).pipe(
+    return this.http.post(
+      `${this.apiRoot()}api/services/app/${path}`,
+      this.buildWishlistRequest(inventoryId),
+      asBackgroundRequest()
+    ).pipe(
       map(() => {
         const next = state.wishlist.filter((item) => !this.sameLineId(item.id, product.id));
         this.syncWishlistLocal(next);
@@ -489,149 +545,101 @@ private apiRoot(): string {
     localStorage.setItem(ONLINE_SHOP_CART_VERSION_KEY, String(ONLINE_SHOP_CART_VERSION));
     localStorage.setItem('cartItems', JSON.stringify(state.cart));
     this.cartChanged.next([...state.cart]);
-    this.recalculateAppliedCouponIfNeeded();
   }
 
-  public get appliedCoupon$(): Observable<AppliedShopCouponState | null> {
-    return this.appliedCouponChanged.asObservable();
+  /**
+   * The codes the customer has applied. Several can be live at once because the engine allows one
+   * effective coupon per scope. Amounts for them come from the pricing engine.
+   */
+  public get appliedCouponCodes$(): Observable<string[]> {
+    return this.appliedCouponCodesChanged.asObservable();
   }
 
-  public getAppliedCoupon(): AppliedShopCouponState | null {
-    return this.appliedCouponChanged.value;
+  public getAppliedCouponCodes(): string[] {
+    return [...this.appliedCouponCodesChanged.value];
   }
 
-  public get couponDiscountAmount(): number {
-    const applied = this.getAppliedCoupon();
-    return applied?.result?.isValid ? applied.result.discountAmount : 0;
-  }
-
-  public get cartSubtotalAfterCoupon(): Observable<number> {
-    return this.cartTotalAmount().pipe(
-      map((subtotal) => Math.round((subtotal - this.couponDiscountAmount) * 100) / 100)
-    );
-  }
-
-  private static readStoredCoupon(): AppliedShopCouponState | null {
+  /**
+   * Only codes are kept. Caching a discount amount would let a stale figure outlive the rules that
+   * produced it, and the engine revalidates on every pricing call anyway.
+   */
+  private static readStoredCouponCodes(): string[] {
     try {
       const raw = localStorage.getItem(ProductService.APPLIED_COUPON_KEY);
       if (!raw) {
-        return null;
+        return [];
       }
-      return JSON.parse(raw) as AppliedShopCouponState;
+
+      // Earlier builds stored a single code, and before that a whole coupon result object.
+      const parsed = JSON.parse(raw);
+      const codes = Array.isArray(parsed)
+        ? parsed
+        : [typeof parsed === 'string' ? parsed : parsed?.couponCode];
+
+      return ProductService.normaliseCouponCodes(codes);
     } catch {
-      return null;
+      return [];
     }
   }
 
-  private persistAppliedCoupon(stateCoupon: AppliedShopCouponState | null): void {
-    if (!stateCoupon) {
+  private static normaliseCouponCodes(codes: unknown[]): string[] {
+    const seen: string[] = [];
+
+    for (const candidate of codes ?? []) {
+      const code = String(candidate ?? '').trim().toUpperCase();
+      if (code && !seen.includes(code)) {
+        seen.push(code);
+      }
+    }
+
+    return seen.slice(0, ProductService.MAX_APPLIED_COUPONS);
+  }
+
+  public setAppliedCouponCodes(codes: string[]): void {
+    const normalised = ProductService.normaliseCouponCodes(codes ?? []);
+
+    if (!normalised.length) {
       localStorage.removeItem(ProductService.APPLIED_COUPON_KEY);
-    } else {
-      localStorage.setItem(ProductService.APPLIED_COUPON_KEY, JSON.stringify(stateCoupon));
+      this.appliedCouponCodesChanged.next([]);
+      return;
     }
-    this.appliedCouponChanged.next(stateCoupon);
+
+    localStorage.setItem(ProductService.APPLIED_COUPON_KEY, JSON.stringify(normalised));
+    this.appliedCouponCodesChanged.next(normalised);
   }
 
-  public clearAppliedCoupon(): void {
-    this.couponRecalcInFlight = false;
-    this.persistAppliedCoupon(null);
+  /** Adds a code alongside the ones already applied. Re-applying a held code changes nothing. */
+  public addAppliedCouponCode(code: string): void {
+    this.setAppliedCouponCodes([...this.getAppliedCouponCodes(), code]);
   }
 
-  /** After order completes: wipe cart, coupon cache, and localStorage. */
+  public removeAppliedCouponCode(code: string): void {
+    const target = String(code ?? '').trim().toUpperCase();
+    this.setAppliedCouponCodes(this.getAppliedCouponCodes().filter((x) => x !== target));
+  }
+
+  public clearAppliedCoupons(): void {
+    this.setAppliedCouponCodes([]);
+  }
+
+  /** After order completes: wipe cart, coupon codes, and localStorage. */
   public clearCheckoutAfterOrder(): void {
-    this.couponRecalcInFlight = false;
     state.cart = [];
     localStorage.removeItem('cartItems');
     localStorage.removeItem(ProductService.APPLIED_COUPON_KEY);
-    this.appliedCouponChanged.next(null);
+    this.appliedCouponCodesChanged.next([]);
     this.cartChanged.next([]);
   }
 
-  buildCartCouponItems(products: Product[]): CartCouponItemDto[] {
-    return (products || []).map((p) => {
-      let unit = Number(p.price) || 0;
-      if (p.discount) {
-        unit = unit - (unit * Number(p.discount) / 100);
-      }
-      unit = unit * (this.Currency.price ?? 1);
-      const qty = Math.max(1, Number(p.quantity) || 1);
-      const unitPrice = Math.round(unit * 100) / 100;
-      const lineTotal = Math.round(unitPrice * qty * 100) / 100;
-      const productId = String(p.productId ?? p.id ?? '');
-      return {
-        productId,
-        quantity: qty,
-        unitPrice,
-        lineTotal
-      };
-    });
-  }
-
-  applyCouponCode(couponCode: string): Observable<ApplyOnlineShopCouponResult> {
-    const code = (couponCode ?? '').trim();
-    if (!code) {
-      return of({
-        isValid: false,
-        message: 'Enter a coupon code.',
-        eligibleSubtotal: 0,
-        discountAmount: 0,
-        payableAmountAfterDiscount: 0
-      });
-    }
-
-    return new Observable((subscriber) => {
-      this.cartTotalAmount().subscribe({
-        next: (subtotal) => {
-          const request = {
-            couponCode: code,
-            storeId: this.auth.storeId,
-            customerId: null as string | null,
-            cartSubtotal: Math.round(subtotal * 100) / 100,
-            cartItems: this.buildCartCouponItems(state.cart)
-          };
-          this.onlineShopCheckout.applyCoupon(request).subscribe({
-            next: (result) => {
-              if (result.isValid) {
-                this.persistAppliedCoupon({ couponCode: code, result });
-              } else {
-                this.clearAppliedCoupon();
-              }
-              subscriber.next(result);
-              subscriber.complete();
-            },
-            error: (err) => {
-              subscriber.error(err);
-            }
-          });
-        },
-        error: (err) => subscriber.error(err)
-      });
-    });
-  }
-
-  private recalculateAppliedCouponIfNeeded(): void {
-    const applied = this.getAppliedCoupon();
-    if (!applied?.couponCode || this.couponRecalcInFlight) {
-      return;
-    }
-    if (!state.cart.length) {
-      this.clearAppliedCoupon();
-      return;
-    }
-
-    this.couponRecalcInFlight = true;
-    this.applyCouponCode(applied.couponCode).subscribe({
-      next: (result) => {
-        this.couponRecalcInFlight = false;
-        if (!result.isValid) {
-          this.clearAppliedCoupon();
-          this.toastrService.warning(result.message || 'Coupon is no longer valid for this cart.');
-        }
-      },
-      error: () => {
-        this.couponRecalcInFlight = false;
-      }
-    });
+  /** Cart lines in the shape the pricing engine accepts: identity and quantity, no prices. */
+  public buildPricingCartLines(products?: Product[]): OnlineShopCartLineInput[] {
+    return (products ?? state.cart)
+      .filter((p) => p && Number(p.quantity) > 0)
+      .map((p) => ({
+        productId: String(p.productId ?? ''),
+        productInventoryId: String(p.id ?? '') || null,
+        quantity: Number(p.quantity)
+      }));
   }
 
   // Add to Cart
@@ -853,23 +861,29 @@ private apiRoot(): string {
     return true;
   }
 
-  /** Clear cart (and coupon) — use clearCheckoutAfterOrder when order is placed. */
+  /** Clear cart (and coupons) — use clearCheckoutAfterOrder when order is placed. */
   public clearCart(): void {
     state.cart = [];
-    this.clearAppliedCoupon();
+    this.clearAppliedCoupons();
     this.syncCartState();
   }
 
-  // Total amount 
-  public cartTotalAmount(): Observable<number> {
-    return this.cartItems.pipe(map((product: Product[]) => {
-      return product.reduce((prev, curr: Product) => {
-        let price = curr.price;
-        if(curr.discount) {
-          price = curr.price - (curr.price * curr.discount / 100)
-        }
-        return (prev + price * curr.quantity) * this.Currency.price;
+  /**
+   * Indicative catalogue value of the cart, for the header and mini-cart only. It is not an order
+   * total: coupons, delivery and margin rules live on the server, so cart and checkout read their
+   * figures from the pricing engine instead of this.
+   */
+  public cartCatalogueDisplayTotal(): Observable<number> {
+    return this.cartItems.pipe(map((products: Product[]) => {
+      const total = (products || []).reduce((sum, item: Product) => {
+        const listPrice = Number(item?.price) || 0;
+        const discount = Number(item?.discount) || 0;
+        const unit = discount > 0 ? listPrice - (listPrice * discount / 100) : listPrice;
+        const quantity = Number(item?.quantity) > 0 ? Number(item.quantity) : 1;
+        return sum + unit * quantity;
       }, 0);
+
+      return Math.round(total * 100) / 100;
     }));
   }
 
@@ -1065,8 +1079,14 @@ private apiRoot(): string {
     };
   }
 
+  private categoriesRequest$: Observable<any> | null = null;
+
   public getCategories(): Observable<any> {
-    return this.tenantService.whenReady().pipe(
+    if (this.categoriesRequest$) {
+      return this.categoriesRequest$;
+    }
+
+    this.categoriesRequest$ = this.tenantService.whenReady().pipe(
       switchMap(({ tenantId, storeId }) => {
         const path =
           environment.urls?.OnlineShopProductGroup_GetHierarchyForOnline ??
@@ -1074,7 +1094,10 @@ private apiRoot(): string {
         const q = `TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
         return this.http.get(`${this.apiRoot()}api/services/app/${path}?${q}`);
       }),
+      shareReplay(1),
     );
+
+    return this.categoriesRequest$;
   }
 
   getProductGroupsListForOnline(input: {
@@ -1108,10 +1131,11 @@ private apiRoot(): string {
     );
   }
 
+  /** Category tile URL, or empty when missing so the storefront can use a neutral frame. */
   private resolveCategoryPictureUrl(pictureUrl: unknown): string {
     const raw = pictureUrl != null ? String(pictureUrl).trim() : '';
-    if (!raw) {
-      return 'assets/images/product/placeholder.svg';
+    if (!raw || this.isGenericPlaceholderUrl(raw)) {
+      return '';
     }
     if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('assets/')) {
       return raw;
@@ -1119,6 +1143,19 @@ private apiRoot(): string {
     const base = (environment.baseUrl || '').replace(/\/$/, '');
     const path = raw.startsWith('/') ? raw : `/${raw}`;
     return `${base}${path}`;
+  }
+
+  /** Brand logo URL, or empty when missing so the storefront shows the brand name instead. */
+  private resolveBrandPictureUrl(pictureUrl: unknown): string {
+    return this.resolveCategoryPictureUrl(pictureUrl);
+  }
+
+  private isGenericPlaceholderUrl(url: string): boolean {
+    const normalized = url.toLowerCase();
+    return normalized.includes('default-image')
+      || normalized.includes('defaultattachments')
+      || normalized.includes('placeholder')
+      || normalized.includes('no-image');
   }
 
   /** Brands for the shop sidebar with in-stock product counts; optional category limits to that subtree. */
@@ -1153,7 +1190,7 @@ private apiRoot(): string {
               .map((row) => ({
                 id: String(row.id ?? row.Id ?? ''),
                 name: String(row.brandName ?? row.BrandName ?? ''),
-                image: this.resolveCategoryPictureUrl(row.pictureUrl ?? row.PictureUrl),
+                image: this.resolveBrandPictureUrl(row.pictureUrl ?? row.PictureUrl),
               }))
               .filter((row) => row.id.length > 0);
           }),
@@ -1260,7 +1297,10 @@ private apiRoot(): string {
       description: desc,
       type: item.categoryName ?? item.CategoryName,
       brand: item.brandName ?? item.BrandName,
+      brandId: this.resolveGuidField(item.brandId ?? item.BrandId),
       category: item.categoryName ?? item.CategoryName,
+      categoryId: this.resolveGuidField(item.categoryId ?? item.CategoryId),
+      slug: String(item.slug ?? item.Slug ?? '').trim() || undefined,
       productId: item.productId != null || item.ProductId != null
         ? String(item.productId ?? item.ProductId)
         : undefined,
@@ -1300,9 +1340,27 @@ private apiRoot(): string {
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  private shopApiQuery(inventoryId: string, extra?: Record<string, string | number>): string {
+  /** Keep only real POS Guids (skip empty / zero Guid). */
+  private resolveGuidField(value: unknown): string | undefined {
+    if (value == null || value === '') {
+      return undefined;
+    }
+    const id = String(value).trim();
+    if (!id || id === '00000000-0000-0000-0000-000000000000') {
+      return undefined;
+    }
+    return id;
+  }
+
+  private shopApiQuery(routeKey: string, extra?: Record<string, string | number>): string {
     const { tenantId, storeId } = this.shopIds();
-    let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}&ProductInventoryId=${encodeURIComponent(inventoryId)}`;
+    let q = `?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
+    const key = String(routeKey || '').trim();
+    if (this.looksLikeGuid(key)) {
+      q += `&ProductInventoryId=${encodeURIComponent(key)}`;
+    } else if (key) {
+      q += `&Slug=${encodeURIComponent(key)}`;
+    }
     if (extra) {
       Object.keys(extra).forEach((k) => {
         q += `&${k}=${encodeURIComponent(String(extra[k]))}`;
@@ -1311,8 +1369,12 @@ private apiRoot(): string {
     return q;
   }
 
-  getProductDetailForOnlineShop(productInventoryId: string): Observable<any> {
-    const path = `${environment.urls.OnlineShopAvailableProduct_GetProductDetailForOnlineShop}${this.shopApiQuery(productInventoryId)}`;
+  private looksLikeGuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  getProductDetailForOnlineShop(productInventoryIdOrSlug: string): Observable<any> {
+    const path = `${environment.urls.OnlineShopAvailableProduct_GetProductDetailForOnlineShop}${this.shopApiQuery(productInventoryIdOrSlug)}`;
     return this.getProductsFromAPI(path);
   }
 

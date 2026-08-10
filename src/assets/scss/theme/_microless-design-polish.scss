@@ -48,8 +48,16 @@ body.dark {
     }
 
     .microless-cat-current {
-      color: var(--primary) !important;
+      color: var(--text-primary) !important;
       font-weight: 700;
+    }
+
+    .microless-cat-back {
+      color: var(--text-muted) !important;
+
+      &:hover {
+        color: var(--text-primary) !important;
+      }
     }
 
     .collapse-block-title {

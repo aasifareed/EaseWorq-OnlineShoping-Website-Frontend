@@ -177,6 +177,11 @@ export class CollectionLeftSidebarComponent implements OnInit {
       if (this.searchText) {
         this.pageTitle = `${this.pageTitle} · ${this.searchText}`;
       }
+      trail.push({
+        label: 'Shop',
+        routerLink: pathRoute,
+        queryParams: this.queryWithoutCategoryPage()
+      });
       catPath.forEach((node, i) => {
         const last = i === catPath.length - 1;
         trail.push({
@@ -188,13 +193,23 @@ export class CollectionLeftSidebarComponent implements OnInit {
       });
     } else if (this.searchText) {
       this.pageTitle = `Search: ${this.searchText}`;
+      trail.push({
+        label: 'Shop',
+        routerLink: pathRoute,
+        queryParams: this.queryWithoutCategoryPage()
+      });
       trail.push({ label: this.pageTitle, current: true });
     } else {
       this.pageTitle = this.category ? this.formatFallbackCategoryTitle(String(this.category)) : 'Shop';
       if (this.category) {
+        trail.push({
+          label: 'Shop',
+          routerLink: pathRoute,
+          queryParams: this.queryWithoutCategoryPage()
+        });
         trail.push({ label: this.pageTitle, current: true });
       } else {
-        trail.push({ label: 'All products', current: true });
+        trail.push({ label: 'Shop', current: true });
       }
     }
     this.breadcrumbTrail = trail;

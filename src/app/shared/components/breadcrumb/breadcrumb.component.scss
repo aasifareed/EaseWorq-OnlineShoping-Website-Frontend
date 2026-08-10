@@ -11,24 +11,26 @@ $breadcrumb-dark-border: #404040;
 :host .breadcrumb-section {
   background-color: $breadcrumb-light-bg;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 1.1rem 0;
+  padding: var(--layout-breadcrumb-padding-y, 0.45rem) 0;
 
   .row {
-    min-height: 2.75rem;
+    min-height: 0;
+    align-items: center;
   }
 
   .page-title {
     display: flex;
     align-items: center;
-    height: 100%;
+    height: auto;
+    min-height: 0;
 
     h2 {
       margin: 0;
-      font-size: 1.25rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
-      line-height: 1.3;
+      line-height: 1.25;
       color: #1f2937;
     }
   }
@@ -37,7 +39,11 @@ $breadcrumb-dark-border: #404040;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    height: 100%;
+    height: auto;
+
+    &--start {
+      justify-content: flex-start;
+    }
   }
 
   .breadcrumb {
@@ -45,14 +51,15 @@ $breadcrumb-dark-border: #404040;
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.35rem;
+    gap: 0.25rem;
     margin: 0;
     padding: 0;
     background: transparent;
     text-transform: uppercase;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
+    line-height: 1.25;
 
     .breadcrumb-item {
       display: inline-flex;

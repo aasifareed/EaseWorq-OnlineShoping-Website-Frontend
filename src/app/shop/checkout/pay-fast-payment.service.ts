@@ -3,18 +3,25 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { AppBusyService } from 'src/app/shared/services/app-busy.service';
+
+/** Safety valve: how long the overlay stays up waiting for the PayFast redirect to take over. */
+const REDIRECT_HOLD_MS = 15000;
 
 export interface PayFastCheckoutResponse {
   formUrl: string;
   fields: Record<string, string>;
 }
 
+/**
+ * Carries no amount: the server charges what the persisted order says is due, so a browser cannot
+ * change what is paid.
+ */
 export interface CreatePayFastCheckoutRequest {
   /** Online shop sale order id (Guid string) from CreateOnlineShopSaleOrder. */
   orderId?: string;
   /** PayFast basket / transaction reference from order creation. */
   basketId?: string;
-  amount: number;
   customerName?: string;
   customerEmail?: string;
   customerMobileNo?: string;
@@ -31,7 +38,7 @@ interface AbpAjaxResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class PayFastPaymentService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private busy: AppBusyService) {}
 
   /** Uses host root (not services/app) — matches Mart PayFastController. */
   private apiRoot(): string {
@@ -70,6 +77,11 @@ export class PayFastPaymentService {
       input.value = fields[key];
       form.appendChild(input);
     });
+    // Hold the screen until the browser leaves for PayFast, so the customer cannot start something
+    // else mid-redirect. Released on a timer in case the navigation never happens.
+    this.busy.begin('Taking you to secure payment…');
+    setTimeout(() => this.busy.end(), REDIRECT_HOLD_MS);
+
     document.body.appendChild(form);
     form.submit();
   }

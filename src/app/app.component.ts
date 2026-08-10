@@ -2,11 +2,13 @@ import { Component, PLATFORM_ID, Inject, OnInit } from '@angular/core';
 
 import { isPlatformBrowser } from '@angular/common';
 
-import { LoadingBarService } from '@ngx-loading-bar/core';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 
 import { combineLatest, Observable } from 'rxjs';
 
-import { map, delay, withLatestFrom, filter, take } from 'rxjs/operators';
+import { map, filter, take } from 'rxjs/operators';
+
+import { AppBusyService } from './shared/services/app-busy.service';
 
 import { TranslateService } from '@ngx-translate/core';
 
@@ -17,8 +19,6 @@ import { SignalRService } from './shared/services/signal-r.service';
 import { ProductService } from './shared/services/product.service';
 
 import { OnlineShopSettingsService } from './shared/services/online-shop-settings.service';
-
-import { OnlineShopPageService } from './shared/services/online-shop-page.service';
 
 import { ThemeService } from './shared/services/theme.service';
 
@@ -40,19 +40,8 @@ export class AppComponent implements OnInit {
 
   
 
-  // For Progressbar
-
-  loaders = this.loader.progress$.pipe(
-
-    delay(1000),
-
-    withLatestFrom(this.loader.progress$),
-
-    map(v => v[1]),
-
-  );
-
-
+  /** True while a route change is in flight, so the busy overlay is released exactly once. */
+  private navigationPending = false;
 
   readonly bootstrapping$: Observable<boolean> = combineLatest([
 
@@ -68,15 +57,15 @@ export class AppComponent implements OnInit {
 
     @Inject(PLATFORM_ID) private platformId: Object,
 
-    private loader: LoadingBarService,
+    private router: Router,
+
+    private busy: AppBusyService,
 
     translate: TranslateService,
 
     private tenantService: TenantService,
 
     private storefrontSettings: OnlineShopSettingsService,
-
-    private pageService: OnlineShopPageService,
 
     private themeService: ThemeService,
 
@@ -108,6 +97,8 @@ export class AppComponent implements OnInit {
 
     if (isPlatformBrowser(this.platformId)) {
 
+      this.trackNavigation();
+
       this.tenantService.shopContext$
 
         .pipe(
@@ -119,8 +110,6 @@ export class AppComponent implements OnInit {
         )
 
         .subscribe((ctx) => {
-
-          this.pageService.clearActivePagesCache();
 
           if (ctx?.storefront) {
 
@@ -139,6 +128,48 @@ export class AppComponent implements OnInit {
       }
 
     }
+
+  }
+
+
+
+  /** Covers the screen while a page is being fetched, so a second link cannot be clicked mid-route. */
+
+  private trackNavigation(): void {
+
+    this.router.events.subscribe((event) => {
+
+      if (event instanceof NavigationStart) {
+
+        if (!this.navigationPending) {
+
+          this.navigationPending = true;
+
+          this.busy.begin('Loading…');
+
+        }
+
+        return;
+
+      }
+
+      const settled =
+
+        event instanceof NavigationEnd
+
+        || event instanceof NavigationCancel
+
+        || event instanceof NavigationError;
+
+      if (settled && this.navigationPending) {
+
+        this.navigationPending = false;
+
+        this.busy.end();
+
+      }
+
+    });
 
   }
 

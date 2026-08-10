@@ -27,6 +27,7 @@ import {
   SearchSuggestionsResult,
 } from '../../services/online-shop-search.service';
 import { StoreLogoService } from '../../services/store-logo.service';
+import { OnlineShopOrderService } from '../../services/online-shop-order.service';
 
 @Component({
   selector: 'app-header-one',
@@ -53,8 +54,11 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   searchSuggestions: SearchSuggestionsResult = { products: [], categories: [] };
   justAddedSuggestionId: string | null = null;
   cartRevision = 0;
+  /** null until we know, so the chip never claims "0 orders" on a guess. */
+  myOrderCount: number | null = null;
 
   private readonly destroy$ = new Subject<void>();
+  private readonly markingReadIds = new Set<number>();
   private addedSuggestionTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly searchInput$ = new Subject<string>();
   private readonly isBrowser: boolean;
@@ -69,6 +73,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private searchService: OnlineShopSearchService,
     private storeLogoService: StoreLogoService,
+    private orderService: OnlineShopOrderService,
     private elementRef: ElementRef<HTMLElement>,
     @Inject(PLATFORM_ID) platformId: object,
   ) {
@@ -138,6 +143,87 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
         orderId ? { queryParams: { orderId } } : undefined
       );
     }
+  }
+
+  /** Spoken form of the chip, since the badge on its own says nothing to a screen reader. */
+  get myOrdersAriaLabel(): string {
+    if (!this.isLoggedIn || this.myOrderCount === null) {
+      return 'My orders';
+    }
+
+    return this.myOrderCount === 1 ? 'My orders, 1 order' : `My orders, ${this.myOrderCount} orders`;
+  }
+
+  private watchMyOrderCount(): void {
+    this.orderService.myOrderCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((count) => {
+        this.myOrderCount = count;
+      });
+
+    this.auth.isLoggedIn$
+      .pipe(distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((loggedIn) => {
+        if (loggedIn) {
+          this.refreshMyOrderCount();
+          return;
+        }
+
+        this.orderService.clearMyOrderCount();
+      });
+
+    // A pushed update can be a brand new order, so the figure is re-read rather than assumed.
+    this.signalRService.orderUpdated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshMyOrderCount());
+  }
+
+  private refreshMyOrderCount(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const email = this.auth.getCustomerEmail();
+    if (email) {
+      this.orderService.refreshMyOrderCount(email);
+    }
+  }
+
+  isMarkingNotificationRead(notificationId: number): boolean {
+    return this.markingReadIds.has(notificationId);
+  }
+
+  /**
+   * Dismisses one alert without opening the order behind it, for the customer who has read the news in
+   * the dropdown and just wants it off the list. The click is kept from the row so the dropdown stays
+   * open and the alert does not double as a link.
+   */
+  markNotificationAsRead(event: Event, item: ShopNotificationItem): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const notificationId = item?.id;
+    if (!notificationId || this.markingReadIds.has(notificationId)) {
+      return;
+    }
+
+    if (item.isRead) {
+      this.signalRService.removeNotification(notificationId);
+      return;
+    }
+
+    this.markingReadIds.add(notificationId);
+    this.notificationService.markAsRead(notificationId).subscribe({
+      next: (ok) => {
+        this.markingReadIds.delete(notificationId);
+        if (ok) {
+          this.signalRService.removeNotification(notificationId);
+        }
+      },
+      error: () => {
+        this.markingReadIds.delete(notificationId);
+      }
+    });
   }
 
   clearAllNotifications(event: Event): void {
@@ -237,6 +323,8 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.cartRevision++;
       });
+
+    this.watchMyOrderCount();
 
     this.searchInput$
       .pipe(

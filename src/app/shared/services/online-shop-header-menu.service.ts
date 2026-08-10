@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import {
   AbpResponse,
@@ -13,6 +13,7 @@ import { Menu } from './nav.service';
 import { Product } from '../classes/product';
 import { ProductService } from './product.service';
 import { TenantService } from './tenant.service';
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 const MAX_POPULAR_PRODUCTS = 20;
 
@@ -20,82 +21,102 @@ const MAX_POPULAR_PRODUCTS = 20;
   providedIn: 'root',
 })
 export class OnlineShopHeaderMenuService {
+  private headerMenuItemsRequest$: Observable<Menu[]> | null = null;
+  private readonly popularByCategory = new Map<string, Observable<Product[]>>();
+
   constructor(
     private http: HttpClient,
     private tenantService: TenantService,
     private productService: ProductService,
   ) {}
 
-  loadHeaderMenuItems(): Observable<Menu[]> {
-    return this.tenantService.whenReady().pipe(
+  loadHeaderMenuItems(force = false): Observable<Menu[]> {
+    if (force) {
+      this.headerMenuItemsRequest$ = null;
+    }
+    if (this.headerMenuItemsRequest$) {
+      return this.headerMenuItemsRequest$;
+    }
+
+    this.headerMenuItemsRequest$ = this.tenantService.whenReady().pipe(
       switchMap(() =>
-        forkJoin({
-          header: this.fetchHeaderMenu(),
-          categories: this.fetchCategoryTree(),
-        }).pipe(
-          switchMap(({ header, categories }) => this.buildMenuItems(header.dropdowns, categories)),
+        this.fetchHeaderMenu().pipe(
+          switchMap((header) =>
+            this.fetchCategoryTree().pipe(
+              map((categories) => this.buildMenuItems(header.dropdowns, categories)),
+            ),
+          ),
           catchError(() => of([])),
         ),
       ),
+      shareReplay(1),
     );
+
+    return this.headerMenuItemsRequest$;
   }
 
   private fetchHeaderMenu(): Observable<HeaderMenuStorefront> {
     const tenantId = this.resolveTenantId();
     const url = `${this.apiUrl(environment.urls.HeaderMenu_GetForStorefront)}?tenantId=${tenantId}`;
-    return this.http.get<AbpResponse<HeaderMenuStorefront>>(url, this.tenantHeaders(tenantId)).pipe(
+    // Header chrome: fills in around the page rather than holding the customer up.
+    return this.http.get<AbpResponse<HeaderMenuStorefront>>(
+      url,
+      asBackgroundRequest(this.tenantHeaders(tenantId))
+    ).pipe(
       map((response) => this.normalizeHeaderMenu(response?.result)),
       catchError(() => of({ tenantId, dropdowns: [] })),
     );
   }
 
   private fetchCategoryTree(): Observable<CategoryTreeNode[]> {
-    const tenantId = this.resolveTenantId();
-    const storeId = this.resolveStoreId();
-    const url = `${this.apiUrl(
-      environment.urls.OnlineShopProductGroup_GetHierarchyForOnline,
-    )}?TenantId=${tenantId}&StoreId=${encodeURIComponent(storeId)}`;
-    return this.http.get<AbpResponse<CategoryTreeNode[]>>(url).pipe(
-      map((response) => this.normalizeCategoryTree(response?.result)),
+    return this.productService.getCategories().pipe(
+      map((response: AbpResponse<CategoryTreeNode[]> | CategoryTreeNode[]) => {
+        const raw = Array.isArray(response)
+          ? response
+          : (response?.result ?? []);
+        return this.normalizeCategoryTree(raw);
+      }),
       catchError(() => of([])),
     );
   }
 
+  /** Build nav structure only — popular products load lazily on mega-menu open. */
   private buildMenuItems(
     dropdowns: HeaderMenuStorefrontItem[],
     categoryTree: CategoryTreeNode[],
-  ): Observable<Menu[]> {
+  ): Menu[] {
     const configured = (dropdowns || [])
       .filter((d) => d.productGroupId && d.productGroupId !== 'undefined')
       .sort((a, b) => a.slot - b.slot);
 
     if (!configured.length) {
-      return of([]);
+      return [];
     }
 
-    const productRequests = configured.map((d) =>
-      this.fetchProductsForCategory(d.productGroupId!).pipe(
-        map((products) => ({ slot: d.slot, products })),
-      ),
-    );
+    const seenTitles = new Set<string>();
+    const unique: Menu[] = [];
 
-    return forkJoin(productRequests).pipe(
-      map((productResults) => {
-        const productsBySlot = new Map(productResults.map((r) => [r.slot, r.products]));
-        return configured.map((dropdown) => {
-          const groupId = dropdown.productGroupId!;
-          const node = this.findCategoryById(categoryTree, groupId);
-          const categoryLabel = this.toDisplayName(
-            node?.title,
-            dropdown.categoryName,
-            `Category ${dropdown.slot}`,
-          );
-          const title = categoryLabel.toUpperCase();
-          const products = productsBySlot.get(dropdown.slot) || [];
-          return this.buildDropdownMenu(title, categoryLabel, groupId, node, products);
-        });
-      }),
-    );
+    for (const dropdown of configured) {
+      const groupId = dropdown.productGroupId!;
+      const node = this.findCategoryById(categoryTree, groupId);
+      const categoryLabel = this.toDisplayName(
+        node?.title,
+        dropdown.categoryName,
+        `Category ${dropdown.slot}`,
+      );
+      const title = this.normalizeNavLabel(categoryLabel);
+      const key = String(title || '').trim().toLowerCase();
+      if (!key || seenTitles.has(key)) {
+        continue;
+      }
+      seenTitles.add(key);
+      unique.push(this.buildDropdownMenu(title, categoryLabel, groupId, node));
+      if (unique.length >= 5) {
+        break;
+      }
+    }
+
+    return unique;
   }
 
   private buildDropdownMenu(
@@ -103,7 +124,6 @@ export class OnlineShopHeaderMenuService {
     categoryLabel: string,
     groupId: string,
     node: CategoryTreeNode | null,
-    products: Product[],
   ): Menu {
     const columns: Menu[] = [this.buildShopAllColumn(categoryLabel, groupId)];
 
@@ -112,10 +132,14 @@ export class OnlineShopHeaderMenuService {
       columns.push(subcategories);
     }
 
-    const popular = this.buildPopularColumn(products);
-    if (popular) {
-      columns.push(popular);
-    }
+    columns.push({
+      title: 'Most Popular',
+      type: 'sub',
+      megaColumnType: 'popular',
+      skipTranslate: true,
+      active: false,
+      children: [],
+    });
 
     return {
       title,
@@ -148,7 +172,6 @@ export class OnlineShopHeaderMenuService {
     };
   }
 
-  /** Single column listing all subcategories (one navigable level). */
   private buildSubcategoriesColumn(node: CategoryTreeNode | null): Menu | null {
     const links = this.collectSubcategoryLinks(node);
     if (!links.length) {
@@ -190,22 +213,6 @@ export class OnlineShopHeaderMenuService {
     );
   }
 
-  private buildPopularColumn(products: Product[]): Menu | null {
-    const links = this.mapProductsToMenuLinks(products);
-    if (!links.length) {
-      return null;
-    }
-
-    return {
-      title: 'Most Popular',
-      type: 'sub',
-      megaColumnType: 'popular',
-      skipTranslate: true,
-      active: false,
-      children: links,
-    };
-  }
-
   private mapProductsToMenuLinks(products: Product[]): Menu[] {
     return (products || [])
       .filter((p) => p?.id && p?.title)
@@ -213,7 +220,9 @@ export class OnlineShopHeaderMenuService {
       .map((p) => ({
         title: p.title,
         type: 'link',
-        path: ['/shop/product', String(p.id)],
+        path: p.slug
+          ? ['/shop/product', p.slug]
+          : ['/shop/product', String(p.id)],
         skipTranslate: true,
       }));
   }
@@ -229,19 +238,33 @@ export class OnlineShopHeaderMenuService {
   }
 
   private fetchProductsForCategory(categoryId: string): Observable<Product[]> {
+    const key = String(categoryId || '').trim();
+    if (!key) {
+      return of([]);
+    }
+
+    const cached = this.popularByCategory.get(key);
+    if (cached) {
+      return cached;
+    }
+
     const tenantId = this.resolveTenantId();
     const storeId = this.resolveStoreId();
     const path = `${environment.urls.OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop}?TenantId=${tenantId}&StoreId=${encodeURIComponent(
       storeId,
-    )}&CategoryId=${encodeURIComponent(categoryId)}&maxResultCount=${MAX_POPULAR_PRODUCTS}&skipCount=0&ShopSortBy=ascending`;
+    )}&CategoryId=${encodeURIComponent(key)}&maxResultCount=${MAX_POPULAR_PRODUCTS}&skipCount=0&ShopSortBy=ascending`;
 
-    return this.productService.getProductsFromAPI(path).pipe(
+    const request$ = this.productService.getProductsFromAPI(path).pipe(
       map((response: { result?: { items?: unknown[] } }) => {
         const items = response?.result?.items || [];
         return items.map((item) => this.productService.mapInventoryItemToProduct(item));
       }),
       catchError(() => of([] as Product[])),
+      shareReplay(1),
     );
+
+    this.popularByCategory.set(key, request$);
+    return request$;
   }
 
   private findCategoryById(nodes: CategoryTreeNode[], id: string): CategoryTreeNode | null {
@@ -261,11 +284,37 @@ export class OnlineShopHeaderMenuService {
 
   private toDisplayName(...candidates: (string | undefined)[]): string {
     const raw = candidates.find((c) => c && String(c).trim()) || 'Category';
-    return String(raw)
+    return this.normalizeNavLabel(String(raw));
+  }
+
+  private normalizeNavLabel(raw: string): string {
+    let s = String(raw || '')
       .trim()
+      .replace(/\s*\/\s*/g, ' / ')
+      .replace(/\s+/g, ' ');
+
+    const acronyms = new Set(['tws', 'otg', 'usb', 'led', 'lcd', 'hd', 'gps', 'sim']);
+
+    s = s
       .split(/\s+/)
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .map((w) => {
+        if (w === '/' || w === '&') {
+          return w;
+        }
+        const bare = w.replace(/[().,]/g, '');
+        if (acronyms.has(bare.toLowerCase())) {
+          return w.replace(bare, bare.toUpperCase());
+        }
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      })
       .join(' ');
+
+    s = s
+      .replace(/\bAirbuds\b/gi, 'Earbuds')
+      .replace(/\bAdaptors\b/gi, 'Adapters')
+      .replace(/\s*\/\s*/g, ' & ');
+
+    return s;
   }
 
   private normalizeHeaderMenu(raw: HeaderMenuStorefront | null | undefined): HeaderMenuStorefront {

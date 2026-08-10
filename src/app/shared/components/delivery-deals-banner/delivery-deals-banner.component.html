@@ -1,0 +1,32 @@
+<section
+  class="delivery-deals"
+  [class.delivery-deals--compact]="compact"
+  *ngIf="deals.length"
+  aria-label="Delivery deals"
+  [attr.title]="spendBasisNote">
+  <div class="delivery-deals__inner">
+    <span class="delivery-deals__label">
+      <span class="delivery-deals__label-icon" aria-hidden="true">
+        <i class="fa fa-truck"></i>
+      </span>
+      <span class="delivery-deals__label-text">{{ heading }}</span>
+    </span>
+
+    <span class="delivery-deals__divider" aria-hidden="true"></span>
+
+    <ul class="delivery-deals__list">
+      <li
+        class="delivery-deals__item"
+        *ngFor="let deal of deals"
+        [class.delivery-deals__item--free]="deal.chargeType === 'free'">
+        <span class="delivery-deals__spend">{{ spendLabel(deal) }}</span>
+        <span class="delivery-deals__benefit">{{ benefitLabel(deal) }}</span>
+        <span class="delivery-deals__country" *ngIf="showCountry && deal.countryName">
+          {{ deal.countryName }}
+        </span>
+      </li>
+    </ul>
+
+    <span class="delivery-deals__note" *ngIf="spendBasisNote">{{ spendBasisNote }}</span>
+  </div>
+</section>

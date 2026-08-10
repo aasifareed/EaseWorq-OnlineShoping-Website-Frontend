@@ -8,8 +8,8 @@ li { display: block !important; }
 }
 
 .category-list > li > a {
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 12px;
   color: var(--ml-sidebar-text);
   display: inline-block;
   border-radius: 4px;
@@ -78,50 +78,62 @@ li { display: block !important; }
 }
 
 .microless-category-branch {
-  margin-top: 4px;
+  margin-top: 2px;
+  padding-top: 2px;
 }
 
+/* Microless-style back: "< Parent" / "< All Categories" */
 .microless-cat-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
-  color: var(--ml-sidebar-text-muted);
+  font-weight: 500;
+  line-height: 1.3;
+  color: #6b7280;
   text-decoration: none;
-  margin-bottom: 10px;
+  margin: 0 0 10px;
+  padding: 2px 0;
+  cursor: pointer;
 
   &:hover {
-    color: var(--ml-sidebar-active);
+    color: #111111;
     text-decoration: underline;
   }
 }
 
 .microless-cat-back-chevron {
-  margin-right: 4px;
-  color: var(--ml-sidebar-text-muted);
+  flex: 0 0 auto;
+  margin-right: 2px;
+  color: #9ca3af;
+  font-weight: 600;
 }
 
 .microless-cat-current {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--ml-sidebar-active);
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--ml-sidebar-divider);
+  line-height: 1.3;
+  color: #111111;
+  margin: 0 0 10px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--ml-sidebar-divider, #e5e7eb);
 }
 
 .microless-cat-children {
   list-style: none;
-  padding: 0;
+  padding: 0 0 0 6px;
   margin: 0;
 
   li {
     display: block !important;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   a {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    color: var(--ml-sidebar-text);
+    line-height: 1.35;
+    color: var(--ml-sidebar-text, #374151);
     text-decoration: none;
     display: block;
     padding: 5px 8px;
@@ -129,9 +141,18 @@ li { display: block !important; }
     border-radius: 4px;
     transition: color 0.15s ease, background 0.15s ease;
 
+    /* Forward affordance for nodes with children */
+    &.has-children::before {
+      content: '\f105';
+      font-family: 'FontAwesome';
+      margin-right: 6px;
+      font-size: 11px;
+      color: var(--ml-sidebar-text-muted, #9ca3af);
+    }
+
     &:hover {
-      color: var(--ml-sidebar-active);
-      background: var(--ml-sidebar-active-bg, transparent);
+      color: var(--ml-sidebar-active, #111111);
+      background: var(--ml-sidebar-active-bg, rgba(240, 180, 41, 0.08));
     }
 
     &.active {
@@ -148,5 +169,20 @@ li { display: block !important; }
     font-size: 12px;
     font-weight: 600;
     margin-left: 4px;
+  }
+}
+
+:host-context(body.dark) {
+  .microless-cat-back {
+    color: #9ca3af;
+
+    &:hover {
+      color: #ffffff;
+    }
+  }
+
+  .microless-cat-current {
+    color: #ffffff;
+    border-bottom-color: var(--ml-sidebar-divider, #333);
   }
 }

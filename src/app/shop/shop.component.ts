@@ -50,6 +50,6 @@ export class ShopComponent implements OnInit, OnDestroy {
 
   private syncNavigationBarVisibility(url: string): void {
     const path = (url || '').split('?')[0].split('#').pop() || '';
-    this.hideNavigationBar = /^\/shop\/checkout\/?$/.test(path);
+    this.hideNavigationBar = /^\/shop\/checkout(\/|$)/.test(path);
   }
 }

@@ -1,9 +1,9 @@
 <div class="collection-collapse-block" [class.open]="collapse" *ngIf="displayColorList.length || loading">
     <h3 class="collapse-block-title" (click)="collapse = !collapse">Colors</h3>
     <div class="collection-collapse-block-content">
-      <div class="collection-brand-filter color-filter">
+      <div class="collection-brand-filter color-filter collection-brand-filter--expandable">
         <div class="custom-control custom-checkbox collection-filter-checkbox"
-          *ngFor="let c of displayColorList; let i = index">
+          *ngFor="let c of visibleColors; let i = index">
           <input
             type="checkbox"
             class="custom-control-input"
@@ -14,6 +14,12 @@
           <span [class]="c.label" [ngStyle]="{'background-color': c.label}"></span>
           <label class="custom-control-label" [attr.for]="'shop-color-' + i">{{ c.label }}</label>
         </div>
+        <button type="button"
+                class="filter-show-more"
+                *ngIf="displayColorList.length > previewLimit"
+                (click)="showAll = !showAll">
+          {{ showAll ? 'Show less' : 'Show more' }}
+        </button>
       </div>
     </div>
 </div>

@@ -38,6 +38,8 @@ export class ColorsComponent implements OnInit, OnDestroy, OnChanges {
   public displayColorList: ShopColorDisplayOption[] = [];
   public collapse = true;
   public loading = false;
+  public showAll = false;
+  public readonly previewLimit = 6;
 
   private routeSub?: Subscription;
   private category: string | null = null;
@@ -86,6 +88,13 @@ export class ColorsComponent implements OnInit, OnDestroy, OnChanges {
       checked: (this.selectedColors || []).some((v) => this.sameValue(v, c.value)),
     }));
     this.cdr.markForCheck();
+  }
+
+  get visibleColors(): ShopColorDisplayOption[] {
+    if (this.showAll || this.displayColorList.length <= this.previewLimit) {
+      return this.displayColorList;
+    }
+    return this.displayColorList.slice(0, this.previewLimit);
   }
 
   private loadColors(): void {

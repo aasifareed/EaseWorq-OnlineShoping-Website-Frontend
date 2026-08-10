@@ -1,11 +1,17 @@
 <!-- Grid card -->
-<div class="mc-card mb-2" *ngIf="!loader && !listMode">
+<div class="mc-card" *ngIf="!loader && !listMode">
   <div class="mc-card__img-box">
-    <span class="mc-chip" *ngIf="product?.sale">Powered By AMD</span>
     <div class="mc-ribbon" *ngIf="product?.new"><span>New</span></div>
+    <button type="button"
+            class="mc-card__wish"
+            title="Add to wishlist"
+            aria-label="Add to wishlist"
+            (click)="addToWishlist(product); $event.stopPropagation(); $event.preventDefault()">
+      <i class="fa fa-heart-o" aria-hidden="true"></i>
+    </button>
     <div class="mc-card__img-clip">
       <a [routerLink]="productLink" class="mc-card__img-link">
-        <img [defaultImage]="cardImageSrc"
+        <img [defaultImage]="'assets/images/product/placeholder.svg'"
              [lazyLoad]="cardImageSrc"
              class="mc-card__img"
              [alt]="product?.images?.[0]?.alt || product?.title"
@@ -14,21 +20,37 @@
     </div>
   </div>
   <div class="mc-card__info">
-    <span class="mc-discount" *ngIf="product?.discount">{{ product.discount }}% OFF</span>
+    <div class="mc-card__topline">
+      <span class="mc-card__brand" *ngIf="product?.brand">{{ product.brand }}</span>
+      <span class="mc-discount" *ngIf="hasDiscount">{{ discountLabel }}</span>
+    </div>
     <a [routerLink]="productLink" class="mc-card__name">{{ product?.title }}</a>
     <div class="mc-card__prices">
-      <span class="mc-card__sale">
-        {{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}
-      </span>
-      <span class="mc-card__old" *ngIf="product?.discount">
-        {{ product?.price * currency?.price | shopCurrency:currency?.currency }}
-      </span>
+      <div class="mc-card__price-group">
+        <span class="mc-card__sale">
+          {{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}
+        </span>
+        <span class="mc-card__old" *ngIf="hasDiscount">
+          {{ product?.price * currency?.price | shopCurrency:currency?.currency }}
+        </span>
+      </div>
+      <p
+        class="mc-card__stock"
+        [class.mc-card__stock--in]="isInStock"
+        [class.mc-card__stock--out]="!isInStock"
+        [class.mc-card__stock--low]="isInStock && stockQty <= 5"
+      >
+        {{ stockLabel }}
+      </p>
     </div>
     <a href="javascript:void(0)"
        class="btn btn-primary mc-card__cart-btn"
-       title="Add To Cart"
-       (click)="QuickView.openModal()">
-      Add To Cart
+       [class.mc-card__cart-btn--disabled]="!isInStock"
+       [attr.aria-disabled]="!isInStock"
+       [attr.title]="isInStock ? 'Add to Cart' : 'Out of stock'"
+       (click)="isInStock && QuickView.openModal()">
+      <i class="fa" [ngClass]="isInStock ? 'fa-shopping-cart' : 'fa-ban'" aria-hidden="true"></i>
+      <span>{{ isInStock ? 'Add to Cart' : 'Out of Stock' }}</span>
     </a>
   </div>
 </div>
@@ -45,14 +67,16 @@
   </div>
 
   <div class="shop-list-card__body">
-    <a [routerLink]="productLink" class="shop-list-card__title">{{ product?.title | titlecase }}</a>
+    <span class="mc-card__brand" *ngIf="product?.brand">{{ product.brand }}</span>
+    <a [routerLink]="productLink" class="shop-list-card__title">{{ product?.title }}</a>
     <div class="shop-list-card__meta">
       <span class="shop-list-stock-badge"
-            [class.shop-list-stock-badge--in]="(product?.stock ?? 0) > 0"
-            [class.shop-list-stock-badge--out]="(product?.stock ?? 0) <= 0">
-        {{ (product?.stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock' }}
+            [class.shop-list-stock-badge--in]="isInStock"
+            [class.shop-list-stock-badge--out]="!isInStock"
+            [class.shop-list-stock-badge--low]="isInStock && stockQty <= 5">
+        {{ stockLabel }}
       </span>
-      <span class="mc-discount shop-list-card__discount" *ngIf="product?.discount">{{ product.discount }}% OFF</span>
+      <span class="mc-discount shop-list-card__discount" *ngIf="hasDiscount">{{ discountLabel }}</span>
     </div>
   </div>
 
@@ -61,15 +85,18 @@
       <span class="mc-card__sale shop-list-card__price-current">
         {{ product?.price * currency?.price | discount:product | shopCurrency:currency?.currency }}
       </span>
-      <span class="mc-card__old shop-list-card__price-old" *ngIf="product?.discount">
+      <span class="mc-card__old shop-list-card__price-old" *ngIf="hasDiscount">
         {{ product?.price * currency?.price | shopCurrency:currency?.currency }}
       </span>
     </div>
     <a href="javascript:void(0)"
        class="btn btn-primary mc-card__cart-btn shop-list-card__cart-btn"
-       title="Add To Cart"
-       (click)="QuickView.openModal()">
-      Add To Cart
+       [class.mc-card__cart-btn--disabled]="!isInStock"
+       [attr.aria-disabled]="!isInStock"
+       [attr.title]="isInStock ? 'Add to Cart' : 'Out of stock'"
+       (click)="isInStock && QuickView.openModal()">
+      <i class="fa" [ngClass]="isInStock ? 'fa-shopping-cart' : 'fa-ban'" aria-hidden="true"></i>
+      <span>{{ isInStock ? 'Add to Cart' : 'Out of Stock' }}</span>
     </a>
   </div>
 </article>

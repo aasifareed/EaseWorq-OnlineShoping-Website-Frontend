@@ -30,6 +30,26 @@ export function trimDigitsOnly(): ValidatorFn {
   };
 }
 
+/**
+ * International phone: optional leading +, digits required.
+ * Allows spaces, hyphens, and parentheses while typing (stripped for validation).
+ * Examples: +923017438739, 03017438739, 923017438739
+ */
+export function trimPhoneNumber(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const raw = (control.value ?? '').toString().trim();
+    if (!raw) {
+      return null;
+    }
+    const normalized = raw.replace(/[\s\-().]/g, '');
+    // Optional +, then 7–15 digits (E.164 digit count range)
+    if (!/^\+?[0-9]{7,15}$/.test(normalized)) {
+      return { phone: true };
+    }
+    return null;
+  };
+}
+
 export function trimMaxLength(max: number): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value = (control.value ?? '').toString().trim();

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { ProductService } from "../../services/product.service";
 import { Product } from "../../classes/product";
+import { shopProductLink } from "../../constants/storefront-routes";
 
 @Component({
   selector: 'app-settings',
@@ -61,7 +62,7 @@ export class SettingsComponent implements OnInit {
   }
 
   get getTotal(): Observable<number> {
-    return this.productService.cartTotalAmount();
+    return this.productService.cartCatalogueDisplayTotal();
   }
 
   removeItem(product: any) {
@@ -70,6 +71,10 @@ export class SettingsComponent implements OnInit {
 
   changeCurrency(currency: any) {
     this.productService.Currency = currency
+  }
+
+  productLink(product: Product): (string | number)[] {
+    return shopProductLink(product || {});
   }
 
 }

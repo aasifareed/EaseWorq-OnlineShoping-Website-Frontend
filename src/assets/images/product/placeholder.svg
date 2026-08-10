@@ -1,16 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480" role="img" aria-label="No product image">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="100%" stop-color="#e5e7eb"/>
-    </linearGradient>
-  </defs>
-  <rect width="480" height="480" fill="url(#bg)"/>
-  <rect x="36" y="36" width="408" height="408" rx="24" fill="#ffffff" stroke="#d1d5db" stroke-width="2"/>
-  <g transform="translate(160 132)" fill="none" stroke="#9ca3af" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="0" y="18" width="160" height="120" rx="16"/>
-    <circle cx="112" cy="66" r="18"/>
-    <path d="M24 138 L64 92 L96 118 L136 78 L160 102"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="No Image">
+  <rect width="800" height="800" fill="#eef0f3"/>
+  <g transform="translate(250 210)" fill="none" stroke="#9aa3af" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="300" height="240" rx="18"/>
+    <circle cx="220" cy="78" r="28"/>
+    <path d="M36 198 L110 120 L168 168 L230 108 L264 148 L264 198 Z" fill="#c5cad3" stroke="#9aa3af"/>
   </g>
-  <text x="240" y="360" text-anchor="middle" fill="#6b7280" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="22" font-weight="600">No Image</text>
+  <text x="400" y="560" text-anchor="middle" fill="#6b7280" font-family="Segoe UI, system-ui, sans-serif" font-size="42" font-weight="600">No Image</text>
 </svg>

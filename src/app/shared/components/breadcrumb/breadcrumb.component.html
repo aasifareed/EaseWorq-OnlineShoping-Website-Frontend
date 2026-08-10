@@ -1,18 +1,31 @@
 <!-- breadcrumb start -->
-<div class="breadcrumb-section">
+<div class="breadcrumb-section" [class.breadcrumb-section--trail-only]="!showTitle || !title">
   <div class="container">
     <div class="row align-items-center">
-      <div class="col-sm-6">
+      <div class="col-sm-6" *ngIf="showTitle && title">
         <div class="page-title">
           <h2>{{ title }}</h2>
         </div>
       </div>
-      <div class="col-sm-6">
-        <nav aria-label="breadcrumb" class="theme-breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a [routerLink]="'/home'">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb }}</li>
+      <div [class.col-sm-6]="showTitle && title" [class.col-12]="!showTitle || !title">
+        <nav aria-label="breadcrumb" class="theme-breadcrumb" [class.theme-breadcrumb--start]="!showTitle || !title">
+          <ol class="breadcrumb" *ngIf="hasTrail; else simpleTrail">
+            <li class="breadcrumb-item"
+                *ngFor="let crumb of trail; let last = last"
+                [class.active]="last || crumb.current"
+                [attr.aria-current]="last || crumb.current ? 'page' : null">
+              <a *ngIf="crumb.routerLink && !crumb.current && !last"
+                 [routerLink]="crumb.routerLink"
+                 [queryParams]="crumb.queryParams || {}">{{ crumb.label }}</a>
+              <span *ngIf="!crumb.routerLink || crumb.current || last">{{ crumb.label }}</span>
+            </li>
           </ol>
+          <ng-template #simpleTrail>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a [routerLink]="'/home'">Home</a></li>
+              <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb }}</li>
+            </ol>
+          </ng-template>
         </nav>
       </div>
     </div>

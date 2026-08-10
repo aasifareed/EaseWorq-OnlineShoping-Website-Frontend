@@ -1,9 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
+  OnlineShopOrderAppliedDiscount,
   OnlineShopOrderService,
   OnlineShopPaymentFailureDetail
 } from '../../../shared/services/online-shop-order.service';
+import {
+  orderMerchandiseDiscountRows,
+  orderShippingBeforeDiscount,
+  orderShippingDiscountRows,
+  orderSubtotalBeforeDiscounts
+} from '../../../shared/services/online-shop-order-summary.util';
 import { ProductService } from '../../../shared/services/product.service';
 import { PayFastPaymentService } from '../pay-fast-payment.service';
 import { ToastrService } from 'ngx-toastr';
@@ -68,6 +75,22 @@ export class FailureComponent implements OnInit {
         this.toastr.error(msg || 'Could not restart payment. Please try again.');
       }
     });
+  }
+
+  get orderSubtotal(): number {
+    return this.order ? orderSubtotalBeforeDiscounts(this.order) : 0;
+  }
+
+  get orderShippingAmount(): number {
+    return this.order ? orderShippingBeforeDiscount(this.order) : 0;
+  }
+
+  get merchandiseDiscountRows(): OnlineShopOrderAppliedDiscount[] {
+    return this.order ? orderMerchandiseDiscountRows(this.order) : [];
+  }
+
+  get shippingDiscountRows(): OnlineShopOrderAppliedDiscount[] {
+    return this.order ? orderShippingDiscountRows(this.order) : [];
   }
 
   formatDate(iso: string): string {

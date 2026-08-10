@@ -1,94 +1,190 @@
 <ng-template class="theme-modal" #quickView let-modal>
     <div class="modal-content quick-view-modal">
         <div class="modal-body">
-            <button type="button" class="close float-end border-0" (click)="modal.dismiss('Cross click')">
+            <button type="button"
+                    class="qv-close"
+                    (click)="modal.dismiss('Cross click')"
+                    aria-label="Close quick view">
                 <span aria-hidden="true">&times;</span>
             </button>
-            <div class="row">
-                <div class="col-lg-6 col-xs-12 product-image-gallery">
+
+            <div class="qv-layout">
+                <div class="qv-gallery product-image-gallery">
                     <div class="gallery-main"
                          [class.is-single]="!hasMultipleImages"
                          (touchstart)="onGalleryTouchStart($event)"
                          (touchend)="onGalleryTouchEnd($event)">
-                        <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage()" aria-label="Previous image">
+                        <button type="button" class="gallery-nav prev" *ngIf="hasMultipleImages" (click)="prevImage($event)" aria-label="Previous image">
                             <i class="ti-angle-left"></i>
                         </button>
-                        <div class="gallery-zoom-stage"
-                             (mousemove)="onZoomMove($event)"
-                             (mouseleave)="onZoomLeave()">
-                            <img [src]="selectedImage"
+                        <div class="gallery-zoom-stage gallery-zoom-stage--clickable"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Open image gallery"
+                             (click)="openLightbox($event)"
+                             (keydown.enter)="openLightbox($event)">
+                            <img *ngFor="let slide of [selectedIndex]"
+                                 [src]="productImages[slide] || placeholderImage"
                                  [alt]="product?.title"
                                  class="gallery-main-img"
-                                 [class.is-zoomed]="zoomActive"
-                                 [style.transform-origin]="zoomOrigin"
-                                 (error)="onImageError($event)">
+                                 (error)="onImageError($event, slide)">
                         </div>
-                        <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage()" aria-label="Next image">
+                        <button type="button" class="gallery-nav next" *ngIf="hasMultipleImages" (click)="nextImage($event)" aria-label="Next image">
                             <i class="ti-angle-right"></i>
                         </button>
                     </div>
                     <div class="gallery-thumbs" *ngIf="hasMultipleImages">
                         <button type="button"
                                 class="gallery-thumb-btn"
-                                *ngFor="let image of productImages; index as i"
+                                *ngFor="let image of productImages; index as i; trackBy: trackByIndex"
                                 [class.active]="selectedIndex === i"
-                                (click)="selectThumbnail(i)"
+                                (click)="selectThumbnail(i, $event)"
                                 [attr.aria-label]="'Show image ' + (i + 1)">
-                            <img [src]="image" [alt]="product?.title" (error)="onImageError($event)">
+                            <img [src]="image" [alt]="product?.title" (error)="onImageError($event, i)">
                         </button>
                     </div>
                 </div>
-                <div class="col-lg-6 rtl-text">
-                    <div class="product-right">
-                        <h2>{{ product?.title | titlecase }}</h2>
-                        <h3>{{ (product?.price | discount:product) * (currency?.price ?? 1) | shopCurrency:currency?.currency }}
-                            <del *ngIf="product?.discount"><span class="money">{{ product?.price * (currency?.price ?? 1) | shopCurrency:currency?.currency }}</span></del>
-                        </h3>
-                        <div class="border-product">
-                            <h6 class="product-title">product details</h6>
-                            <p>{{ (product?.description || 'No description available.').toString().substring(0, 200) }}{{ (product?.description || '').toString().length > 200 ? '...' : '' }}</p>
+
+                <div class="qv-info product-right">
+                    <h2 class="qv-title">{{ product?.title }}</h2>
+                    <p class="qv-price">
+                        {{ (product?.price | discount:product) * (currency?.price ?? 1) | shopCurrency:currency?.currency }}
+                        <del *ngIf="product?.discount">
+                            <span class="money">{{ product?.price * (currency?.price ?? 1) | shopCurrency:currency?.currency }}</span>
+                        </del>
+                    </p>
+
+                    <p class="qv-stock"
+                       [class.qv-stock--out]="stockTone === 'out'"
+                       [class.qv-stock--ok]="stockTone === 'ok'"
+                       [class.qv-stock--cart]="stockTone === 'cart'">
+                        {{ stockStatusLine }}
+                    </p>
+                    <p class="qv-stock-note" *ngIf="stockNote">{{ stockNote }}</p>
+
+                    <div class="qv-details">
+                        <h6 class="qv-section-label">Product Details</h6>
+                        <p class="qv-description"
+                           [class.qv-description--fallback]="!hasProductDescription">
+                            {{ productDescriptionText }}
+                        </p>
+                    </div>
+
+                    <div class="qv-qty" *ngIf="!isFullyInCart">
+                        <h6 class="qv-section-label">Quantity</h6>
+                        <div class="qv-qty-box" role="group" aria-label="Quantity">
+                            <button type="button"
+                                    class="qv-qty-btn"
+                                    (click)="decrement()"
+                                    [disabled]="counter <= 1"
+                                    aria-label="Decrease quantity">
+                                −
+                            </button>
+                            <input type="text"
+                                   name="quantity"
+                                   class="qv-qty-input"
+                                   [value]="counter"
+                                   disabled
+                                   aria-label="Selected quantity">
+                            <button type="button"
+                                    class="qv-qty-btn"
+                                    (click)="increment()"
+                                    [disabled]="!canIncrementCounter"
+                                    aria-label="Increase quantity">
+                                +
+                            </button>
                         </div>
-                        <div class="product-stock-summary border-product" *ngIf="productStock > 0">
-                            <p class="product-stock-available mb-0">
-                                Available quantity: <strong>{{ productStock }}</strong>
-                                <span class="product-stock-in-cart" *ngIf="isFullyInCart"> · Already in your cart</span>
-                                <span class="product-stock-partial" *ngIf="!isFullyInCart && cartQuantity > 0 && selectableQuantity > 0">
-                                  · {{ cartQuantity }} in cart, add up to {{ selectableQuantity }} more
-                                </span>
-                            </p>
-                        </div>
-                        <div class="product-stock-summary border-product" *ngIf="productStock <= 0">
-                            <p class="product-stock-out mb-0">Out of stock</p>
-                        </div>
-                        <div class="product-description border-product">
-                            <h5 class="avalibility" *ngIf="isFullyInCart"><span>In cart</span></h5>
-                            <h5 class="avalibility" *ngIf="!isFullyInCart && selectableQuantity > 0 && counter <= selectableQuantity"><span>In Stock</span></h5>
-                            <h5 class="avalibility" *ngIf="!isFullyInCart && (selectableQuantity <= 0 || counter > selectableQuantity)"><span>Out of Stock</span></h5>
-                            <h6 class="product-title" *ngIf="!isFullyInCart">quantity</h6>
-                            <div class="qty-box" *ngIf="!isFullyInCart">
-                                <div class="input-group">
-                                    <span class="input-group-prepend">
-                                        <button type="button" class="btn quantity-left-minus" data-type="minus" (click)="decrement()" [disabled]="counter <= 1">
-                                            <i class="ti-angle-left"></i>
-                                        </button>
-                                    </span>
-                                    <input type="text" name="quantity" class="form-control input-number" [value]="counter" disabled>
-                                    <span class="input-group-prepend">
-                                        <button type="button" class="btn quantity-right-plus" data-type="plus" (click)="increment()" [disabled]="!canIncrementCounter">
-                                            <i class="ti-angle-right"></i>
-                                        </button>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="product-buttons quick-view-actions">
-                            <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="addToCart(product)">add to cart</a>
-                            <a href="javascript:void(0)" class="btn btn-solid" [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity" (click)="buyNow(product)">buy now</a>
-                            <a href="javascript:void(0)" class="btn btn-solid" (click)="goProductDetail($event)">view detail</a>
-                        </div>
+                    </div>
+
+                    <div class="qv-actions product-buttons quick-view-actions">
+                        <a href="javascript:void(0)"
+                           class="btn qv-btn qv-btn--primary"
+                           [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity"
+                           (click)="addToCart(product)">
+                          <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                          <span>Add to Cart</span>
+                        </a>
+                        <a href="javascript:void(0)"
+                           class="btn qv-btn qv-btn--secondary"
+                           [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity"
+                           (click)="buyNow(product)">
+                          <i class="fa fa-bolt" aria-hidden="true"></i>
+                          <span>Buy Now</span>
+                        </a>
+                        <a href="javascript:void(0)"
+                           class="btn qv-btn qv-btn--ghost"
+                           (click)="goProductDetail($event)">
+                          <i class="fa fa-external-link" aria-hidden="true"></i>
+                          <span>View Full Details</span>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </ng-template>
+
+<!-- Image lightbox (outside Quick View modal so it stacks above it) -->
+<div class="product-lightbox"
+     *ngIf="lightboxOpen"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Product image gallery">
+  <div class="product-lightbox__backdrop" (click)="closeLightbox($event)"></div>
+  <div class="product-lightbox__dialog"
+       (click)="$event.stopPropagation()"
+       (touchstart)="onLightboxTouchStart($event)"
+       (touchend)="onLightboxTouchEnd($event)">
+    <div class="product-lightbox__header">
+      <div class="product-lightbox__title-wrap">
+        <span class="product-lightbox__title">{{ product?.title || 'Product images' }}</span>
+        <span class="product-lightbox__counter" *ngIf="productImages.length">
+          {{ selectedIndex + 1 }} / {{ productImages.length }}
+        </span>
+      </div>
+      <button type="button"
+              class="product-lightbox__close"
+              (click)="closeLightbox($event)"
+              aria-label="Close gallery">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="product-lightbox__stage">
+      <button type="button"
+              class="product-lightbox__nav product-lightbox__nav--prev"
+              *ngIf="hasMultipleImages"
+              (click)="prevImage($event)"
+              aria-label="Previous image">
+        <i class="ti-angle-left"></i>
+      </button>
+
+      <div class="product-lightbox__image-frame">
+        <img *ngFor="let slide of [selectedIndex]"
+             class="product-lightbox__image"
+             [src]="productImages[slide] || placeholderImage"
+             [alt]="product?.title"
+             (error)="onImageError($event, slide)">
+      </div>
+
+      <button type="button"
+              class="product-lightbox__nav product-lightbox__nav--next"
+              *ngIf="hasMultipleImages"
+              (click)="nextImage($event)"
+              aria-label="Next image">
+        <i class="ti-angle-right"></i>
+      </button>
+    </div>
+
+    <div class="product-lightbox__thumbs" *ngIf="hasMultipleImages">
+      <button type="button"
+              class="product-lightbox__thumb"
+              *ngFor="let image of productImages; index as i; trackBy: trackByIndex"
+              [class.active]="selectedIndex === i"
+              (click)="selectThumbnail(i, $event)"
+              [attr.aria-label]="'Show image ' + (i + 1)">
+        <img [src]="image" [alt]="product?.title" (error)="onImageError($event, i)">
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,38 +1,44 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Product } from '../../classes/product';
 import { ProductService } from '../../services/product.service';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-categories',
   templateUrl: './categories.component.html',
   styleUrls: ['./categories.component.scss']
 })
-export class CategoriesComponent implements OnInit {
+export class CategoriesComponent implements OnInit, OnDestroy {
 
   public products: Product[] = [];
   public collapse: boolean = true;
-activeSlug = '';
+  public showAll = false;
+  public readonly previewLimit = 6;
+  activeSlug = '';
   category: any;
-  constructor(public productService: ProductService,private route: ActivatedRoute) { 
+
+  private paramsSub?: Subscription;
+
+  constructor(
+    public productService: ProductService,
+    private route: ActivatedRoute
+  ) {
     this.productService.getProducts.subscribe(product => this.products = product);
   }
 
   ngOnInit(): void {
-      this.route.queryParams.subscribe(params => {
-    this.activeSlug = params['category'] || '';
-  });
-  this.filterbyCategory();
+    this.paramsSub = this.route.queryParams.subscribe(params => {
+      this.activeSlug = params['category'] ? String(params['category']) : '';
+      this.showAll = false;
+    });
+    this.filterbyCategory();
   }
 
-// activeSlug = '';
- 
-// Call this in your queryParams subscription
-setActiveSlug(slug: string) {
-  this.activeSlug = slug || '';
-}
- 
-// Used in template — opens a node if it or any descendant is active
+  ngOnDestroy(): void {
+    this.paramsSub?.unsubscribe();
+  }
+
   get categoryPathResolved(): any[] | null {
     if (!this.activeSlug || !this.category?.length) {
       return null;
@@ -84,19 +90,38 @@ setActiveSlug(slug: string) {
 
   get navChildren(): any[] {
     const cur = this.navCurrent;
-    return cur?.children || [];
+    return Array.isArray(cur?.children) ? cur.children : [];
+  }
+
+  /** Microless back target: parent category, or root list when at top level. */
+  get backLabel(): string {
+    return this.navParent?.title ? String(this.navParent.title) : 'All Categories';
+  }
+
+  get backQueryParams(): Record<string, string> {
+    if (this.navParent?.id !== undefined && this.navParent?.id !== null && this.navParent?.id !== '') {
+      return { category: String(this.navParent.id) };
+    }
+    return {};
+  }
+
+  hasChildren(node: any): boolean {
+    return Array.isArray(node?.children) && node.children.length > 0;
+  }
+
+  get visibleCategories(): any[] {
+    const list = Array.isArray(this.category) ? this.category : [];
+    if (this.showAll || list.length <= this.previewLimit) {
+      return list;
+    }
+    return list.slice(0, this.previewLimit);
   }
 
   filterbyCategory() {
-  // get filterbyCategory() {
-    // const category = CATEGORIES;
     this.productService.getCategories().subscribe({
-      next:(resp) =>{
+      next: (resp) => {
         this.category = resp.result;
       }
     });
-    // return category
   }
-  // : Category[]
-
 }

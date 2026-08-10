@@ -3,6 +3,7 @@ import { QuickViewComponent } from "../../modal/quick-view/quick-view.component"
 import { CartModalComponent } from "../../modal/cart-modal/cart-modal.component";
 import { Product } from "../../../classes/product";
 import { ProductService } from "../../../services/product.service";
+import { shopProductLink } from "../../../constants/storefront-routes";
 
 @Component({
   selector: 'app-product-box-one',
@@ -47,10 +48,33 @@ export class ProductBoxOneComponent implements OnInit, OnChanges {
   }
 
   get productLink(): (string | number)[] {
-    if (this.product?.id != null) {
-      return ['/shop/product', this.product.id];
-    }
-    return ['/shop'];
+    return shopProductLink(this.product || {});
+  }
+
+  get hasDiscount(): boolean {
+    const d = Number(this.product?.discount);
+    return Number.isFinite(d) && d > 0;
+  }
+
+  get discountLabel(): string {
+    const d = Number(this.product?.discount) || 0;
+    const rounded = Number.isInteger(d) ? String(d) : d.toFixed(2).replace(/\.?0+$/, '');
+    return `${rounded}% OFF`;
+  }
+
+  get stockQty(): number {
+    const n = Number(this.product?.stock);
+    return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  }
+
+  get isInStock(): boolean {
+    return this.stockQty > 0;
+  }
+
+  get stockLabel(): string {
+    return this.isInStock
+      ? `Available quantity: ${this.stockQty}`
+      : 'Out of stock';
   }
 
   /** First gallery image for listing cards (pictureUrls[0] || pictureUrl). */
@@ -65,9 +89,11 @@ export class ProductBoxOneComponent implements OnInit, OnChanges {
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     const fallback = this.productService.defaultProductImage;
-    if (img && img.src !== fallback) {
-      img.src = fallback;
+    if (!img || img.getAttribute('data-fallback') === '1') {
+      return;
     }
+    img.setAttribute('data-fallback', '1');
+    img.src = fallback;
   }
 
   // Get Product Color

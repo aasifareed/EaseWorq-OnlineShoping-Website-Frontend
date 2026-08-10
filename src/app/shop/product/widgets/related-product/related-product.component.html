@@ -1,5 +1,7 @@
 <!-- product section start -->
-<section class="section-b-space">
+<section class="section-b-space related-products-section"
+         [class.related-products-section--sparse]="!loading && displayProducts.length > 0 && displayProducts.length < 4"
+         *ngIf="loading || displayProducts.length">
     <div class="container">
         <div class="row">
             <div class="col-12 product-related">
@@ -9,19 +11,21 @@
         <div class="row search-product" *ngIf="loading">
             <div class="col-12 text-center py-4">Loading related products…</div>
         </div>
-        <div class="row search-product" *ngIf="!loading && displayProducts.length">
-            <div class="col-xl-3 col-md-6 col-sm-6" *ngFor="let product of displayProducts">
+        <div class="related-products-grid"
+             *ngIf="!loading && displayProducts.length"
+             [attr.data-count]="displayProducts.length"
+             [class.related-products-grid--count-1]="displayProducts.length === 1"
+             [class.related-products-grid--count-2]="displayProducts.length === 2"
+             [class.related-products-grid--count-3]="displayProducts.length === 3">
+            <div class="related-products-grid__item" *ngFor="let product of displayProducts">
                 <div class="product-box">
-                   <app-product-box-one 
-	                  [product]="product" 
+                   <app-product-box-one
+	                  [product]="product"
 	                  [currency]="productService?.Currency"
 	                  [cartModal]="true">
 	                </app-product-box-one>
                 </div>
             </div>
-        </div>
-        <div class="row" *ngIf="!loading && !displayProducts.length">
-            <div class="col-12 text-center py-3 text-muted">No related products found.</div>
         </div>
     </div>
 </section>

@@ -9,6 +9,7 @@ import { OnlineShopSettingsService } from './online-shop-settings.service';
 import { StoreLogoService } from './store-logo.service';
 import { ShopContextService } from './shop-context.service';
 import { isValidStoreGuid, normalizeStoreGuid } from '../utils/shop-context.util';
+import { asBackgroundRequest } from '../interceptors/background-request';
 
 interface TenantDetailsForWebsiteResult {
   tenantId?: number;
@@ -114,7 +115,12 @@ export class TenantService {
       ?? 'WebsiteTenantResolver/ResolveTenantByDomain';
     const url = `${this.apiRoot()}api/services/app/${path}`;
 
-    return this.http.post<AbpResultResponse<ResolveTenantByDomainApiResult>>(url, { hostName }).pipe(
+    // Runs during start-up behind the boot screen, which is the loader for this stage.
+    return this.http.post<AbpResultResponse<ResolveTenantByDomainApiResult>>(
+      url,
+      { hostName },
+      asBackgroundRequest()
+    ).pipe(
       map((response) => {
         const result = response?.result;
         if (!result) {
@@ -155,7 +161,7 @@ export class TenantService {
     const path = environment.urls.OnlineShopTenant_GetTenantDetailsForWebsite;
     const url = `${this.apiRoot()}api/services/app/${path}?TenantId=${tenantId}`;
 
-    return this.http.get<AbpResultResponse<TenantDetailsForWebsiteResult>>(url).pipe(
+    return this.http.get<AbpResultResponse<TenantDetailsForWebsiteResult>>(url, asBackgroundRequest()).pipe(
       map((response) => {
         if (response?.success === false || !response?.result) {
           return null;

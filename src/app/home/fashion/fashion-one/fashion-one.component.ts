@@ -1,8 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ProductSlider } from '../../../shared/data/slider';
 import { Product } from '../../../shared/classes/product';
 import { ProductService } from '../../../shared/services/product.service';
 import { HomeBannerService } from '../../../shared/services/home-banner.service';
+import {
+  FreeShippingPromo,
+  FreeShippingPromoService
+} from '../../../shared/services/free-shipping-promo.service';
 import { HomeCategorySliderView } from '../../../shared/models/home-category-slider.model';
 
 @Component({
@@ -10,7 +14,7 @@ import { HomeCategorySliderView } from '../../../shared/models/home-category-sli
   templateUrl: './fashion-one.component.html',
   styleUrls: ['./fashion-one.component.scss']
 })
-export class FashionOneComponent implements OnInit {
+export class FashionOneComponent implements OnInit, OnDestroy {
 
   public products: Product[] = [];
   public productCollections: any[] = [];
@@ -20,6 +24,10 @@ export class FashionOneComponent implements OnInit {
   public popularBrandLogos: { id: string; name: string; image: string }[] = [];
   public loadingPopularBrands = true;
   public loadingHomeBanners = true;
+  public freeShippingPromo: FreeShippingPromo | null = null;
+  public codeCopied = false;
+
+  private codeCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly defaultSliders = [{
     image: 'https://microless.com/cdn/banners/microless-cases-sales-pc.jpg'
@@ -41,18 +49,9 @@ export class FashionOneComponent implements OnInit {
 
   constructor(
     public productService: ProductService,
-    private homeBannerService: HomeBannerService
-  ) {
-    this.productService.getProducts.subscribe(response => {
-      this.products = response.filter(item => item.type == 'fashion');
-      this.products.filter((item) => {
-        item.collection?.filter((collection) => {
-          const index = this.productCollections.indexOf(collection);
-          if (index === -1) this.productCollections.push(collection);
-        })
-      })
-    });
-  }
+    private homeBannerService: HomeBannerService,
+    private freeShippingPromoService: FreeShippingPromoService
+  ) {}
 
   public ProductSliderConfig: any = ProductSlider;
 
@@ -90,8 +89,88 @@ export class FashionOneComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadHomeBanners();
+    this.loadFreeShippingPromo();
     this.loadCategorySliders();
     this.loadPopularBrands();
+  }
+
+  get promoHeadline(): string {
+    if (this.freeShippingPromo?.isFirstOrder) {
+      return 'Your First Delivery Is FREE!';
+    }
+    const title = (this.freeShippingPromo?.title || '').trim();
+    return title || 'Free shipping available';
+  }
+
+  get promoHeadlineMobile(): string {
+    if (this.freeShippingPromo?.isFirstOrder) {
+      return 'Free shipping on your first order';
+    }
+    return this.promoHeadline;
+  }
+
+  get promoAnnounceLabel(): string {
+    const promo = this.freeShippingPromo;
+    if (!promo) {
+      return '';
+    }
+    const code = (promo.code || '').trim();
+    return code
+      ? `${this.promoHeadline} Use code ${code}`
+      : this.promoHeadline;
+  }
+
+  async copyPromoCode(): Promise<void> {
+    const code = (this.freeShippingPromo?.code || '').trim();
+    if (!code) {
+      return;
+    }
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(code);
+      } else {
+        this.copyPromoCodeFallback(code);
+      }
+      this.showCodeCopied();
+    } catch {
+      try {
+        this.copyPromoCodeFallback(code);
+        this.showCodeCopied();
+      } catch {
+        // ignore clipboard failures
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.codeCopiedTimer) {
+      clearTimeout(this.codeCopiedTimer);
+      this.codeCopiedTimer = null;
+    }
+  }
+
+  private showCodeCopied(): void {
+    this.codeCopied = true;
+    if (this.codeCopiedTimer) {
+      clearTimeout(this.codeCopiedTimer);
+    }
+    this.codeCopiedTimer = setTimeout(() => {
+      this.codeCopied = false;
+      this.codeCopiedTimer = null;
+    }, 1600);
+  }
+
+  private copyPromoCodeFallback(code: string): void {
+    const input = document.createElement('textarea');
+    input.value = code;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
   }
 
   private loadHomeBanners(): void {
@@ -101,7 +180,10 @@ export class FashionOneComponent implements OnInit {
       next: (banners) => {
         if (banners?.length) {
           this.sliders = banners.map((b) => ({
-            image: b.image
+            image: b.image,
+            linkUrl: b.linkUrl,
+            title: (b as any).title,
+            subTitle: (b as any).subTitle
           }));
         }
         this.loadingHomeBanners = false;
@@ -111,6 +193,33 @@ export class FashionOneComponent implements OnInit {
         this.loadingHomeBanners = false;
       }
     });
+  }
+
+  private loadFreeShippingPromo(): void {
+    this.freeShippingPromoService.getActivePromo().subscribe({
+      next: (promo) => {
+        this.freeShippingPromo = promo;
+      },
+      error: () => {
+        this.freeShippingPromo = null;
+      }
+    });
+  }
+
+  /** Customer-facing section titles only — POS category names stay unchanged. */
+  displayCategoryName(name?: string | null): string {
+    const raw = String(name || '').trim();
+    if (!raw) {
+      return '';
+    }
+    const key = raw.toLowerCase();
+    const map: Record<string, string> = {
+      units: 'Mobile Phones',
+      unit: 'Mobile Phones',
+      smartphones: 'Mobile Phones',
+      phones: 'Mobile Phones'
+    };
+    return map[key] || raw;
   }
 
   private loadCategorySliders(): void {

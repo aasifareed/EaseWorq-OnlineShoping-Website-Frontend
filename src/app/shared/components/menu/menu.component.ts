@@ -1,7 +1,7 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 import { NavService, Menu } from '../../services/nav.service';
 import { OnlineShopHeaderMenuService } from '../../services/online-shop-header-menu.service';
 
@@ -10,21 +10,27 @@ import { OnlineShopHeaderMenuService } from '../../services/online-shop-header-m
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss'],
 })
-export class MenuComponent implements OnInit, OnDestroy {
+export class MenuComponent implements OnDestroy {
   public menuItems: Menu[] = [];
   public activeMegaMenu: Menu | null = null;
-  public selectedSubcategoryId: string | null = null;
   public popularProductsLoading = false;
 
   private readonly destroy$ = new Subject<void>();
-  private readonly subcategorySelect$ = new Subject<{ categoryId: string; megaMenu: Menu }>();
   private megaCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  private hoverOpenTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly defaultPopularByMega = new Map<Menu, Menu[]>();
   private ignoreMegaOpenUntil = 0;
+
+  /** Hover-intent: open only if pointer rests on the trigger/panel zone. */
+  private readonly HOVER_OPEN_MS = 175;
+  /** Hover-intent: delay before close when leaving the unified zone. */
+  private readonly HOVER_CLOSE_MS = 300;
+  /** Subcategory count below this → compact single-column dropdown. */
+  private readonly COMPACT_SUBCATEGORY_LIMIT = 6;
+
   constructor(
     private router: Router,
     public navServices: NavService,
-    private elementRef: ElementRef<HTMLElement>,
     private headerMenuService: OnlineShopHeaderMenuService,
   ) {
     this.navServices.items.pipe(takeUntil(this.destroy$)).subscribe((menuItems) => {
@@ -42,63 +48,16 @@ export class MenuComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnInit(): void {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', this.syncMegaPanelTop);
-      window.addEventListener('scroll', this.syncMegaPanelTop, true);
-    }
-
-    this.subcategorySelect$
-      .pipe(
-        switchMap(({ categoryId, megaMenu }) =>
-          this.headerMenuService.getPopularProductLinks(categoryId).pipe(
-            map((children) => ({ megaMenu, children, categoryId })),
-          ),
-        ),
-        takeUntil(this.destroy$),
-      )
-      .subscribe(({ megaMenu, children, categoryId }) => {
-        this.popularProductsLoading = false;
-        if (this.activeMegaMenu !== megaMenu) {
-          return;
-        }
-        const popular = this.getPopularColumn(megaMenu);
-        if (popular) {
-          popular.children = children.length
-            ? children
-            : [
-                {
-                  title: 'View category',
-                  type: 'link',
-                  path: '/shop',
-                  queryParams: { category: categoryId },
-                  skipTranslate: true,
-                },
-              ];
-        }
-      });
-  }
-
   ngOnDestroy(): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('resize', this.syncMegaPanelTop);
-      window.removeEventListener('scroll', this.syncMegaPanelTop, true);
-    }
     this.clearMegaCloseTimer();
+    this.clearHoverOpenTimer();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  private readonly syncMegaPanelTop = (): void => {
-    if (!this.activeMegaMenu || typeof window === 'undefined' || window.innerWidth < 992) {
-      return;
-    }
-    const navBar = document.querySelector('.microless-header .navigation-bar');
-    if (navBar) {
-      const bottom = navBar.getBoundingClientRect().bottom;
-      document.documentElement.style.setProperty('--store-mega-top', `${bottom}px`);
-    }
-  };
+  isDesktop(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth >= 992;
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
@@ -107,15 +66,21 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
 
     const target = event.target as HTMLElement;
-    if (target.closest('.store-mega-panel__inner') || target.closest('.mega-menu-backdrop')) {
-      return;
-    }
-
-    if (target.closest('li.mega-menu-open')) {
+    if (
+      target.closest('.mega-menu-hover-zone')
+      || target.closest('.mega-menu-backdrop')
+    ) {
       return;
     }
 
     this.closeMegaMenu();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.activeMegaMenu) {
+      this.closeMegaMenu();
+    }
   }
 
   onMegaBackdropClick(event: MouseEvent): void {
@@ -143,43 +108,170 @@ export class MenuComponent implements OnInit, OnDestroy {
     return this.activeMegaMenu === item;
   }
 
+  /** Compact dropdown when the category has few subcategories. */
+  isCompactDropdown(megaMenu: Menu): boolean {
+    return this.getSubcategoryCount(megaMenu) < this.COMPACT_SUBCATEGORY_LIMIT;
+  }
+
+  getSubcategoryCount(megaMenu: Menu): number {
+    const cats = megaMenu.children?.find((c) => c.megaColumnType === 'categories');
+    return cats?.children?.length ?? 0;
+  }
+
+  /** Flattened links for compact menus: Shop All + subcategories (no empty popular). */
+  getCompactLinks(megaMenu: Menu): Menu[] {
+    const links: Menu[] = [];
+    for (const col of megaMenu.children || []) {
+      if (col.megaColumnType === 'popular') {
+        continue;
+      }
+      for (const link of col.children || []) {
+        if (link?.title) {
+          links.push(link);
+        }
+      }
+    }
+    return links;
+  }
+
+  /** Mega columns excluding empty / placeholder popular. */
+  getVisibleColumns(megaMenu: Menu): Menu[] {
+    return (megaMenu.children || []).filter((col) => this.shouldShowColumn(col));
+  }
+
+  private shouldShowColumn(column: Menu): boolean {
+    if (column.megaColumnType !== 'popular') {
+      return !!(column.children?.length);
+    }
+    const kids = column.children || [];
+    if (!kids.length) {
+      return false;
+    }
+    if (kids.length === 1 && /view category/i.test(String(kids[0].title || ''))) {
+      return false;
+    }
+    return true;
+  }
+
   getPopularColumn(megaMenu: Menu): Menu | undefined {
     return megaMenu.children?.find((c) => c.megaColumnType === 'popular');
   }
 
-  isSubcategorySelected(link: Menu): boolean {
-    const id = link.queryParams?.['category'];
-    return !!id && this.selectedSubcategoryId === String(id);
+  panelId(item: Menu): string {
+    const key = (item.mainCategoryId || item.title || 'menu')
+      .toString()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-');
+    return `store-mega-${key}`;
   }
 
-  onSubcategoryClick(link: Menu, megaMenu: Menu): void {
-    const categoryId = link.queryParams?.['category'];
-    if (!categoryId || !megaMenu.megaMenu) {
+  onTriggerClick(item: Menu, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.clearHoverOpenTimer();
+
+    if (!this.isDesktop()) {
+      this.toggletNavActive(item);
       return;
     }
-    this.selectedSubcategoryId = String(categoryId);
-    this.popularProductsLoading = true;
-    this.subcategorySelect$.next({ categoryId: String(categoryId), megaMenu });
+
+    if (this.isMegaOpen(item)) {
+      this.closeMegaMenu();
+    } else {
+      this.openMegaMenu(item);
+    }
   }
 
-  onMegaPanelLinkClick(event: MouseEvent, link: Menu, megaMenu: Menu, column: Menu): void {
-    if (column.megaColumnType === 'categories') {
+  onTriggerKeydown(item: Menu, event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      event.stopPropagation();
-      this.onSubcategoryClick(link, megaMenu);
+      this.onTriggerClick(item, event);
+    }
+  }
+
+  /**
+   * Unified hover zone = trigger + dropdown (single enter/leave).
+   * Moving between trigger and panel must not close/reopen.
+   */
+  onHoverZoneEnter(item: Menu): void {
+    if (!this.isDesktop() || !item.megaMenu || Date.now() < this.ignoreMegaOpenUntil) {
       return;
     }
+    this.clearMegaCloseTimer();
+    this.clearHoverOpenTimer();
+
+    if (this.isMegaOpen(item)) {
+      return;
+    }
+
+    this.hoverOpenTimer = setTimeout(() => {
+      this.hoverOpenTimer = null;
+      this.openMegaMenu(item);
+    }, this.HOVER_OPEN_MS);
+  }
+
+  onHoverZoneLeave(item: Menu, event: MouseEvent): void {
+    if (!this.isDesktop() || !item.megaMenu) {
+      return;
+    }
+
+    this.clearHoverOpenTimer();
+
+    const zone = event.currentTarget as HTMLElement;
+    const related = event.relatedTarget as Node | null;
+    if (related && zone.contains(related)) {
+      return;
+    }
+
+    this.scheduleCloseMegaMenu();
+  }
+
+  onCompactLinkClick(): void {
     this.onMegaLinkClick();
   }
 
-  onShopAllHover(megaMenu: Menu): void {
-    this.resetPopularToDefault(megaMenu);
+  openMegaMenu(item: Menu): void {
+    if (!item.megaMenu || Date.now() < this.ignoreMegaOpenUntil) {
+      return;
+    }
+    this.clearMegaCloseTimer();
+    this.clearHoverOpenTimer();
+    this.activeMegaMenu = item;
+
+    if (!this.isCompactDropdown(item)) {
+      this.cacheDefaultPopularProducts(item);
+      this.ensureDefaultPopularProducts(item);
+    }
   }
 
-  private resetPopularToDefault(megaMenu: Menu): void {
-    this.selectedSubcategoryId = null;
-    this.popularProductsLoading = false;
-    this.restoreDefaultPopularProducts(megaMenu);
+  private ensureDefaultPopularProducts(megaMenu: Menu): void {
+    if (this.defaultPopularByMega.has(megaMenu)) {
+      this.restoreDefaultPopularProducts(megaMenu);
+      return;
+    }
+
+    const categoryId = megaMenu.mainCategoryId;
+    const popular = this.getPopularColumn(megaMenu);
+    if (!categoryId || !popular) {
+      return;
+    }
+
+    this.popularProductsLoading = true;
+    this.headerMenuService.getPopularProductLinks(categoryId).pipe(
+      takeUntil(this.destroy$),
+    ).subscribe({
+      next: (children) => {
+        this.popularProductsLoading = false;
+        if (this.activeMegaMenu !== megaMenu) {
+          return;
+        }
+        popular.children = children.length ? children : [];
+        this.cacheDefaultPopularProducts(megaMenu);
+      },
+      error: () => {
+        this.popularProductsLoading = false;
+      },
+    });
   }
 
   private restoreDefaultPopularProducts(megaMenu: Menu): void {
@@ -200,50 +292,19 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  openMegaMenu(item: Menu): void {
-    if (!item.megaMenu || Date.now() < this.ignoreMegaOpenUntil) {
-      return;
-    }
-    this.clearMegaCloseTimer();
-    this.activeMegaMenu = item;
-    this.selectedSubcategoryId = null;
-    this.cacheDefaultPopularProducts(item);
-    this.syncMegaPanelTop();
-  }
-
   scheduleCloseMegaMenu(): void {
     this.clearMegaCloseTimer();
     this.megaCloseTimer = setTimeout(() => {
       this.activeMegaMenu = null;
-      this.selectedSubcategoryId = null;
       this.popularProductsLoading = false;
-    }, 320);
-  }
-
-  onMegaHoverZoneLeave(event: MouseEvent): void {
-    const zone = event.currentTarget as HTMLElement;
-    const related = event.relatedTarget as Node | null;
-    if (!related) {
-      this.scheduleCloseMegaMenu();
-      return;
-    }
-    if (zone.contains(related)) {
-      return;
-    }
-    const megaPanel = zone.querySelector('.store-mega-panel');
-    if (megaPanel?.contains(related)) {
-      return;
-    }
-    if (related instanceof Element && related.closest('.store-mega-panel')) {
-      return;
-    }
-    this.scheduleCloseMegaMenu();
+      this.megaCloseTimer = null;
+    }, this.HOVER_CLOSE_MS);
   }
 
   closeMegaMenu(): void {
     this.clearMegaCloseTimer();
+    this.clearHoverOpenTimer();
     this.activeMegaMenu = null;
-    this.selectedSubcategoryId = null;
     this.popularProductsLoading = false;
     this.ignoreMegaOpenUntil = Date.now() + 350;
   }
@@ -257,10 +318,22 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.navServices.mainMenuToggle = false;
   }
 
+  /** Mobile accordion: only show groups that have links (skip empty popular). */
+  getMobileColumns(megaMenu: Menu): Menu[] {
+    return this.getVisibleColumns(megaMenu);
+  }
+
   private clearMegaCloseTimer(): void {
     if (this.megaCloseTimer) {
       clearTimeout(this.megaCloseTimer);
       this.megaCloseTimer = null;
+    }
+  }
+
+  private clearHoverOpenTimer(): void {
+    if (this.hoverOpenTimer) {
+      clearTimeout(this.hoverOpenTimer);
+      this.hoverOpenTimer = null;
     }
   }
 }

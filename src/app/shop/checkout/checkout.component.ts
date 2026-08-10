@@ -1,13 +1,12 @@
 import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { trimRequired, trimPersonName, trimDigitsOnly, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
+import { trimRequired, trimPersonName, trimPhoneNumber, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
 import { Observable, of, Subject } from 'rxjs';
-import { catchError, debounceTime, takeUntil } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from '../../shared/classes/product';
 import { ProductService } from '../../shared/services/product.service';
-import { OrderService } from '../../shared/services/order.service';
 import { CreatePayFastCheckoutRequest, PayFastPaymentService } from './pay-fast-payment.service';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
@@ -16,7 +15,7 @@ import {
   OnlineShopOrderService,
   OnlineShopPaymentMethod,
   OnlineShopShippingMethod,
-  CheckoutOrderAmounts,
+  CheckoutOrderSelection,
   ONLINE_SHOP_PAYMENT_METHOD_LABELS,
   ONLINE_SHOP_SHIPPING_METHOD_LABELS,
   CheckoutFormValues,
@@ -24,18 +23,22 @@ import {
   CheckoutAddressFormValues
 } from '../../shared/services/online-shop-order.service';
 import {
-  AppliedShopCouponState,
   CourierShippingOptionResult,
+  OnlineShopAppliedDiscount,
   OnlineShopCheckoutService,
-  OnlineShopShippingRateResult
+  OnlineShopCouponStatus,
+  OnlineShopPricingResult
 } from '../../shared/services/online-shop-checkout.service';
 import { OnlineShopSettingsService } from '../../shared/services/online-shop-settings.service';
+import { CouponType, DiscountScope } from '../../shared/models/online-shop-discount.enum';
 import { OnlineShopStorefront } from '../../shared/models/online-shop-storefront.model';
+import { describeWeight } from '../../shared/utils/weight-format.util';
 import { GoogleAddressService } from '../../shared/services/address-autocomplete/google-address.service';
 import {
   GoogleAddressFieldMode,
   parseGooglePlaceAddress
 } from '../../shared/services/address-autocomplete/google-address.util';
+import { OnlineShopWorkingAreaService } from '../../shared/services/online-shop-working-area.service';
 
 type CheckoutAddressGroup = 'billing' | 'shipping';
 type CheckoutAutocompleteKey = `${CheckoutAddressGroup}.${GoogleAddressFieldMode}`;
@@ -59,7 +62,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly defaultCountryCode = 'PK';
 
   private readonly destroy$ = new Subject<void>();
-  private shippingRequestId = 0;
+  private readonly pricingRequested$ = new Subject<void>();
+  private pricingRequestId = 0;
   private lastSelectedValues: Record<CheckoutAddressGroup, Record<GoogleAddressFieldMode, string>> = {
     billing: { address: '', town: '', state: '' },
     shipping: { address: '', town: '', state: '' }
@@ -77,17 +81,32 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public checkoutForm: UntypedFormGroup;
   public products: Product[] = [];
-  public amount: any;
-  public cartSubtotal = 0;
   public loading = false;
   public shippingLoading = false;
-  public shippingRate: OnlineShopShippingRateResult | null = null;
+
+  /** The server's pricing for the current cart, coupon, address and courier selection. */
+  public pricing: OnlineShopPricingResult | null = null;
+
+  /**
+   * Courier options from the most recent quote that asked for shipping. Cached so the list stays on
+   * screen after the customer picks "help me arrange delivery", which prices without a courier.
+   */
+  private cachedCourierOptions: CourierShippingOptionResult[] = [];
+
   public selectedCourierOptionKey: string | null = null;
-  public appliedCoupon: AppliedShopCouponState | null = null;
+  private courierSelectionSkipped = false;
+  public appliedCouponCodes: string[] = [];
+  public couponCodeInput = '';
+  public couponApplying = false;
+  /** The code the customer just entered, awaiting the server's verdict in the next quote. */
+  private pendingCouponCode: string | null = null;
   public storefront: OnlineShopStorefront | null = null;
 
   public paymentMethod: OnlineShopPaymentMethod = OnlineShopPaymentMethod.GoPayFast;
   public shippingMethod: OnlineShopShippingMethod = OnlineShopShippingMethod.Shipping;
+  /** When false, only top recommended courier options are shown. */
+  public showAllCourierOptions = false;
+  readonly courierPreviewLimit = 3;
 
   readonly OnlineShopPaymentMethod = OnlineShopPaymentMethod;
   readonly OnlineShopShippingMethod = OnlineShopShippingMethod;
@@ -99,13 +118,20 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     OnlineShopShippingMethod.Shipping,
     OnlineShopShippingMethod.LocalPickup
   ];
+  /** Turn on to offer local pickup again; the working-area gating below then applies. */
+  private readonly localPickupEnabled = false;
+  /** Local pickup is offered only when the billing address falls inside the store working area. */
+  public localPickupAvailable = true;
+  private billingCoordinates: { latitude: number; longitude: number } | null = null;
+  /** Billing address the cached coordinates belong to, so edits force a fresh lookup. */
+  private billingCoordinatesKey = '';
+  private workingAreaRequestId = 0;
   readonly paymentMethodLabels = ONLINE_SHOP_PAYMENT_METHOD_LABELS;
   readonly shippingMethodLabels = ONLINE_SHOP_SHIPPING_METHOD_LABELS;
 
   constructor(
     private fb: UntypedFormBuilder,
     public productService: ProductService,
-    private orderService: OrderService,
     private onlineShopOrder: OnlineShopOrderService,
     private auth: AuthService,
         private payFast: PayFastPaymentService,
@@ -115,6 +141,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     private onlineShopCheckout: OnlineShopCheckoutService,
     private onlineShopSettings: OnlineShopSettingsService,
     public googleAddressService: GoogleAddressService,
+    private workingArea: OnlineShopWorkingAreaService,
     private elementRef: ElementRef,
   ) {
     this.checkoutForm = this.fb.group({
@@ -133,20 +160,24 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.applyPaymentMethodDefaults();
     });
 
-    this.productService.cartItems.subscribe(response => {
-      this.products = response;
-      this.refreshShippingRate();
-    });
-    this.productService.cartTotalAmount().subscribe(amount => {
-      this.amount = amount;
-      this.cartSubtotal = Number(amount) || 0;
-      this.refreshShippingRate();
-    });
+    // One debounced pipeline, so a burst of form and cart events costs a single pricing call.
+    this.pricingRequested$
+      .pipe(debounceTime(250), takeUntil(this.destroy$))
+      .subscribe(() => this.requestPricing());
 
-    this.productService.appliedCoupon$
+    this.productService.cartItems
       .pipe(takeUntil(this.destroy$))
-      .subscribe((coupon) => {
-        this.appliedCoupon = coupon;
+      .subscribe(response => {
+        this.products = response;
+        this.pricingRequested$.next();
+      });
+
+    this.productService.appliedCouponCodes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((codes) => {
+        this.appliedCouponCodes = codes;
+        // Delivery tiers match on the post-discount goods total, so re-price on coupon changes.
+        this.pricingRequested$.next();
       });
 
     this.checkoutForm.get('shipToDifferentAddress')?.valueChanges.subscribe((checked: boolean) => {
@@ -160,8 +191,17 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isShippingCardView = false;
         this.loadShippingFromLocalStorage();
       }
-      this.refreshShippingRate();
+      this.pricingRequested$.next();
     });
+
+    this.billingGroup.valueChanges
+      .pipe(
+        map(() => this.billingAddressText()),
+        debounceTime(600),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.refreshLocalPickupAvailability());
 
     this.prefillCheckoutCustomerDetails();
   }
@@ -328,10 +368,92 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       formGroup.get('town')?.updateValueAndValidity();
       formGroup.get('state')?.updateValueAndValidity();
 
+      if (group === 'billing') {
+        // Only a street-level pick is precise enough to test against the working area;
+        // a town/state pick would resolve to the city centre, so re-geocode the full address.
+        const location = field === 'address' ? place.geometry?.location : null;
+        this.billingCoordinates = location
+          ? { latitude: location.lat(), longitude: location.lng() }
+          : null;
+        this.billingCoordinatesKey = location ? this.billingAddressText() : '';
+        this.refreshLocalPickupAvailability();
+      }
+
       this.activeAutocompleteKey = null;
       this.highlightedIndex = -1;
       this.placeSelectionInFlight = false;
     });
+  }
+
+  /**
+   * Local pickup depends on the customer's full billing address (street + city + state + postal
+   * code) sitting inside the store working area polygon.
+   */
+  private refreshLocalPickupAvailability(): void {
+    if (!this.localPickupEnabled) {
+      return;
+    }
+
+    const requestId = ++this.workingAreaRequestId;
+
+    void this.resolveBillingCoordinates().then((coordinates) => {
+      if (requestId !== this.workingAreaRequestId) {
+        return;
+      }
+
+      if (!coordinates) {
+        this.applyLocalPickupAvailability(true);
+        return;
+      }
+
+      this.workingArea
+        .isPointInsideWorkingArea(coordinates.latitude, coordinates.longitude)
+        .subscribe((result) => {
+          if (requestId !== this.workingAreaRequestId) {
+            return;
+          }
+          // No polygon drawn yet means the store has not restricted pickup at all.
+          this.applyLocalPickupAvailability(!result.hasWorkingArea || result.isInside);
+        });
+    });
+  }
+
+  private applyLocalPickupAvailability(available: boolean): void {
+    this.localPickupAvailable = available;
+    if (!available && this.shippingMethod === OnlineShopShippingMethod.LocalPickup) {
+      this.onShippingMethodChange(OnlineShopShippingMethod.Shipping);
+    }
+  }
+
+  private async resolveBillingCoordinates(): Promise<{ latitude: number; longitude: number } | null> {
+    const text = this.billingAddressText();
+    if (!text) {
+      return null;
+    }
+
+    if (this.billingCoordinates && this.billingCoordinatesKey === text) {
+      return this.billingCoordinates;
+    }
+
+    this.billingCoordinates = await this.googleAddressService.geocodeAddressText(text);
+    this.billingCoordinatesKey = text;
+    return this.billingCoordinates;
+  }
+
+  private billingAddressText(): string {
+    const billing = this.billingGroup.getRawValue() as CheckoutAddressFormValues;
+    return [billing.address, billing.town, billing.state, billing.postalcode]
+      .map((part) => String(part ?? '').trim())
+      .filter((part) => !!part)
+      .join(', ');
+  }
+
+  get availableShippingMethods(): OnlineShopShippingMethod[] {
+    return this.shippingMethodOptions.filter(
+      (method) =>
+        method !== OnlineShopShippingMethod.LocalPickup ||
+        (this.localPickupEnabled && this.localPickupAvailable)
+    );
   }
 
   ngOnDestroy(): void {
@@ -344,8 +466,46 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onCourierOptionSelected(key: string): void {
+    if (this.selectedCourierOptionKey === key) {
+      this.skipCourierSelection();
+      return;
+    }
+
+    this.courierSelectionSkipped = false;
     this.selectedCourierOptionKey = key;
-    this.applySelectedCourierToRate();
+    // The charge for this courier is whatever the server quotes for it, so re-price rather than
+    // copying the amount out of the option the customer clicked.
+    this.pricingRequested$.next();
+  }
+
+  /** Customer found no courier that serves them; the store arranges delivery manually. */
+  skipCourierSelection(): void {
+    this.courierSelectionSkipped = true;
+    this.selectedCourierOptionKey = null;
+    this.pricingRequested$.next();
+  }
+
+  get isCourierSelectionSkipped(): boolean {
+    return this.courierSelectionSkipped && this.shippingCourierOptions.length > 0;
+  }
+
+  /**
+   * Online payment needs a known payable total. Help Me Arrange Delivery leaves shipping
+   * unconfirmed, so PayFast stays unavailable until a courier is chosen (including FREE).
+   */
+  get isOnlinePaymentAllowed(): boolean {
+    if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+      return true;
+    }
+    return !this.isCourierSelectionSkipped && !!this.selectedCourierOption;
+  }
+
+  /**
+   * What the customer pays for delivery, straight from the server. Zero while no courier is chosen,
+   * because the store confirms that charge separately after the order is placed.
+   */
+  get effectiveShippingAmount(): number {
+    return this.pricing?.finalShippingAmount ?? 0;
   }
 
   toggleItemsExpanded(): void {
@@ -377,17 +537,93 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     return String(this.checkoutForm.get('description')?.value ?? '').length;
   }
 
-  get appliedCouponCode(): string {
-    return (this.appliedCoupon?.couponCode ?? '').trim();
-  }
-
   productImage(product: Product): string {
     return product?.pictureUrl || product?.images?.[0]?.src || 'assets/images/product/placeholder.svg';
   }
 
-  productVariant(product: Product): string {
-    const parts = [product?.color, product?.productSize].filter((value) => value != null && String(value).trim() !== '');
-    return parts.length ? parts.map((value) => String(value)).join(' / ') : '—';
+  /** Customer-facing variant only — hide internal defaults like 0 / empty. */
+  productVariantLabel(product: Product): string {
+    const parts: string[] = [];
+    const color = String(product?.color ?? '').trim();
+    if (color && color !== '0' && color.toLowerCase() !== 'n/a' && color !== '-') {
+      parts.push(color);
+    }
+    const sizeRaw = product?.productSize;
+    if (sizeRaw != null && String(sizeRaw).trim() !== '') {
+      const size = String(sizeRaw).trim();
+      if (size !== '0' && size.toLowerCase() !== 'n/a' && size !== '-') {
+        parts.push(size);
+      }
+    }
+    return parts.join(' / ');
+  }
+
+  get showVariantColumn(): boolean {
+    return this.products.some((p) => !!this.productVariantLabel(p));
+  }
+
+  get placeOrderButtonLabel(): string {
+    if (this.loading) {
+      return 'Processing...';
+    }
+    if (this.codCollectsShippingOnline) {
+      return 'Pay Shipping & Place Order';
+    }
+    if (this.paymentMethod === OnlineShopPaymentMethod.GoPayFast) {
+      return 'Continue to PayFast';
+    }
+    return 'Place Order';
+  }
+
+  get primaryAddressSectionTitle(): string {
+    return this.shipToDifferentAddress ? 'Billing Details' : 'Delivery Details';
+  }
+
+  get primaryAddressSectionSubtitle(): string {
+    return this.shipToDifferentAddress
+      ? 'Enter your billing information'
+      : 'Where should we deliver your order?';
+  }
+
+  get primaryAddressCardLabel(): string {
+    return this.shipToDifferentAddress ? 'Billing Address' : 'Delivery Address';
+  }
+
+  get primaryAddressFormTitle(): string {
+    return this.shipToDifferentAddress ? 'Billing Details' : 'Delivery Details';
+  }
+
+  get localPickupLines(): string[] {
+    const lines: string[] = [];
+    const name = this.storefront?.storeName?.trim();
+    const address = this.storefront?.storeAddress?.trim();
+    const phone = this.storefront?.phoneNumber?.trim() || this.storefront?.whatsAppNumber?.trim();
+    if (name) {
+      lines.push(name);
+    }
+    if (address) {
+      lines.push(address);
+    }
+    if (phone) {
+      lines.push(phone);
+    }
+    return lines;
+  }
+
+  get deliveryEstimateHint(): string | null {
+    if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+      return null;
+    }
+    const selected = this.selectedCourierOption;
+    if (selected?.courierServiceType) {
+      return this.serviceTypeLabel(selected.courierServiceType);
+    }
+    const days = this.storefront?.estimatedDeliveryDays;
+    if (days != null && Number(days) > 0) {
+      const n = Number(days);
+      return n === 1 ? 'Estimated delivery: within 1 day' : `Estimated delivery: within ${n} days`;
+    }
+    return null;
   }
 
   isCourierOptionSelected(option: CourierShippingOptionResult): boolean {
@@ -409,13 +645,32 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     return `checkout-courier-card--${key || 'default'}`;
   }
 
+  /**
+   * What the cart weighs, as the server computed it, shown alongside the rates so a customer can see
+   * why a parcel is priced the way it is. Grams under a kilogram, because an accessory order is a
+   * couple of hundred grams. Null when nothing in the cart carries a catalogue weight, since the
+   * courier's minimum billable weight would then describe the courier's pricing, not this parcel.
+   */
+  get quotedWeight(): string | null {
+    const pricing = this.pricing;
+    if (!pricing || pricing.totalWeightKg <= 0) {
+      return null;
+    }
+
+    const goods = describeWeight(pricing.totalWeightKg);
+
+    // Light parcels are charged at the courier's minimum. Saying so is what makes the shipping price
+    // make sense to someone who just read that their order weighs 180 g.
+    if (pricing.billableWeightKg > pricing.totalWeightKg) {
+      return `${goods} (billed ${describeWeight(pricing.billableWeightKg)})`;
+    }
+
+    return goods;
+  }
+
   get shippingDestinationCity(): string {
     const address = this.resolveShippingAddressForRate();
     return address?.town?.trim() || 'your city';
-  }
-
-  get cartWeightKg(): number {
-    return this.onlineShopOrder.calculateCartWeightKg(this.products);
   }
 
   get selectedCourierOption(): CourierShippingOptionResult | null {
@@ -431,34 +686,189 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onShippingMethodChange(method: OnlineShopShippingMethod): void {
     this.shippingMethod = method;
+    this.showAllCourierOptions = false;
     if (method === OnlineShopShippingMethod.LocalPickup) {
-      this.clearShippingRate();
-      return;
+      this.resetCourierSelection();
     }
-    this.refreshShippingRate();
+    this.pricingRequested$.next();
+  }
+
+  /** Merchandise at catalogue list price, before any discount. */
+  get cartSubtotal(): number {
+    return this.pricing?.originalProductSubtotal ?? 0;
+  }
+
+  /** Every code the shopper is holding, with the server's verdict on each. */
+  get couponStatuses(): OnlineShopCouponStatus[] {
+    return this.pricing?.coupons ?? [];
+  }
+
+  private get appliedCoupons(): OnlineShopCouponStatus[] {
+    return this.couponStatuses.filter((x) => x.isValid);
   }
 
   get couponDiscount(): number {
-    return this.appliedCoupon?.result?.isValid ? this.appliedCoupon.result.discountAmount : 0;
+    return this.appliedCoupons.reduce((sum, coupon) => sum + coupon.discountAmount, 0);
+  }
+
+  /** True when a coupon covers only some cart lines, which explains a smaller discount. */
+  isCouponPartiallyEligible(coupon: OnlineShopCouponStatus): boolean {
+    return coupon.isValid
+      && coupon.discountAmount > 0
+      && coupon.eligibleSubtotal > 0
+      && coupon.eligibleSubtotal < (this.pricing?.subtotalAfterProductDiscounts ?? 0) - 0.005;
+  }
+
+  /**
+   * Applies a code from this page, for the customer who came straight here from Buy Now and never
+   * saw the cart. Holding the code re-quotes the order, and the server's verdict on it is reported
+   * once that quote comes back.
+   */
+  applyCoupon(): void {
+    if (this.couponApplying) {
+      return;
+    }
+
+    const code = this.couponCodeInput.trim().toUpperCase();
+    if (!code) {
+      this.toastr.warning('Enter a coupon code.');
+      return;
+    }
+
+    if (this.appliedCouponCodes.includes(code)) {
+      this.toastr.info('That code is already applied.');
+      this.couponCodeInput = '';
+      return;
+    }
+
+    this.couponApplying = true;
+    this.pendingCouponCode = code;
+    this.couponCodeInput = '';
+    this.productService.setAppliedCouponCodes([...this.appliedCouponCodes, code]);
+  }
+
+  removeCoupon(code: string | null | undefined): void {
+    if (!code) {
+      return;
+    }
+    this.productService.removeAppliedCouponCode(code);
+  }
+
+  /**
+   * Reports what the server made of a freshly entered code, and takes a refused one back off the
+   * order — left applied it would only block Place Order.
+   */
+  private settlePendingCoupon(result: OnlineShopPricingResult): void {
+    const code = this.pendingCouponCode;
+    if (!code) {
+      return;
+    }
+
+    this.pendingCouponCode = null;
+    this.couponApplying = false;
+
+    const status = result.coupons.find((x) => x.couponCode === code);
+    if (!status?.isAdmitted) {
+      this.productService.removeAppliedCouponCode(code);
+      this.toastr.error(status?.message || 'Invalid coupon.');
+      return;
+    }
+
+    // Admitted but beaten to its scope: kept, since removing another code can let it win.
+    if (status.isValid) {
+      this.toastr.success(status.message || 'Coupon applied.');
+    } else {
+      this.toastr.info(status.message || 'A better offer is already applied to this order.');
+    }
   }
 
   get orderTotal(): number {
-    const shipping =
-      this.shippingMethod === OnlineShopShippingMethod.Shipping
-        ? this.shippingRate?.finalShippingAmount ?? 0
-        : 0;
-    const afterCoupon = this.appliedCoupon?.result?.isValid
-      ? this.appliedCoupon.result.payableAmountAfterDiscount
-      : this.cartSubtotal;
-    return Math.round((afterCoupon + shipping) * 100) / 100;
+    return this.pricing?.finalTotal ?? 0;
+  }
+
+  /**
+   * Every merchandise discount the server granted, each with its own label, in the order the engine
+   * ranked them. Shipping promotions are excluded: they belong to the delivery section below.
+   */
+  get merchandiseDiscountRows(): OnlineShopAppliedDiscount[] {
+    return (this.pricing?.appliedDiscounts ?? [])
+      .filter((d) => d.scope !== 'shipping' && d.discountAmount > 0)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   get showShippingBreakdown(): boolean {
     return (
       this.shippingMethod === OnlineShopShippingMethod.Shipping &&
-      !!this.shippingRate &&
+      !!this.pricing &&
       !this.shippingLoading
     );
+  }
+
+  /** True when shipping is waived (coupon/rule) and a courier is still chosen. */
+  get isShippingFree(): boolean {
+    if (this.isCourierSelectionSkipped || !this.showShippingBreakdown || !this.selectedCourierOption) {
+      return false;
+    }
+    return this.effectiveShippingAmount === 0;
+  }
+
+  get isFreeShippingCouponApplied(): boolean {
+    return this.appliedCoupons.some((coupon) => {
+      const type = String(coupon.couponType ?? '').trim().toLowerCase();
+      // The compact spelling is tolerated because older orders were stored without the underscore.
+      return type === CouponType.FreeShipping || type === 'freeshipping';
+    });
+  }
+
+  /** Show coupon confirmation under FREE shipping when a free-shipping coupon is in play. */
+  get showFreeShippingCouponHint(): boolean {
+    if (!this.isShippingFree || !this.appliedCouponCodes.length) {
+      return false;
+    }
+    return this.isFreeShippingCouponApplied || this.couponDiscount === 0;
+  }
+
+  /** The code to name beside a waived delivery charge: the shipping one if there is one. */
+  get freeShippingCouponCode(): string | null {
+    const shippingCoupon = this.appliedCoupons.find(
+      (coupon) => (coupon.scope ?? '') === DiscountScope.Shipping
+    );
+    return shippingCoupon?.couponCode ?? this.appliedCouponCodes[0] ?? null;
+  }
+
+  /** Courier rate for the selected option before any delivery promotion is applied. */
+  get shippingListPrice(): number {
+    return this.pricing?.originalShippingAmount ?? 0;
+  }
+
+  get deliveryDiscountAmount(): number {
+    return this.pricing?.shippingDiscountTotal ?? 0;
+  }
+
+  /** Itemise the promotion only when shipping is still payable; free delivery shows FREE instead. */
+  get showDeliveryDiscountRow(): boolean {
+    return this.showShippingBreakdown && !this.isShippingFree && this.deliveryDiscountAmount > 0;
+  }
+
+  /** Shows the pre-promotion rate whenever the saving is itemised on its own line. */
+  get shippingSummaryAmount(): number {
+    return this.showDeliveryDiscountRow ? this.shippingListPrice : this.effectiveShippingAmount;
+  }
+
+  /** The server's own label for the delivery promotion, e.g. "Delivery Discount (20%)". */
+  get deliveryDiscountLabel(): string {
+    const shippingRow = (this.pricing?.appliedDiscounts ?? [])
+      .find((d) => d.scope === 'shipping' && d.discountAmount > 0);
+    return shippingRow?.description || 'Delivery Discount';
+  }
+
+  /** Saving to advertise when the promotion covers the whole delivery charge. */
+  get freeDeliverySaving(): number {
+    return this.isShippingFree ? this.shippingListPrice : 0;
+  }
+
+  courierOptionHasDiscount(option: CourierShippingOptionResult): boolean {
+    return option.shippingDiscountAmount > 0;
   }
 
   /** COD with shipping collected online per store payment settings. */
@@ -469,16 +879,20 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.storefront?.isGoPayFastEnabled &&
       this.paymentMethod === OnlineShopPaymentMethod.CashOnDelivery &&
       this.shippingMethod === OnlineShopShippingMethod.Shipping &&
-      (this.shippingRate?.finalShippingAmount ?? 0) > 0
+      this.effectiveShippingAmount > 0
     );
   }
 
+  /**
+   * What is still collected at the door once shipping has been prepaid online: the goods and their
+   * tax, both taken from the engine. The courier booking recomputes this from the stored order, so
+   * this figure is only ever the notice shown on this page.
+   */
   get codRemainingOnDelivery(): number {
-    const shipping =
-      this.shippingMethod === OnlineShopShippingMethod.Shipping
-        ? this.shippingRate?.finalShippingAmount ?? 0
-        : 0;
-    return Math.max(0, Math.round((this.orderTotal - shipping) * 100) / 100);
+    if (!this.pricing) {
+      return 0;
+    }
+    return this.pricing.netMerchandiseAmount + this.pricing.taxAmount;
   }
 
   get availablePaymentMethods(): OnlineShopPaymentMethod[] {
@@ -486,10 +900,10 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.storefront?.isCashOnDeliveryEnabled !== false) {
       methods.push(OnlineShopPaymentMethod.CashOnDelivery);
     }
-    if (this.storefront?.isGoPayFastEnabled) {
+    if (this.storefront?.isGoPayFastEnabled && this.isOnlinePaymentAllowed) {
       methods.push(OnlineShopPaymentMethod.GoPayFast);
     }
-    if (!methods.length) {
+    if (!methods.length && this.isOnlinePaymentAllowed) {
       methods.push(OnlineShopPaymentMethod.GoPayFast);
     }
     return methods;
@@ -514,16 +928,90 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!this.isShippingAddressComplete(address)) {
         return false;
       }
+      // No quote means no authoritative delivery charge, so the order would be priced without one.
+      // Arranging delivery manually is the deliberate way past this.
+      if (this.pricing?.shippingQuoteUnavailable && !this.isCourierSelectionSkipped) {
+        return false;
+      }
+    }
+    if (!this.pricing) {
+      return false;
+    }
+    if (!this.availablePaymentMethods.length) {
+      return false;
+    }
+    if (
+      this.paymentMethod === OnlineShopPaymentMethod.GoPayFast &&
+      !this.isOnlinePaymentAllowed
+    ) {
+      return false;
     }
     return true;
   }
 
   get shippingCourierOptions(): CourierShippingOptionResult[] {
-    return this.shippingRate?.availableOptions ?? [];
+    const options = [...this.cachedCourierOptions];
+    return options.sort((a, b) => {
+      if (!!a.isRecommended !== !!b.isRecommended) {
+        return a.isRecommended ? -1 : 1;
+      }
+      return (a.finalShippingAmount ?? 0) - (b.finalShippingAmount ?? 0);
+    });
   }
 
-  public get getTotal(): Observable<number> {
-    return this.productService.cartTotalAmount();
+  get visibleCourierOptions(): CourierShippingOptionResult[] {
+    const options = this.shippingCourierOptions;
+    if (this.showAllCourierOptions || options.length <= this.courierPreviewLimit) {
+      return options;
+    }
+
+    const preview = options.slice(0, this.courierPreviewLimit);
+    const selected = this.selectedCourierOption;
+    if (
+      selected &&
+      !preview.some((o) => this.courierOptionKey(o) === this.courierOptionKey(selected))
+    ) {
+      return [...preview, selected];
+    }
+    return preview;
+  }
+
+  get hiddenCourierOptionsCount(): number {
+    return Math.max(0, this.shippingCourierOptions.length - this.visibleCourierOptions.length);
+  }
+
+  toggleCourierOptionsExpanded(): void {
+    this.showAllCourierOptions = !this.showAllCourierOptions;
+  }
+
+  courierOptionBadge(option: CourierShippingOptionResult): string | null {
+    if (option.isRecommended) {
+      return 'Best value';
+    }
+
+    const options = this.shippingCourierOptions;
+    if (!options.length) {
+      return null;
+    }
+
+    const service = (option.courierServiceType || '').trim().toLowerCase();
+    const overnightOptions = options.filter(
+      (o) => (o.courierServiceType || '').trim().toLowerCase() === 'overnight'
+    );
+    if (
+      service === 'overnight' &&
+      overnightOptions.length &&
+      this.courierOptionKey(overnightOptions[0]) === this.courierOptionKey(option)
+    ) {
+      return 'Fastest';
+    }
+
+    const lowest = Math.min(...options.map((o) => Number(o.finalShippingAmount) || 0));
+    if ((Number(option.finalShippingAmount) || 0) === lowest) {
+      return 'Lowest price';
+    }
+
+    return null;
   }
 
   get billingGroup(): UntypedFormGroup {
@@ -571,7 +1059,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleBillingEdit(): void {
     this.isBillingCardView = false;
-    this.clearShippingRate();
+    // The address is in flux again, so drop the courier quote until it is confirmed.
+    this.resetCourierSelection();
+    this.pricingRequested$.next();
   }
 
   continueBillingAddress(): void {
@@ -583,12 +1073,13 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.isBillingCardView = true;
     this.persistCustomerProfileFromBilling(this.billingGroup.getRawValue() as CheckoutAddressFormValues);
-    this.refreshShippingRate();
+    this.pricingRequested$.next();
   }
 
   toggleShippingEdit(): void {
     this.isShippingCardView = false;
-    this.clearShippingRate();
+    this.resetCourierSelection();
+    this.pricingRequested$.next();
   }
 
   continueShippingAddress(): void {
@@ -605,7 +1096,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.saveShippingToLocalStorage();
     this.isShippingCardView = true;
     this.toastr.success('Shipping address saved.');
-    this.refreshShippingRate();
+    this.pricingRequested$.next();
   }
 
   placeOrder(): void {
@@ -625,31 +1116,44 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (
-      this.appliedCoupon?.couponCode &&
-      !this.appliedCoupon?.result?.isValid
+      this.paymentMethod === OnlineShopPaymentMethod.GoPayFast &&
+      !this.isOnlinePaymentAllowed
     ) {
-      this.toastr.warning('Please apply a valid coupon or remove it.');
+      this.toastr.warning('Select a delivery option to pay online.');
+      return;
+    }
+
+    // Only a code the server refused outright blocks the order. One that was simply beaten to its
+    // scope is priced at zero and stays out of the way.
+    const refused = this.couponStatuses.find((coupon) => !coupon.isAdmitted);
+    if (refused) {
+      this.toastr.warning(
+        refused.message || `Remove ${refused.couponCode} to continue — it cannot be used here.`
+      );
       return;
     }
 
     this.loading = true;
     const formValue = this.buildCheckoutPayload();
     const selectedCourier = this.selectedCourierOption;
-    const checkoutAmounts: CheckoutOrderAmounts = {
-      couponDiscountAmount: this.couponDiscount,
-      shippingCharges:
-        this.shippingMethod === OnlineShopShippingMethod.Shipping
-          ? this.shippingRate?.finalShippingAmount ?? 0
-          : 0,
-      selectedCourierCompany: selectedCourier?.courierCompany ?? this.shippingRate?.courierCompany ?? null,
-      selectedCourierServiceType: selectedCourier?.courierServiceType ?? this.shippingRate?.courierServiceType ?? null
+    const skipCourier = this.isCourierSelectionSkipped;
+    // Only the courier choice and the total on screen travel with the order; the server prices it
+    // again and rejects the request if its own total disagrees with what we were showing.
+    const selection: CheckoutOrderSelection = {
+      selectedCourierCompany: skipCourier
+        ? null
+        : selectedCourier?.courierCompany ?? this.pricing?.courierCompany ?? null,
+      selectedCourierServiceType: skipCourier
+        ? null
+        : selectedCourier?.courierServiceType ?? this.pricing?.courierServiceType ?? null,
+      clientExpectedTotal: this.pricing?.finalTotal ?? null
     };
     const orderRequest = this.onlineShopOrder.buildCreateOrderRequest(
       formValue,
       this.products,
       this.paymentMethod,
-      this.appliedCoupon,
-      checkoutAmounts
+      this.appliedCouponCodes,
+      selection
     );
 
     this.onlineShopOrder.createOrder(orderRequest).subscribe({
@@ -681,16 +1185,11 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
         }
 
         const billing = formValue.billing;
-        const payAmount =
-          created.amountDueNow != null && created.amountDueNow > 0
-            ? created.amountDueNow
-            : codShippingPrepay
-              ? (this.shippingRate?.finalShippingAmount ?? 0)
-              : created.totalAmount;
+        // No amount is sent: the payment gateway session is opened for whatever the order says is
+        // due now, so a stale figure on this page can never become the charged amount.
         const payfastPayload: CreatePayFastCheckoutRequest = {
           orderId: created.onlineShopSaleOrderId,
           basketId: created.transactionReference || created.onlineShopSaleOrderId,
-          amount: payAmount,
           customerName: billing.customerName,
           customerEmail: billing.customerEmail,
           customerMobileNo: billing.customerMobileNo,
@@ -717,25 +1216,10 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  stripeCheckout() {
-    const handler = (<any>window).StripeCheckout.configure({
-      key: environment.stripe_token,
-      locale: 'auto',
-      token: (token: any) => {
-        this.orderService.createOrder(this.products, this.checkoutForm.value, token.id, this.amount);
-      }
-    });
-    handler.open({
-      name: 'Multikart',
-      description: 'Online Fashion Store',
-      amount: this.amount * 100
-    });
-  }
-
   private createBillingAddressGroup(): UntypedFormGroup {
     return this.fb.group({
       customerName: ['', [trimRequired(), trimPersonName()]],
-      customerMobileNo: ['', [trimRequired(), trimDigitsOnly()]],
+      customerMobileNo: ['', [trimRequired(), trimPhoneNumber()]],
       customerEmail: ['', [trimRequired(), this.trimEmailValidator]],
       address: ['', [trimRequired(), trimMaxLength(100)]],
       town: ['', [trimRequired(), this.suggestionMatchValidator('billing', 'town')]],
@@ -769,7 +1253,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     const rules = required
       ? {
           customerName: [trimRequired(), trimPersonName()],
-          customerMobileNo: [trimRequired(), trimDigitsOnly()],
+          customerMobileNo: [trimRequired(), trimPhoneNumber()],
           address: [trimRequired(), trimMaxLength(100)],
           town: [trimRequired(), this.suggestionMatchValidator('shipping', 'town')],
           state: [trimRequired(), this.suggestionMatchValidator('shipping', 'state')],
@@ -806,7 +1290,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       shipToDifferentAddress: raw.shipToDifferentAddress,
       description: raw.description,
       shippingMethod: this.shippingMethod,
-      paymentMethod: this.paymentMethod
+      paymentMethod: this.paymentMethod,
+      billingLatitude: this.billingCoordinates?.latitude ?? null,
+      billingLongitude: this.billingCoordinates?.longitude ?? null
     };
   }
 
@@ -815,8 +1301,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isShippingCardView = false;
     this.productService.clearCheckoutAfterOrder();
     this.products = [];
-    this.appliedCoupon = null;
-    this.shippingRate = null;
+    this.appliedCouponCodes = [];
+    this.pricing = null;
+    this.resetCourierSelection();
   }
 
   private handleCheckoutError(err: any): void {
@@ -910,11 +1397,16 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.billingGroup.get('town')?.updateValueAndValidity({ emitEvent: false });
       this.billingGroup.get('state')?.updateValueAndValidity({ emitEvent: false });
       this.googleAddressService.isAddressSelect = false;
-
-      if (this.canShowBillingCard) {
-        this.isBillingCardView = true;
-      }
     }
+
+    // Prefill can finish after cart subscriptions already tried (and skipped) shipping.
+    // Once a complete saved address is shown as the card, load cargo options immediately.
+    if (this.canShowBillingCard) {
+      this.isBillingCardView = true;
+      this.pricingRequested$.next();
+    }
+
+    this.refreshLocalPickupAvailability();
   }
 
   private isAddressConfirmedForShippingRate(): boolean {
@@ -929,57 +1421,85 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     return true;
   }
 
-  private refreshShippingRate(): void {
-    if (this.shippingMethod !== OnlineShopShippingMethod.Shipping) {
+  /**
+   * Asks the server to price the whole order. This is the only place checkout money comes from:
+   * the request carries product ids, quantities, the coupon code, the address and the chosen
+   * courier, and every displayed figure is read back out of the response.
+   */
+  private requestPricing(): void {
+    const items = this.productService.buildPricingCartLines(this.products);
+    if (!items.length) {
+      this.pricing = null;
+      this.pendingCouponCode = null;
+      this.couponApplying = false;
       return;
     }
 
-    if (!this.isAddressConfirmedForShippingRate()) {
-      return;
-    }
-
+    const wantsShipping = this.shippingMethod === OnlineShopShippingMethod.Shipping;
     const address = this.resolveShippingAddressForRate();
-    if (!this.isShippingAddressComplete(address)) {
-      this.clearShippingRate();
-      return;
-    }
 
-    const requestId = ++this.shippingRequestId;
-    this.shippingLoading = true;
+    // A courier quote needs a confirmed, complete address. Until then price the goods alone so the
+    // customer still sees a subtotal rather than a spinner.
+    const includeShipping = wantsShipping
+      && !this.courierSelectionSkipped
+      && this.isAddressConfirmedForShippingRate()
+      && this.isShippingAddressComplete(address);
+
+    const requestId = ++this.pricingRequestId;
+    if (includeShipping) {
+      this.shippingLoading = true;
+    }
 
     this.onlineShopCheckout
-      .getShippingRate({
+      .calculatePricing({
+        storeId: this.auth.storeId,
+        items,
+        couponCodes: this.appliedCouponCodes,
+        shippingMethod: this.shippingMethod,
+        includeShipping,
         countryCode: this.defaultCountryCode,
-        address: address.address.trim(),
-        city: address.town.trim(),
-        state: address.state.trim(),
-        postalCode: address.postalcode.trim(),
-        cartSubtotal: this.cartSubtotal,
-        cartWeight: this.onlineShopOrder.calculateCartWeightKg(this.products),
-        selectedCourierCompany: this.shippingRate?.courierCompany ?? null,
-        selectedCourierServiceType: this.shippingRate?.courierServiceType ?? null
+        address: address?.address?.trim() ?? null,
+        city: address?.town?.trim() ?? null,
+        state: address?.state?.trim() ?? null,
+        postalCode: address?.postalcode?.trim() ?? null,
+        selectedCourierCompany: this.selectedCourierOption?.courierCompany ?? null,
+        selectedCourierServiceType: this.selectedCourierOption?.courierServiceType ?? null
       })
-      .pipe(
-        catchError(() => of(null))
-      )
-      .subscribe((rate) => {
-        if (requestId !== this.shippingRequestId) {
+      .pipe(catchError(() => of(null)), takeUntil(this.destroy$))
+      .subscribe((result) => {
+        if (requestId !== this.pricingRequestId) {
           return;
         }
         this.shippingLoading = false;
 
-        if (!rate || rate.ratesUnavailable) {
-          this.shippingRate = null;
-          this.selectedCourierOptionKey = null;
+        if (!result) {
+          // The quote failed, so there is no verdict to report. The code stays applied and visible
+          // rather than being dropped on a network hiccup.
+          if (this.pendingCouponCode) {
+            this.pendingCouponCode = null;
+            this.couponApplying = false;
+            this.toastr.warning('Could not check that coupon just now. Please try again.');
+          }
           return;
         }
 
-        this.shippingRate = rate;
-        this.syncCourierSelectionAfterRateLoad();
+        this.pricing = result;
+        this.settlePendingCoupon(result);
+
+        if (includeShipping) {
+          this.cachedCourierOptions = result.courierOptions;
+          this.syncCourierSelectionAfterPricing();
+        }
+
+        this.applyPaymentMethodDefaults();
       });
   }
 
-  private syncCourierSelectionAfterRateLoad(): void {
+  /**
+   * Adopts the courier the server priced. Re-quoting here would loop, so the selection simply
+   * follows the engine's choice unless the customer has already picked an option that still exists.
+   */
+  private syncCourierSelectionAfterPricing(): void {
     const options = this.shippingCourierOptions;
     if (!options.length) {
       this.selectedCourierOptionKey = null;
@@ -988,43 +1508,21 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const previousKey = this.selectedCourierOptionKey;
     if (previousKey && options.some((o) => this.courierOptionKey(o) === previousKey)) {
-      this.selectedCourierOptionKey = previousKey;
-    } else {
-      const recommended = options.find((o) => o.isRecommended) ?? options[0];
-      this.selectedCourierOptionKey = this.courierOptionKey(recommended);
-    }
-
-    this.applySelectedCourierToRate();
-  }
-
-  private applySelectedCourierToRate(): void {
-    if (!this.shippingRate || !this.selectedCourierOptionKey) {
       return;
     }
 
-    const selected = this.shippingCourierOptions.find(
-      (o) => this.courierOptionKey(o) === this.selectedCourierOptionKey
+    const priced = options.find(
+      (o) => o.courierCompany === this.pricing?.courierCompany
+        && o.courierServiceType === this.pricing?.courierServiceType
     );
-    if (!selected) {
-      return;
-    }
-
-    this.shippingRate = {
-      ...this.shippingRate,
-      cargoOriginalAmount: selected.cargoOriginalAmount,
-      shippingDiscountAmount: selected.shippingDiscountAmount,
-      finalShippingAmount: selected.finalShippingAmount,
-      courierCompany: selected.courierCompany,
-      courierServiceType: selected.courierServiceType,
-      pickupLocationId: selected.pickupLocationId ?? this.shippingRate.pickupLocationId
-    };
+    const fallback = options.find((o) => o.isRecommended) ?? options[0];
+    this.selectedCourierOptionKey = this.courierOptionKey(priced ?? fallback);
   }
 
-  private clearShippingRate(): void {
-    this.shippingRequestId++;
-    this.shippingRate = null;
-    this.shippingLoading = false;
+  private resetCourierSelection(): void {
     this.selectedCourierOptionKey = null;
+    this.courierSelectionSkipped = false;
+    this.cachedCourierOptions = [];
   }
 
   private resolveShippingAddressForRate(): CheckoutAddressFormValues {
@@ -1138,7 +1636,18 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private applyPaymentMethodDefaults(): void {
     const methods = this.availablePaymentMethods;
+    if (!methods.length) {
+      return;
+    }
     if (!methods.includes(this.paymentMethod)) {
+      // Prefer COD when online payment is blocked by unconfirmed shipping.
+      if (
+        !this.isOnlinePaymentAllowed &&
+        methods.includes(OnlineShopPaymentMethod.CashOnDelivery)
+      ) {
+        this.paymentMethod = OnlineShopPaymentMethod.CashOnDelivery;
+        return;
+      }
       this.paymentMethod = methods[0];
     }
   }

@@ -5,8 +5,12 @@ export interface Product {
     description?: string;
     type?: string;
     brand?: string;
+    /** POS brand id — used for shop filter / breadcrumb links. */
+    brandId?: string;
     collection?: any[];
     category?: string;
+    /** POS product group / category id — used for shop filter / breadcrumb links. */
+    categoryId?: string;
     price?: number;
     sale?: boolean;
     discount?: number;
@@ -22,6 +26,8 @@ export interface Product {
     pictureUrls?: string[];
     /** POS catalog product id when available (separate from inventory row id). */
     productId?: string;
+    /** SEO / shareable storefront URL slug (preferred over inventory id). */
+    slug?: string;
     /** POS product color (flat field from API; use with or without `variants`). */
     color?: string | null;
     /** POS product size from API (decimal); shown in size filter. */

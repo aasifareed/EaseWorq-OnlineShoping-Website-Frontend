@@ -1,19 +1,22 @@
-<!-- Start Categories List -->
 <div class="collection-collapse-block border-0 microless-category" [class.open]="collapse">
     <h3 class="collapse-block-title" (click)="collapse = !collapse">Category</h3>
     <div class="collection-collapse-block-content">
-        <div class="collection-brand-filter" *ngIf="!activeSlug || !navCurrent">
+        <!-- Root list: forward into categories -->
+        <div class="collection-brand-filter collection-brand-filter--expandable" *ngIf="!activeSlug || !navCurrent">
             <ul class="category-list">
-                <li *ngFor="let cat of category">
+                <li *ngFor="let cat of visibleCategories">
                     <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
-                        [class.active]="isCategoryActive(cat)">
+                        [class.active]="isCategoryActive(cat)"
+                        [class.has-children]="hasChildren(cat)">
                         {{ cat.title }}
                         <span *ngIf="cat.count">({{ cat.count }})</span>
                     </a>
                     <ul *ngIf="isOpen(cat) && cat.children?.length">
                         <li *ngFor="let child of cat.children">
                             <a [routerLink]="['/shop']"
-                                [queryParams]="{ category: child.id }" [class.active]="isCategoryActive(child)">
+                                [queryParams]="{ category: child.id }"
+                                [class.active]="isCategoryActive(child)"
+                                [class.has-children]="hasChildren(child)">
                                 {{ child.title }}
                                 <span *ngIf="child.count">({{ child.count }})</span>
                             </a>
@@ -21,7 +24,8 @@
                                 <li *ngFor="let grand of child.children">
                                     <a [routerLink]="['/shop']"
                                         [queryParams]="{ category: grand.id }"
-                                        [class.active]="isCategoryActive(grand)">
+                                        [class.active]="isCategoryActive(grand)"
+                                        [class.has-children]="hasChildren(grand)">
                                         {{ grand.title }}
                                         <span *ngIf="grand.count">({{ grand.count }})</span>
                                     </a>
@@ -31,18 +35,31 @@
                     </ul>
                 </li>
             </ul>
+            <button type="button"
+                    class="filter-show-more"
+                    *ngIf="(category?.length || 0) > previewLimit"
+                    (click)="showAll = !showAll">
+              {{ showAll ? 'Show less' : 'Show more' }}
+            </button>
         </div>
 
+        <!-- Drill-down: back to parent / All Categories, current title, forward to children -->
         <div class="collection-brand-filter microless-category-branch" *ngIf="activeSlug && navCurrent">
-            <a *ngIf="navParent" class="microless-cat-back" [routerLink]="['/shop']"
-                [queryParams]="{ category: navParent.id }">
-                <span class="microless-cat-back-chevron">&lt;</span> {{ navParent.title }}
+            <a class="microless-cat-back"
+               [routerLink]="['/shop']"
+               [queryParams]="backQueryParams">
+                <span class="microless-cat-back-chevron" aria-hidden="true">&lt;</span>
+                {{ backLabel }}
             </a>
+
             <div class="microless-cat-current">{{ navCurrent.title }}</div>
+
             <ul class="microless-cat-children" *ngIf="navChildren.length">
                 <li *ngFor="let child of navChildren">
-                    <a [routerLink]="['/shop']" [queryParams]="{ category: child.id }"
-                        [class.active]="isCategoryActive(child)">
+                    <a [routerLink]="['/shop']"
+                       [queryParams]="{ category: child.id }"
+                       [class.active]="isCategoryActive(child)"
+                       [class.has-children]="hasChildren(child)">
                         {{ child.title }}
                         <span *ngIf="child.count">({{ child.count }})</span>
                     </a>
@@ -51,4 +68,3 @@
         </div>
     </div>
 </div>
-<!-- End Categories List -->

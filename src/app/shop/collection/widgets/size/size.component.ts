@@ -87,6 +87,19 @@ export class SizeComponent implements OnInit, OnDestroy, OnChanges {
     return Number.isFinite(na) && Number.isFinite(nb) && na === nb;
   }
 
+  /** Skip null/0/empty/"null" size values that shouldn't appear as filters. */
+  private isMeaningfulSize(value: string): boolean {
+    const v = String(value ?? '').trim().toLowerCase();
+    if (!v || v === 'null' || v === 'undefined' || v === 'n/a' || v === '-') {
+      return false;
+    }
+    const n = Number(v.replace(',', '.'));
+    if (Number.isFinite(n) && n === 0) {
+      return false;
+    }
+    return true;
+  }
+
   private refreshDisplayList(): void {
     this.displaySizeList = this.sizeList.map((s) => ({
       ...s,
@@ -113,7 +126,11 @@ export class SizeComponent implements OnInit, OnDestroy, OnChanges {
             const label = String(x.label ?? x.Label ?? x.value ?? x.Value ?? '').trim();
             return { value: label, label };
           })
-          .filter((x) => x.value.length > 0);
+          .filter((x) => this.isMeaningfulSize(x.value));
+        // Hide Size when empty or only a single option (not useful as a filter)
+        if (this.sizeList.length <= 1) {
+          this.sizeList = [];
+        }
         this.sizeOptionsReady.emit(this.sizeList);
         this.refreshDisplayList();
         this.loading = false;

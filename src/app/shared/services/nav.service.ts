@@ -43,9 +43,23 @@ export class NavService {
 		this.tenantService.whenReady().subscribe(() => this.loadDynamicMenus());
 	}
 
+	private menusLoading = false;
+	private menusLoaded = false;
+
 	loadDynamicMenus(): void {
-		this.headerMenuService.loadHeaderMenuItems().subscribe((dynamicItems) => {
-			this.items.next([...this.BASE_MENU_ITEMS, ...dynamicItems]);
+		if (this.menusLoading || this.menusLoaded) {
+			return;
+		}
+		this.menusLoading = true;
+		this.headerMenuService.loadHeaderMenuItems().subscribe({
+			next: (dynamicItems) => {
+				this.items.next([...this.BASE_MENU_ITEMS, ...dynamicItems]);
+				this.menusLoaded = true;
+				this.menusLoading = false;
+			},
+			error: () => {
+				this.menusLoading = false;
+			},
 		});
 	}
 

@@ -1,0 +1,10 @@
+<div class="busy-overlay"
+  *ngIf="isBusy$ | async"
+  role="alert"
+  aria-live="assertive"
+  aria-busy="true">
+  <div class="busy-overlay__panel">
+    <span class="busy-overlay__spinner" aria-hidden="true"></span>
+    <p class="busy-overlay__text">{{ (message$ | async) || 'Please wait…' }}</p>
+  </div>
+</div>

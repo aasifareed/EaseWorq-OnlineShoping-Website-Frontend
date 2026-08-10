@@ -17,7 +17,10 @@
                             <tr class="th-compare">
                                 <td>Action</td>
                                 <th class="item-row" *ngFor="let product of products">
-                                  <button type="button" (click)="removeItem(product)" class="remove-compare"> Remove </button>
+                                  <button type="button" (click)="removeItem(product)" class="remove-compare">
+                                    <i class="fa fa-trash-o me-1" aria-hidden="true"></i>
+                                    Remove
+                                  </button>
                                 </th>
                             </tr>
                             </thead>
@@ -35,7 +38,10 @@
                                     <div class="product-price product_price"> 
                                     <strong>On Sale: </strong><span> {{ (product.price | discount:product) * productService?.Currency.price | shopCurrency:productService?.Currency.currency }}</span></div>
                                     <form class="variants clearfix">
-                                      <button title="Add to Cart" (click)="addToCart(product)" class="add-to-cart btn btn-solid">Add to Cart</button>
+                                      <button title="Add to Cart" (click)="addToCart(product)" class="add-to-cart btn btn-solid">
+                                        <i class="fa fa-shopping-cart me-1" aria-hidden="true"></i>
+                                        Add to Cart
+                                      </button>
                                     </form>
                                 </td>
                             </tr>

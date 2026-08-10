@@ -1,15 +1,22 @@
 <section class="checkout-page checkout-page--compact section-b-space">
     <div class="container-fluid checkout-container">
+        <nav class="checkout-progress" aria-label="Checkout progress">
+            <a class="checkout-progress__step" [routerLink]="['/shop/cart']">Cart</a>
+            <span class="checkout-progress__sep" aria-hidden="true">→</span>
+            <span class="checkout-progress__step checkout-progress__step--current">Checkout</span>
+            <span class="checkout-progress__sep" aria-hidden="true">→</span>
+            <span class="checkout-progress__step">Confirmation</span>
+        </nav>
         <div class="checkout-form">
             <form [formGroup]="checkoutForm">
                 <div class="row checkout-layout g-2 g-lg-3">
                     <div class="col-xl-7 col-lg-7 checkout-col-left">
                         <div class="checkout-card checkout-card--billing">
                             <div class="checkout-card__header checkout-card__header--billing">
-                                <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-user"></i></span>
+                                <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-truck"></i></span>
                                 <div class="checkout-card__header-text">
-                                    <h2 class="checkout-card__title">Billing Details</h2>
-                                    <p class="checkout-card__subtitle">Enter your billing information</p>
+                                    <h2 class="checkout-card__title">{{ primaryAddressSectionTitle }}</h2>
+                                    <p class="checkout-card__subtitle">{{ primaryAddressSectionSubtitle }}</p>
                                 </div>
                                 <div class="checkout-card__header-action checkout-ship-toggle-header">
                                     <div class="form-check">
@@ -27,7 +34,7 @@
                                 <div class="checkout-address-column checkout-address-column--billing">
                             <div class="checkout-address-form-block" *ngIf="!isBillingCardView">
                                 <div class="checkout-address-form-block__header">
-                                    <h3 class="checkout-address-form-block__title">Billing Details</h3>
+                                    <h3 class="checkout-address-form-block__title">{{ primaryAddressFormTitle }}</h3>
                                 </div>
                             <div class="checkout-address-form-block__content">
                             <div class="row check-out g-2 checkout-billing-fields" formGroupName="billing">
@@ -46,8 +53,8 @@
                                         (blur)="trimField('billing','customerMobileNo')" placeholder="" autocomplete="off">
                                     <div *ngIf="control('billing.customerMobileNo').touched && control('billing.customerMobileNo').errors?.required"
                                         class="text text-danger">Phone is required.</div>
-                                    <div *ngIf="control('billing.customerMobileNo').touched && control('billing.customerMobileNo').errors?.digitsOnly"
-                                        class="text text-danger">Phone must contain digits only.</div>
+                                    <div *ngIf="control('billing.customerMobileNo').touched && control('billing.customerMobileNo').errors?.phone"
+                                        class="text text-danger">Enter a valid phone number (digits; optional leading +).</div>
                                 </div>
                                 <div class="form-group col-md-6 col-sm-6 col-12">
                                     <div class="field-label">Email Address <span class="required-mark">*</span></div>
@@ -140,13 +147,14 @@
                                     type="button"
                                     class="btn-solid btn checkout-address-continue-btn"
                                     (click)="continueBillingAddress()">
+                                    <i class="fa fa-arrow-right me-1" aria-hidden="true"></i>
                                     Continue
                                 </button>
                             </div>
                             </div>
 
                             <div class="checkout-address-card checkout-address-card--preview" *ngIf="isBillingCardView">
-                                <div class="checkout-address-card__label">Billing Address</div>
+                                <div class="checkout-address-card__label">{{ primaryAddressCardLabel }}</div>
                                 <div class="checkout-address-card__body">
                                     <div class="checkout-address-card__name">{{ billingPreview.customerName }}</div>
                                     <div class="checkout-address-card__line">{{ billingPreview.customerMobileNo }}</div>
@@ -159,7 +167,8 @@
                                 </div>
                                 <div class="checkout-address-card__footer">
                                     <button type="button" class="checkout-address-card__action" (click)="toggleBillingEdit()">
-                                        [Edit]
+                                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                                        Edit
                                     </button>
                                 </div>
                             </div>
@@ -173,7 +182,7 @@
                                 class="checkout-address-form-block checkout-shipping-form-block"
                                 *ngIf="!isShippingCardView">
                                 <div class="checkout-address-form-block__header">
-                                    <h3 class="checkout-address-form-block__title">Shipping Details</h3>
+                                    <h3 class="checkout-address-form-block__title">Delivery Details</h3>
                                 </div>
                                 <div class="checkout-address-form-block__content">
                                 <div class="row check-out g-2">
@@ -192,8 +201,8 @@
                                             (blur)="trimField('shipping','customerMobileNo')" autocomplete="off">
                                         <div *ngIf="control('shipping.customerMobileNo').touched && control('shipping.customerMobileNo').errors?.required"
                                             class="text text-danger">Phone is required.</div>
-                                        <div *ngIf="control('shipping.customerMobileNo').touched && control('shipping.customerMobileNo').errors?.digitsOnly"
-                                            class="text text-danger">Phone must contain digits only.</div>
+                                        <div *ngIf="control('shipping.customerMobileNo').touched && control('shipping.customerMobileNo').errors?.phone"
+                                            class="text text-danger">Enter a valid phone number (digits; optional leading +).</div>
                                     </div>
                                     <div class="form-group col-12">
                                         <div class="field-label">Address <span class="required-mark">*</span></div>
@@ -270,13 +279,14 @@
                                         type="button"
                                         class="btn-solid btn checkout-address-continue-btn"
                                         (click)="continueShippingAddress()">
+                                        <i class="fa fa-arrow-right me-1" aria-hidden="true"></i>
                                         Continue
                                     </button>
                                 </div>
                             </div>
 
                             <div class="checkout-address-card checkout-address-card--preview" *ngIf="isShippingCardView">
-                                <div class="checkout-address-card__label">Shipping Address</div>
+                                <div class="checkout-address-card__label">Delivery Address</div>
                                 <div class="checkout-address-card__body">
                                     <div class="checkout-address-card__name">{{ shippingPreview.customerName }}</div>
                                     <div class="checkout-address-card__line">{{ shippingPreview.customerMobileNo }}</div>
@@ -288,7 +298,8 @@
                                 </div>
                                 <div class="checkout-address-card__footer">
                                     <button type="button" class="checkout-address-card__action" (click)="toggleShippingEdit()">
-                                        [Edit]
+                                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                                        Edit
                                     </button>
                                 </div>
                             </div>
@@ -315,14 +326,17 @@
                                     <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-shopping-cart"></i></span>
                                     <h2 class="checkout-card__title">Your Items ({{ products.length }})</h2>
                                 </div>
-                                <a [routerLink]="['/shop/cart']" class="checkout-edit-cart">Edit Cart</a>
+                                <a [routerLink]="['/shop/cart']" class="checkout-edit-cart">
+                                  <i class="fa fa-pencil" aria-hidden="true"></i>
+                                  Edit Cart
+                                </a>
                             </div>
                             <div class="checkout-card__body checkout-items-table-wrap">
                                 <table class="checkout-items-table">
                                     <thead>
                                         <tr>
                                             <th>Product</th>
-                                            <th>Variant</th>
+                                            <th *ngIf="showVariantColumn">Variant</th>
                                             <th class="text-center">Qty</th>
                                             <th class="text-end">Price</th>
                                         </tr>
@@ -332,10 +346,18 @@
                                             <td>
                                                 <div class="checkout-item-product">
                                                     <img [src]="productImage(product)" [alt]="product.title" class="checkout-item-thumb">
-                                                    <span class="checkout-item-name">{{ product.title }}</span>
+                                                    <div class="checkout-item-copy">
+                                                        <span class="checkout-item-name">{{ product.title }}</span>
+                                                        <span class="checkout-item-variant"
+                                                            *ngIf="!showVariantColumn && productVariantLabel(product)">
+                                                            {{ productVariantLabel(product) }}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td class="checkout-item-variant">{{ productVariant(product) }}</td>
+                                            <td *ngIf="showVariantColumn" class="checkout-item-variant">
+                                                {{ productVariantLabel(product) || '—' }}
+                                            </td>
                                             <td class="text-center">{{ product.quantity }}</td>
                                             <td class="text-end checkout-item-price">
                                                 {{ (product.price | discount:product) * productService?.Currency.price |
@@ -369,27 +391,103 @@
                                         <span class="count checkout-total-row__value">{{ cartSubtotal |
                                             shopCurrency:productService?.Currency.currency }}</span>
                                     </li>
+                                    <li class="checkout-total-row" *ngFor="let discount of merchandiseDiscountRows">
+                                        <span class="checkout-total-row__label">
+                                            {{ discount.description || 'Discount' }}
+                                            <span class="checkout-coupon-tag" *ngIf="discount.couponCode">{{ discount.couponCode }}</span>
+                                        </span>
+                                        <span class="count checkout-total-row__value checkout-discount">−{{
+                                            discount.discountAmount |
+                                            shopCurrency:productService?.Currency.currency }}</span>
+                                    </li>
                                     <li class="checkout-total-row" *ngIf="showShippingBreakdown">
                                         <span class="checkout-total-row__label">Shipping</span>
-                                        <span class="count checkout-total-row__value">{{ shippingRate?.finalShippingAmount |
+                                        <span class="count checkout-total-row__value checkout-total-row__value--pending"
+                                            *ngIf="isCourierSelectionSkipped">To be confirmed</span>
+                                        <span class="count checkout-total-row__value checkout-total-row__value--free"
+                                            *ngIf="!isCourierSelectionSkipped && isShippingFree">FREE</span>
+                                        <span class="count checkout-total-row__value"
+                                            *ngIf="!isCourierSelectionSkipped && !isShippingFree">{{
+                                            shippingSummaryAmount |
                                             shopCurrency:productService?.Currency.currency }}</span>
                                     </li>
-                                    <li class="checkout-total-row" *ngIf="couponDiscount > 0">
-                                        <span class="checkout-total-row__label">
-                                            Discount
-                                            <span class="checkout-coupon-tag" *ngIf="appliedCouponCode">{{ appliedCouponCode }}</span>
+                                    <li class="checkout-total-row checkout-total-row--coupon-hint"
+                                        *ngIf="showFreeShippingCouponHint">
+                                        <span class="checkout-total-row__label checkout-free-ship-hint">
+                                            <span class="checkout-coupon-tag" *ngIf="freeShippingCouponCode">{{ freeShippingCouponCode }}</span>
+                                            applied
+                                            <i class="fa fa-check" aria-hidden="true"></i>
                                         </span>
-                                        <span class="count checkout-total-row__value checkout-discount">−{{ couponDiscount |
-                                            shopCurrency:productService?.Currency.currency }}</span>
+                                    </li>
+                                    <li class="checkout-total-row checkout-total-row--coupon-hint"
+                                        *ngIf="freeDeliverySaving > 0">
+                                        <span class="checkout-total-row__label checkout-free-ship-hint">
+                                            You saved {{ freeDeliverySaving |
+                                                shopCurrency:productService?.Currency.currency }} on delivery
+                                        </span>
+                                    </li>
+                                    <ng-container *ngFor="let coupon of couponStatuses">
+                                        <li class="checkout-total-row checkout-total-row--coupon-hint"
+                                            *ngIf="isCouponPartiallyEligible(coupon)">
+                                            <span class="checkout-total-row__label checkout-free-ship-hint">
+                                                <span class="checkout-coupon-tag">{{ coupon.couponCode }}</span>
+                                                applies to {{ coupon.eligibleSubtotal |
+                                                    shopCurrency:productService?.Currency.currency }} of eligible items
+                                            </span>
+                                        </li>
+                                    </ng-container>
+
+                                    <!-- Each code is removable here too, so a code the server refuses
+                                         cannot leave the customer stuck on this page. -->
+                                    <li class="checkout-total-row checkout-total-row--coupon-hint"
+                                        *ngFor="let coupon of couponStatuses">
+                                        <span class="checkout-total-row__label checkout-coupon-line"
+                                            [class.checkout-coupon-line--rejected]="!coupon.isValid">
+                                            <span class="checkout-coupon-tag">{{ coupon.couponCode }}</span>
+                                            <span class="checkout-coupon-line__message">{{ coupon.message }}</span>
+                                            <a href="javascript:void(0)"
+                                                class="checkout-coupon-line__remove"
+                                                (click)="removeCoupon(coupon.couponCode)"
+                                                [attr.aria-label]="'Remove ' + coupon.couponCode">
+                                              <i class="fa fa-times" aria-hidden="true"></i>
+                                              Remove
+                                            </a>
+                                        </span>
                                     </li>
                                 </ul>
+
+                                <!-- Buy Now skips the cart, so the code has to be enterable here too. -->
+                                <div class="checkout-coupon-form" *ngIf="products.length">
+                                    <label class="checkout-coupon-form__label" for="checkout-coupon-code">
+                                        Have a coupon or promotional code?
+                                    </label>
+                                    <div class="checkout-coupon-form__row">
+                                        <input type="text"
+                                            id="checkout-coupon-code"
+                                            class="form-control checkout-coupon-form__input"
+                                            placeholder="Enter code"
+                                            autocomplete="off"
+                                            [(ngModel)]="couponCodeInput"
+                                            [ngModelOptions]="{standalone: true}"
+                                            [disabled]="couponApplying"
+                                            (keyup.enter)="applyCoupon()" />
+                                        <button type="button"
+                                            class="btn checkout-coupon-form__button"
+                                            (click)="applyCoupon()"
+                                            [disabled]="couponApplying">
+                                            <i class="fa" [ngClass]="couponApplying ? 'fa-spinner fa-spin' : 'fa-tag'" aria-hidden="true"></i>
+                                            <span>{{ couponApplying ? 'Applying…' : 'Apply' }}</span>
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <div class="checkout-delivery-section" *ngIf="products.length">
                                     <div class="checkout-chip-section checkout-shipping-row">
                                         <div class="checkout-chip-section__label">Shipping Method</div>
                                         <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles"
                                             role="radiogroup" aria-label="Delivery method">
-                                            <label *ngFor="let method of shippingMethodOptions" class="checkout-chip checkout-chip--tile"
+                                            <label *ngFor="let method of availableShippingMethods"
+                                                class="checkout-chip checkout-chip--tile checkout-chip--choice"
                                                 [class.checkout-chip--selected]="shippingMethod === method"
                                                 [for]="'shipping-' + method">
                                                 <input type="radio" class="checkout-chip__input" name="shippingMethod"
@@ -399,7 +497,8 @@
                                                     [ngModelOptions]="{standalone: true}">
                                                 <span class="checkout-chip__text">
                                                     <i class="fa" [ngClass]="method === OnlineShopShippingMethod.Shipping ? 'fa-truck' : 'fa-map-marker'" aria-hidden="true"></i>
-                                                    {{ shippingMethodLabels[method] }}
+                                                    <span class="checkout-chip__label">{{ shippingMethodLabels[method] }}</span>
+                                                    <i class="fa fa-check checkout-chip__check" aria-hidden="true"></i>
                                                 </span>
                                             </label>
                                         </div>
@@ -410,6 +509,21 @@
                                         Calculating shipping…
                                     </p>
 
+                                    <div class="checkout-pickup-panel"
+                                        *ngIf="shippingMethod === OnlineShopShippingMethod.LocalPickup">
+                                        <h4 class="checkout-pickup-panel__title">Pickup location</h4>
+                                        <ng-container *ngIf="localPickupLines.length; else pickupFallback">
+                                            <p class="checkout-pickup-panel__line"
+                                                *ngFor="let line of localPickupLines">{{ line }}</p>
+                                        </ng-container>
+                                        <ng-template #pickupFallback>
+                                            <p class="checkout-pickup-panel__line">
+                                                Collect your order from the store. Shipping charges do not apply.
+                                            </p>
+                                        </ng-template>
+                                        <p class="checkout-pickup-panel__note">No shipping fee for local pickup.</p>
+                                    </div>
+
                                     <div class="checkout-courier-panel"
                                         *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && (shippingLoading || showShippingBreakdown || shippingCourierOptions.length)">
                                         <div class="checkout-courier-panel__header">
@@ -417,7 +531,7 @@
                                                 <h4 class="checkout-courier-panel__title">Choose your courier</h4>
                                                 <span class="checkout-courier-panel__count"
                                                     *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                                    {{ shippingCourierOptions.length }} options
+                                                    {{ shippingCourierOptions.length }} delivery options
                                                 </span>
                                             </div>
                                         </div>
@@ -429,18 +543,27 @@
                                                     <i class="fa fa-map-marker" aria-hidden="true"></i>
                                                     {{ shippingDestinationCity }}
                                                 </span>
-                                                <span class="checkout-courier-meta-item">
+                                                <span class="checkout-courier-meta-item" *ngIf="quotedWeight">
                                                     <i class="fa fa-balance-scale" aria-hidden="true"></i>
-                                                    ~{{ cartWeightKg }} kg
+                                                    ~{{ quotedWeight }}
                                                 </span>
-                                                <span class="checkout-courier-meta-item" *ngIf="shippingRate?.courierProvider">
-                                                    <i class="fa fa-truck" aria-hidden="true"></i>
-                                                    via {{ shippingRate.courierProvider }}
+                                                <span class="checkout-courier-meta-item" *ngIf="deliveryEstimateHint">
+                                                    <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                                    {{ deliveryEstimateHint }}
+                                                </span>
+                                            </p>
+
+                                            <p class="checkout-courier-panel__note"
+                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                                <span>
+                                                    Delivery availability varies by area. Choose an available courier
+                                                    below, or select Help Me Arrange Delivery and we'll assist you.
                                                 </span>
                                             </p>
 
                                             <div class="checkout-courier-rail-wrap"
-                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                                *ngIf="showShippingBreakdown && visibleCourierOptions.length">
                                                 <button type="button"
                                                     class="checkout-courier-rail__arrow checkout-courier-rail__arrow--prev"
                                                     (click)="scrollCourierRail(-1)"
@@ -454,14 +577,14 @@
                                                         class="checkout-courier-card checkout-courier-card--rail"
                                                         [ngClass]="courierAccentClass(option.courierCompany)"
                                                         [class.checkout-courier-card--selected]="isCourierOptionSelected(option)"
-                                                        *ngFor="let option of shippingCourierOptions"
+                                                        *ngFor="let option of visibleCourierOptions"
                                                         (click)="onCourierOptionSelected(courierOptionKey(option))"
                                                         [attr.aria-checked]="isCourierOptionSelected(option)"
                                                         role="radio">
                                                         <span class="checkout-courier-card__top">
                                                             <span class="checkout-courier-card__top-stack">
                                                                 <span class="checkout-courier-card__badge"
-                                                                    *ngIf="option.isRecommended">Best value</span>
+                                                                    *ngIf="courierOptionBadge(option)">{{ courierOptionBadge(option) }}</span>
                                                                 <span class="checkout-courier-card__check" aria-hidden="true">
                                                                     <i class="fa fa-check"></i>
                                                                 </span>
@@ -475,7 +598,7 @@
                                                         </span>
                                                         <span class="checkout-courier-card__footer">
                                                             <span class="checkout-courier-card__was"
-                                                                *ngIf="(option.shippingDiscountAmount || 0) > 0">
+                                                                *ngIf="courierOptionHasDiscount(option)">
                                                                 {{ option.cargoOriginalAmount |
                                                                     shopCurrency:productService?.Currency.currency }}
                                                             </span>
@@ -495,39 +618,81 @@
                                                 </button>
                                             </div>
 
-                                            <p class="checkout-courier-panel__hint"
-                                                *ngIf="selectedCourierOption && showShippingBreakdown">
-                                                Selected:
-                                                <strong>{{ selectedCourierOption.courierCompany }}</strong>
-                                                · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
-                                                · {{ selectedCourierOption.finalShippingAmount |
-                                                    shopCurrency:productService?.Currency.currency }}
-                                            </p>
+                                            <div class="checkout-courier-optout"
+                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                                <button type="button"
+                                                    class="checkout-courier-optout__btn"
+                                                    [class.checkout-courier-optout__btn--active]="isCourierSelectionSkipped"
+                                                    (click)="skipCourierSelection()"
+                                                    [attr.aria-pressed]="isCourierSelectionSkipped">
+                                                    <i class="fa"
+                                                        [ngClass]="isCourierSelectionSkipped ? 'fa-check-circle' : 'fa-headphones'"
+                                                        aria-hidden="true"></i>
+                                                    Help Me Arrange Delivery
+                                                </button>
+                                                <p class="checkout-courier-optout__note" *ngIf="isCourierSelectionSkipped">
+                                                    We'll contact you to confirm an available delivery option and shipping
+                                                    charge before dispatch.
+                                                </p>
+                                            </div>
+
+                                            <div class="checkout-courier-footer"
+                                                *ngIf="(selectedCourierOption && showShippingBreakdown) || hiddenCourierOptionsCount > 0 || (showAllCourierOptions && shippingCourierOptions.length > courierPreviewLimit)">
+                                                <button type="button"
+                                                    class="checkout-courier-more"
+                                                    *ngIf="!showAllCourierOptions && hiddenCourierOptionsCount > 0"
+                                                    (click)="toggleCourierOptionsExpanded()">
+                                                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                                                    Show {{ hiddenCourierOptionsCount }} more options
+                                                </button>
+                                                <button type="button"
+                                                    class="checkout-courier-more"
+                                                    *ngIf="showAllCourierOptions && shippingCourierOptions.length > courierPreviewLimit"
+                                                    (click)="toggleCourierOptionsExpanded()">
+                                                    <i class="fa fa-chevron-up" aria-hidden="true"></i>
+                                                    Show fewer options
+                                                </button>
+                                                <p class="checkout-courier-panel__hint"
+                                                    *ngIf="selectedCourierOption && showShippingBreakdown">
+                                                    Selected:
+                                                    <strong>{{ selectedCourierOption.courierCompany }}</strong>
+                                                    · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
+                                                    · {{ selectedCourierOption.finalShippingAmount |
+                                                        shopCurrency:productService?.Currency.currency }}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <ul class="checkout-delivery-section__charges" *ngIf="showShippingBreakdown && (shippingRate?.shippingDiscountAmount || 0) > 0">
+                                    <ul class="checkout-delivery-section__charges"
+                                        *ngIf="showDeliveryDiscountRow">
                                         <li class="checkout-total-row">
-                                            <span class="checkout-total-row__label">Shipping discount</span>
-                                            <span class="count checkout-total-row__value checkout-discount">−{{ shippingRate?.shippingDiscountAmount |
+                                            <span class="checkout-total-row__label">{{ deliveryDiscountLabel }}</span>
+                                            <span class="count checkout-total-row__value checkout-discount">−{{ deliveryDiscountAmount |
                                                 shopCurrency:productService?.Currency.currency }}</span>
                                         </li>
                                     </ul>
                                 </div>
 
-                                <ul class="total checkout-order-total">
+                                <ul class="total checkout-order-total"
+                                    [class.checkout-order-total--provisional]="isCourierSelectionSkipped">
                                     <li class="checkout-total-row checkout-order-total__row">
-                                        <span class="checkout-total-row__label checkout-order-total__label">Total</span>
+                                        <span class="checkout-total-row__label checkout-order-total__label">
+                                            {{ isCourierSelectionSkipped ? 'Current Total*' : 'Total' }}
+                                        </span>
                                         <span class="count checkout-total-row__value checkout-order-total__value">{{ orderTotal |
                                             shopCurrency:productService?.Currency.currency }}</span>
                                     </li>
                                 </ul>
+                                <p class="checkout-total-footnote" *ngIf="isCourierSelectionSkipped">
+                                    *Excludes shipping. The delivery charge will be confirmed before dispatch.
+                                </p>
 
                                 <div class="checkout-cod-shipping-notice alert alert-info"
                                     *ngIf="codCollectsShippingOnline" role="status">
                                     <strong>Cash on delivery:</strong>
                                     Pay shipping
-                                    <strong>{{ shippingRate?.finalShippingAmount | shopCurrency:productService?.Currency.currency }}</strong>
+                                    <strong>{{ effectiveShippingAmount | shopCurrency:productService?.Currency.currency }}</strong>
                                     now via PayFast. The remaining
                                     <strong>{{ codRemainingOnDelivery | shopCurrency:productService?.Currency.currency }}</strong>
                                     is collected when your order is delivered.
@@ -538,7 +703,8 @@
                                         <div class="checkout-chip-section__label">Payment Method</div>
                                         <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles"
                                             role="radiogroup" aria-label="Payment method">
-                                            <label *ngFor="let method of availablePaymentMethods" class="checkout-chip checkout-chip--tile"
+                                            <label *ngFor="let method of availablePaymentMethods"
+                                                class="checkout-chip checkout-chip--tile checkout-chip--choice"
                                                 [class.checkout-chip--selected]="paymentMethod === method"
                                                 [for]="'payment-' + method">
                                                 <input type="radio" class="checkout-chip__input" name="paymentMethod"
@@ -549,22 +715,31 @@
                                                     <i class="fa"
                                                         [ngClass]="method === OnlineShopPaymentMethod.CashOnDelivery ? 'fa-money' : 'fa-credit-card'"
                                                         aria-hidden="true"></i>
-                                                    {{ paymentMethodLabels[method] }}
+                                                    <span class="checkout-chip__label">{{ paymentMethodLabels[method] }}</span>
+                                                    <i class="fa fa-check checkout-chip__check" aria-hidden="true"></i>
                                                 </span>
                                             </label>
                                         </div>
                                     </div>
                                     <p class="checkout-payment-hint"
-                                        *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && !codCollectsShippingOnline">
+                                        *ngIf="isCourierSelectionSkipped">
+                                        Select a delivery option to pay online.
+                                    </p>
+                                    <p class="checkout-payment-hint"
+                                        *ngIf="isCourierSelectionSkipped && paymentMethod === OnlineShopPaymentMethod.CashOnDelivery">
+                                        Online payment is available once the delivery charge is confirmed.
+                                    </p>
+                                    <p class="checkout-payment-hint"
+                                        *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && !codCollectsShippingOnline && !isCourierSelectionSkipped">
                                         Pay when your order is delivered.
                                     </p>
                                     <p class="checkout-payment-hint"
                                         *ngIf="paymentMethod === OnlineShopPaymentMethod.CashOnDelivery && codCollectsShippingOnline">
-                                        Pay shipping now via PayFast ({{ shippingRate?.finalShippingAmount | shopCurrency:productService?.Currency.currency }}).
+                                        Pay shipping now via PayFast ({{ effectiveShippingAmount | shopCurrency:productService?.Currency.currency }}).
                                         Remaining {{ codRemainingOnDelivery | shopCurrency:productService?.Currency.currency }} on delivery.
                                     </p>
                                     <p class="checkout-payment-hint"
-                                        *ngIf="paymentMethod === OnlineShopPaymentMethod.GoPayFast">
+                                        *ngIf="paymentMethod === OnlineShopPaymentMethod.GoPayFast && isOnlinePaymentAllowed">
                                         You will be redirected to PayFast.
                                     </p>
 
@@ -573,12 +748,21 @@
                                             [disabled]="!canPlaceOrder"
                                             (click)="placeOrder()">
                                             <i class="fa fa-lock" aria-hidden="true"></i>
-                                            {{ loading ? 'Processing...' : (codCollectsShippingOnline ? 'Pay Shipping & Place Order' : 'Place Order') }}
+                                            {{ placeOrderButtonLabel }}
                                         </button>
                                     </div>
 
                                     <p class="checkout-legal-note">
-                                        By placing your order, you agree to our Terms &amp; Conditions and Privacy Policy.
+                                        By placing your order, you agree to our
+                                        <a class="checkout-legal-note__link"
+                                           [routerLink]="['/page', 'terms-and-conditions']"
+                                           target="_blank"
+                                           rel="noopener noreferrer">Terms &amp; Conditions</a>
+                                        and
+                                        <a class="checkout-legal-note__link"
+                                           [routerLink]="['/page', 'privacy-policy']"
+                                           target="_blank"
+                                           rel="noopener noreferrer">Privacy Policy</a>.
                                     </p>
                                     <p class="checkout-security-note">
                                         <i class="fa fa-shield" aria-hidden="true"></i>
