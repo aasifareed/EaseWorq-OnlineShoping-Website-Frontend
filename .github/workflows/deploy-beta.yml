@@ -1,0 +1,106 @@
+name: Deploy Online Shop Storefront to BETA
+
+on:
+  push:
+    branches:
+      - BETA
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    environment: BETA
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Angular (production)
+        shell: pwsh
+        run: |
+          npx ng build --configuration production
+          if (-not (Test-Path "dist\multikart\browser\index.html")) {
+            throw "Build output missing: dist/multikart/browser/index.html"
+          }
+
+      - name: Ensure web.config is in dist
+        shell: pwsh
+        run: |
+          $dist = "dist\multikart\browser"
+          if (-not (Test-Path "$dist\web.config") -and (Test-Path "src\web.config")) {
+            Copy-Item "src\web.config" "$dist\web.config" -Force
+            Write-Host "Copied src/web.config into $dist/"
+          }
+          if (-not (Test-Path "$dist\web.config")) {
+            throw "dist/multikart/browser/web.config is missing — IIS pretty URLs will break"
+          }
+
+      - name: Deploy to IIS via SFTP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $hostname = "${{ secrets.IIS_SERVER }}"
+          $port = if ("${{ secrets.IIS_PORT }}") { "${{ secrets.IIS_PORT }}" } else { "22" }
+          $username = "${{ secrets.IIS_USERNAME }}"
+          $password = "${{ secrets.IIS_PASSWORD }}"
+          $remotePath = "${{ secrets.IIS_DEPLOY_DIR }}"
+          $localPath = "./dist/multikart/browser"
+
+          if (-not $hostname -or -not $username -or -not $password -or -not $remotePath) {
+            throw "Missing required secrets: IIS_SERVER, IIS_USERNAME, IIS_PASSWORD, IIS_DEPLOY_DIR"
+          }
+
+          Install-Module -Name Posh-SSH -Force -Scope CurrentUser -AllowClobber
+          Import-Module Posh-SSH
+
+          $securePassword = ConvertTo-SecureString $password -AsPlainText -Force
+          $credential = New-Object System.Management.Automation.PSCredential($username, $securePassword)
+
+          $sshSession = New-SSHSession -ComputerName $hostname -Port $port -Credential $credential -AcceptKey
+          Invoke-SSHCommand -SessionId $sshSession.SessionId -Command "mkdir -p `"$remotePath`"" | Out-Null
+
+          $sftpSession = New-SFTPSession -ComputerName $hostname -Port $port -Credential $credential -AcceptKey
+
+          function Upload-Directory {
+            param($SftpSession, $SshSessionId, $LocalDir, $RemoteDir)
+
+            $items = Get-ChildItem -Path $LocalDir -Recurse -File
+            $root = (Resolve-Path $LocalDir).Path
+
+            foreach ($item in $items) {
+              $relativePath = $item.FullName.Substring($root.Length + 1)
+              $remoteFilePath = ($RemoteDir + "/" + $relativePath) -replace '\\', '/' -replace '//', '/'
+
+              $remoteFileDir = $remoteFilePath.Substring(0, $remoteFilePath.LastIndexOf('/'))
+              if ($remoteFileDir -and $remoteFileDir -ne $RemoteDir) {
+                Invoke-SSHCommand -SessionId $SshSessionId -Command "mkdir -p `"$remoteFileDir`"" | Out-Null
+              }
+
+              Write-Host "Uploading: $relativePath"
+              # OpenWrite does not truncate existing remote files. Remove first so
+              # shorter uploads cannot leave leftover bytes from previous files.
+              Invoke-SSHCommand -SessionId $SshSessionId -Command "rm -f `"$remoteFilePath`"" | Out-Null
+              $fileContent = [System.IO.File]::ReadAllBytes($item.FullName)
+              $stream = $SftpSession.Session.OpenWrite($remoteFilePath)
+              $stream.Write($fileContent, 0, $fileContent.Length)
+              $stream.Flush()
+              $stream.Close()
+              $stream.Dispose()
+            }
+          }
+
+          Upload-Directory -SftpSession $sftpSession -SshSessionId $sshSession.SessionId -LocalDir $localPath -RemoteDir $remotePath
+
+          Remove-SFTPSession -SessionId $sftpSession.SessionId | Out-Null
+          Remove-SSHSession -SessionId $sshSession.SessionId | Out-Null
+          Write-Host "BETA storefront deploy completed."
