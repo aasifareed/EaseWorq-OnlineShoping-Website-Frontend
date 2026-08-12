@@ -10,6 +10,7 @@ import {
   OnlineShopStorefrontTax,
 } from '../models/online-shop-storefront.model';
 import { ShopContextService } from './shop-context.service';
+import { StoreLogoService } from './store-logo.service';
 import { normalizeStoreGuid, resolveStoreIdFromApiPayload } from '../utils/shop-context.util';
 import { asBackgroundRequest } from '../interceptors/background-request';
 
@@ -29,6 +30,7 @@ export class OnlineShopSettingsService {
     private title: Title,
     private meta: Meta,
     private shopContext: ShopContextService,
+    private storeLogoService: StoreLogoService,
   ) {}
 
   get snapshot(): OnlineShopStorefront | null {
@@ -90,24 +92,13 @@ export class OnlineShopSettingsService {
       this.meta.updateTag({ property: 'og:image', content: s.metaImageUrl });
     }
 
-    this.ensureStoreFavicon();
+    this.ensureStoreFavicon(s);
   }
 
-  /** Keep tab icon on the storefront favicon — do not use header logo as favicon. */
-  private ensureStoreFavicon(): void {
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    const href = 'assets/images/favicon-store.svg';
-    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    link.type = 'image/svg+xml';
-    link.href = href;
+  /** Tab icon uses the same logo as the header once storefront settings are loaded. */
+  private ensureStoreFavicon(storefront?: OnlineShopStorefront | null): void {
+    const logoUrl = (storefront ?? this.snapshot)?.logoUrl;
+    this.storeLogoService.applyFavicon(logoUrl);
   }
 
   private resolveGoPayFastEnabled(raw: Record<string, unknown>): boolean {

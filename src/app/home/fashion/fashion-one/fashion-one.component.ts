@@ -29,23 +29,9 @@ export class FashionOneComponent implements OnInit, OnDestroy {
 
   private codeCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private readonly defaultSliders = [{
-    image: 'https://microless.com/cdn/banners/microless-cases-sales-pc.jpg'
-  },
-  {
-    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
-  },
-  {
-    image: 'https://microless.com/cdn/banners/3d-printer-pc.jpg'
-  },
-  {
-    image: 'https://microless.com/cdn/banners/wacom-pc.jpg'
-  },
-  {
-    image: 'https://microless.com/cdn/banners/gaming-chairs-promo-pc-v2.png'
-  }];
+  private readonly defaultSliders: { image: string }[] = [];
 
-  public sliders = [...this.defaultSliders];
+  public sliders: { image: string }[] = [];
 
   constructor(
     public productService: ProductService,
@@ -175,7 +161,7 @@ export class FashionOneComponent implements OnInit, OnDestroy {
 
   private loadHomeBanners(): void {
     this.loadingHomeBanners = true;
-    this.sliders = [...this.defaultSliders];
+    this.sliders = [];
     this.homeBannerService.getHomeBanners().subscribe({
       next: (banners) => {
         if (banners?.length) {
@@ -189,7 +175,7 @@ export class FashionOneComponent implements OnInit, OnDestroy {
         this.loadingHomeBanners = false;
       },
       error: () => {
-        this.sliders = [...this.defaultSliders];
+        this.sliders = [];
         this.loadingHomeBanners = false;
       }
     });

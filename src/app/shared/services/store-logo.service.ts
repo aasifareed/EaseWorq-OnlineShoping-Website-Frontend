@@ -50,6 +50,9 @@ export class StoreLogoService {
     const cached = this.readCache(resolvedTenantId, resolvedStoreId);
     if (cached !== undefined) {
       this.logoSubject.next(cached);
+      if (cached) {
+        this.applyFavicon(cached);
+      }
     }
 
     const path = environment.urls.OnlineShopStoreLogo_GetForStorefront
@@ -66,6 +69,9 @@ export class StoreLogoService {
       }),
       tap((logoUrl) => {
         this.logoSubject.next(logoUrl);
+        if (logoUrl) {
+          this.applyFavicon(logoUrl);
+        }
       }),
       catchError(() => {
         if (cached === undefined) {
@@ -139,5 +145,62 @@ export class StoreLogoService {
   private apiRoot(): string {
     const base = (environment.baseUrl || '').replace(/\/$/, '');
     return base ? `${base}/` : '/';
+  }
+
+  /**
+   * Sets the browser tab icon from the uploaded store logo. Falls back to the bundled
+   * Sasta Khareedo mark when no logo is configured.
+   */
+  applyFavicon(logoUrl?: string | null): void {
+    if (!this.isBrowser || typeof document === 'undefined') {
+      return;
+    }
+
+    const fallback = 'assets/images/favicon-store.svg';
+    const href = (logoUrl && logoUrl.trim()) || fallback;
+    const type = this.inferFaviconMimeType(href);
+
+    const rels = ['icon', 'shortcut icon'];
+    for (const rel of rels) {
+      let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = rel;
+        document.head.appendChild(link);
+      }
+      link.type = type;
+      link.href = href;
+    }
+
+    let apple = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    if (!apple) {
+      apple = document.createElement('link');
+      apple.rel = 'apple-touch-icon';
+      document.head.appendChild(apple);
+    }
+    apple.href = href;
+  }
+
+  private inferFaviconMimeType(href: string): string {
+    const path = href.split('?')[0].toLowerCase();
+    if (path.endsWith('.svg')) {
+      return 'image/svg+xml';
+    }
+    if (path.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    }
+    if (path.endsWith('.gif')) {
+      return 'image/gif';
+    }
+    if (path.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    if (path.endsWith('.ico')) {
+      return 'image/x-icon';
+    }
+    return 'image/png';
   }
 }

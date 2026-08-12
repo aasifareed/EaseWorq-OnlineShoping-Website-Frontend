@@ -20,7 +20,9 @@
         <img
           *ngIf="!isPlaceholderImage(category.image)"
           [src]="category.image"
-          [alt]="displayCategoryName(category.name)" />
+          [alt]="displayCategoryName(category.name)"
+          loading="lazy"
+          decoding="async" />
         <div class="top-category-img__shade"></div>
         <div class="top-category-caption">
           <span class="top-category-caption__name">{{ displayCategoryName(category.name) }}</span>

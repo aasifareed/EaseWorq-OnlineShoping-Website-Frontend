@@ -183,6 +183,8 @@
                 [src]="storeLogoUrl"
                 [alt]="storeName"
                 class="store-logo-img"
+                decoding="async"
+                fetchpriority="high"
               />
               <span *ngIf="!storeLogoUrl" class="logo-main">{{ storeName }}</span>
             </a>
@@ -229,7 +231,7 @@
                       (click)="selectProductSuggestion(item)"
                     >
                       <span class="header-search-dropdown__item-inner">
-                        <img [src]="resolveSuggestionImage(item.imageUrl)" [alt]="item.name" class="header-search-dropdown__thumb" />
+                        <img [src]="resolveSuggestionImage(item.imageUrl)" [alt]="item.name" class="header-search-dropdown__thumb" loading="lazy" decoding="async" />
                         <span class="header-search-dropdown__body">
                           <span class="header-search-dropdown__name" [title]="item.name">{{ item.name }}</span>
                           <span class="header-search-dropdown__desc" *ngIf="item.description" [title]="item.description">
