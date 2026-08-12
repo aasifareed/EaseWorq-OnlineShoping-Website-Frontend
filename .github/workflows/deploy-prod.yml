@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    environment: PROD
+    environment: BETA
 
     steps:
       - name: Checkout Repo
@@ -56,8 +56,13 @@ jobs:
           $siteName = "${{ secrets.PROD_IIS_SITE_NAME }}"
           $localPath = "./dist/multikart/browser"
 
-          if (-not $hostname -or -not $username -or -not $password -or -not $remotePath) {
-            throw "Missing required secrets: IIS_SERVER, IIS_USERNAME, IIS_PASSWORD, PROD_IIS_DEPLOY_DIR"
+          $missing = @()
+          if (-not $hostname) { $missing += "IIS_SERVER" }
+          if (-not $username) { $missing += "IIS_USERNAME" }
+          if (-not $password) { $missing += "IIS_PASSWORD" }
+          if (-not $remotePath) { $missing += "PROD_IIS_DEPLOY_DIR" }
+          if ($missing.Count -gt 0) {
+            throw "Missing required secrets in the BETA environment: $($missing -join ', '). Add them under Settings → Environments → BETA."
           }
 
           Write-Host "Deploying storefront PROD"
