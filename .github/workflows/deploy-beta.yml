@@ -127,9 +127,9 @@ jobs:
               Invoke-SSHCommand -SessionId $SshSessionId -Command "mv -f `"$tmpPath`" `"$remoteFilePath`" 2>/dev/null || move /y `"$tmpPath`" `"$remoteFilePath`"" | Out-Null
 
               if ($relativePath -ieq 'index.html') {
-                $remoteInfo = Get-SFTPItem -SessionId $sessionId -Path $remoteFilePath
+                $attrs = $SftpSession.Session.GetAttributes($remoteFilePath)
                 $localLen = $fileContent.Length
-                $remoteLen = [int64]$remoteInfo.Length
+                $remoteLen = [int64]$attrs.Size
                 if ($remoteLen -ne $localLen) {
                   throw "index.html size mismatch after upload. Local=$localLen Remote=$remoteLen (leftover bytes would break the site)"
                 }
