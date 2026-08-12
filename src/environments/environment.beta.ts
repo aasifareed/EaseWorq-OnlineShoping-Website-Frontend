@@ -6,7 +6,7 @@ export const environment = {
   production: true,
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
-  baseUrl: 'https://prod-onlineshopping-api.sastakhareedo.com/',
+  baseUrl: 'https://beta-onlineshopping-api.sastakhareedo.com/',
   /** Used only in local development; production resolves tenant from window.location.hostname. */
   devHostName: null as string | null,
   /** Subdomain tenancy name used when running on localhost in development. */
