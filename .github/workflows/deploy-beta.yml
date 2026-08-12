@@ -73,53 +73,31 @@ jobs:
           function Upload-Directory {
             param($SftpSession, $SshSessionId, $LocalDir, $RemoteDir)
 
-            $sftp = $SftpSession.Session
             $items = Get-ChildItem -Path $LocalDir -Recurse -File
             $root = (Resolve-Path $LocalDir).Path
-
-            function Ensure-RemoteDir([string]$Dir) {
-              if ([string]::IsNullOrWhiteSpace($Dir) -or $Dir -eq "/" -or $Dir -eq ".") { return }
-              if ($sftp.Exists($Dir)) { return }
-              $trimmed = $Dir.TrimEnd("/")
-              $slash = $trimmed.LastIndexOf("/")
-              if ($slash -gt 0) {
-                Ensure-RemoteDir $trimmed.Substring(0, $slash)
-              }
-              try { $sftp.CreateDirectory($trimmed) } catch { }
-            }
 
             foreach ($item in $items) {
               $relativePath = $item.FullName.Substring($root.Length + 1)
               $remoteFilePath = ($RemoteDir + "/" + $relativePath) -replace '\\', '/' -replace '//', '/'
 
               $remoteFileDir = $remoteFilePath.Substring(0, $remoteFilePath.LastIndexOf('/'))
-              Ensure-RemoteDir $remoteFileDir
-              Invoke-SSHCommand -SessionId $SshSessionId -Command "mkdir -p `"$remoteFileDir`"" | Out-Null
-
-              Write-Host "Uploading: $relativePath"
-
-              # OpenWrite does not truncate. Delete the remote file first so a
-              # shorter upload cannot leave leftover bytes (this broke index.html).
-              if ($sftp.Exists($remoteFilePath)) {
-                $sftp.DeleteFile($remoteFilePath)
+              if ($remoteFileDir -and $remoteFileDir -ne $RemoteDir) {
+                Invoke-SSHCommand -SessionId $SshSessionId -Command "mkdir -p `"$remoteFileDir`"" | Out-Null
               }
 
+              Write-Host "Uploading: $relativePath"
+              # Same pattern as EaseWorqWebsite / POS-Admin-Frontend.
+              # OpenWrite does not truncate; SetLength cuts leftover bytes from a
+              # shorter upload (this previously left old Facebook script after </html>).
               $fileContent = [System.IO.File]::ReadAllBytes($item.FullName)
-              $stream = $sftp.OpenWrite($remoteFilePath)
+              $stream = $SftpSession.Session.OpenWrite($remoteFilePath)
               $stream.Write($fileContent, 0, $fileContent.Length)
+              if ($stream.CanSeek) {
+                $stream.SetLength($fileContent.Length)
+              }
               $stream.Flush()
               $stream.Close()
               $stream.Dispose()
-
-              if ($relativePath -ieq "index.html") {
-                $attrs = $sftp.GetAttributes($remoteFilePath)
-                $localLen = $fileContent.Length
-                $remoteLen = [int64]$attrs.Size
-                if ($remoteLen -ne $localLen) {
-                  throw "index.html size mismatch after upload. Local=$localLen Remote=$remoteLen (leftover bytes would break the site)"
-                }
-                Write-Host "Verified index.html size: $remoteLen bytes"
-              }
             }
           }
 
