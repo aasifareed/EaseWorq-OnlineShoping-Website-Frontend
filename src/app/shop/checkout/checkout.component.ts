@@ -11,6 +11,8 @@ import { CreatePayFastCheckoutRequest, PayFastPaymentService } from './pay-fast-
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../shared/services/auth.service';
+import { extractAbpErrorMessage } from '../../shared/utils/abp-http.util';
+import Swal from 'sweetalert2';
 import {
   OnlineShopOrderService,
   OnlineShopPaymentMethod,
@@ -83,6 +85,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   public products: Product[] = [];
   public loading = false;
   public shippingLoading = false;
+  public placeOrderError = '';
 
   /** The server's pricing for the current cart, coupon, address and courier selection. */
   public pricing: OnlineShopPricingResult | null = null;
@@ -1133,6 +1136,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    this.placeOrderError = '';
     this.loading = true;
     const formValue = this.buildCheckoutPayload();
     const selectedCourier = this.selectedCourierOption;
@@ -1160,7 +1164,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       next: (created: CreateOnlineShopSaleOrderResponse) => {
         if (!created?.onlineShopSaleOrderId) {
           this.loading = false;
-          this.toastr.error(created?.message || 'Order could not be created.');
+          this.showPlaceOrderError(created?.message || 'Order could not be created.');
           return;
         }
 
@@ -1308,12 +1312,26 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleCheckoutError(err: any): void {
     this.loading = false;
-    const msg =
-      err?.error?.error?.message ||
-      err?.error?.message ||
-      err?.message ||
-      'Could not complete checkout. Please try again.';
-    this.toastr.error(msg, this.translate.instant('toaster_Heading_Error'), { progressBar: true });
+    this.showPlaceOrderError(
+      extractAbpErrorMessage(err, 'Could not complete checkout. Please try again.')
+    );
+  }
+
+  private showPlaceOrderError(message: string): void {
+    this.placeOrderError = message;
+
+    const needsSignIn = /sign in/i.test(message);
+    void Swal.fire({
+      icon: 'error',
+      title: 'Could not place order',
+      text: message,
+      confirmButtonText: needsSignIn ? 'Sign in' : 'OK',
+      confirmButtonColor: '#f0b429'
+    }).then((result) => {
+      if (result.isConfirmed && needsSignIn) {
+        this.auth.navigateToLogin('/shop/checkout');
+      }
+    });
   }
 
   control(path: string): AbstractControl | null {

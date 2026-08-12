@@ -515,6 +515,26 @@
       }
     }
 
+    .header-main-row {
+      flex-wrap: nowrap !important;
+    }
+
+    .header-logo-col {
+      flex: 0 0 auto;
+    }
+
+    .header-search-col {
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: none;
+      width: auto;
+    }
+
+    .header-actions-col {
+      flex: 0 0 auto;
+      margin-left: auto;
+    }
+
     .search-wrapper {
       align-items: stretch;
       overflow: hidden;
@@ -898,6 +918,7 @@
       align-self: center;
       height: 100%;
       min-height: 56px;
+      flex-shrink: 0;
 
       .header-action-link,
       .header-action-icon,
@@ -909,6 +930,7 @@
       > .pointer,
       > .header-action-item,
       > .header-notifications,
+      > .header-orders-link,
       > .header-cart-link {
         display: flex;
         flex-direction: column;
@@ -925,6 +947,7 @@
 
       .header-action-link,
       .header-notifications-trigger,
+      .header-orders-link,
       .header-cart-link {
         display: flex;
         flex-direction: column;
@@ -996,7 +1019,8 @@
 
       .border-end { border-color: rgba(255,255,255,0.1) !important; }
 
-      .header-cart-link {
+      .header-cart-link,
+      .header-orders-link {
         color: inherit;
       }
 
@@ -1042,66 +1066,6 @@
     .store-nav #mainnav,
     .store-nav .nav-menu {
       overflow: visible;
-    }
-
-    /* A solid dark block, so the bar reads as bookended rather than trailing off into text. */
-    .nav-orders-link {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      /* Stretched rather than centred so the whole painted block is the link, edge to edge. */
-      align-self: stretch;
-      height: auto;
-      padding: 0 0.75rem;
-      background: #111111;
-      color: #ffcc00;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: background 0.15s ease, color 0.15s ease;
-
-      &:hover,
-      &:focus-visible {
-        background: #000000;
-        color: #ffd94d;
-
-        .nav-orders-count {
-          background: #ffd94d;
-        }
-      }
-    }
-
-    .nav-orders-icon {
-      font-size: 15px;
-    }
-
-    .nav-orders-count {
-      min-width: 20px;
-      padding: 0 6px;
-      border-radius: 999px;
-      background: #ffcc00;
-      color: #111111;
-      font-size: 11px;
-      font-weight: 800;
-      line-height: 18px;
-      letter-spacing: 0;
-      text-align: center;
-      transition: background 0.15s ease;
-    }
-
-    /* The 40px bar cannot carry the wording and the menu at once on a phone. */
-    @media (max-width: 575px) {
-      .nav-orders-link {
-        gap: 0.35rem;
-        padding: 0 0.75rem;
-      }
-
-      .nav-orders-text {
-        display: none;
-      }
     }
   }
 }
@@ -1573,3 +1537,4 @@
     }
   }
 }
+
