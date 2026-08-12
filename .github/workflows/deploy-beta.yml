@@ -75,6 +75,7 @@ jobs:
 
             $items = Get-ChildItem -Path $LocalDir -Recurse -File
             $root = (Resolve-Path $LocalDir).Path
+            $sessionId = $SftpSession.SessionId
 
             foreach ($item in $items) {
               $relativePath = $item.FullName.Substring($root.Length + 1)
@@ -86,15 +87,54 @@ jobs:
               }
 
               Write-Host "Uploading: $relativePath"
-              # OpenWrite does not truncate existing remote files. Remove first so
-              # shorter uploads cannot leave leftover bytes from previous files.
-              Invoke-SSHCommand -SessionId $SshSessionId -Command "rm -f `"$remoteFilePath`"" | Out-Null
+
+              # OpenWrite does NOT truncate. Leftover bytes from a longer previous
+              # file (especially index.html) break the site. Delete via SFTP first,
+              # with SSH fallbacks for Linux/Windows hosts.
+              $removed = $false
+              try {
+                if (Test-SFTPPath -SessionId $sessionId -Path $remoteFilePath) {
+                  Remove-SFTPItem -SessionId $sessionId -Path $remoteFilePath -Force -ErrorAction Stop
+                  $removed = $true
+                }
+              } catch {
+                Write-Host "SFTP remove failed for $relativePath — trying SSH delete"
+              }
+
+              if (-not $removed) {
+                Invoke-SSHCommand -SessionId $SshSessionId -Command "rm -f `"$remoteFilePath`" 2>/dev/null; if exist `"$remoteFilePath`" del /f /q `"$remoteFilePath`"" | Out-Null
+              }
+
+              $tmpPath = "$remoteFilePath.upload-tmp"
+              try {
+                if (Test-SFTPPath -SessionId $sessionId -Path $tmpPath) {
+                  Remove-SFTPItem -SessionId $sessionId -Path $tmpPath -Force -ErrorAction SilentlyContinue
+                }
+              } catch { }
+
               $fileContent = [System.IO.File]::ReadAllBytes($item.FullName)
-              $stream = $SftpSession.Session.OpenWrite($remoteFilePath)
+              $stream = $SftpSession.Session.OpenWrite($tmpPath)
               $stream.Write($fileContent, 0, $fileContent.Length)
               $stream.Flush()
               $stream.Close()
               $stream.Dispose()
+
+              try {
+                if (Test-SFTPPath -SessionId $sessionId -Path $remoteFilePath) {
+                  Remove-SFTPItem -SessionId $sessionId -Path $remoteFilePath -Force -ErrorAction SilentlyContinue
+                }
+              } catch { }
+              Invoke-SSHCommand -SessionId $SshSessionId -Command "mv -f `"$tmpPath`" `"$remoteFilePath`" 2>/dev/null || move /y `"$tmpPath`" `"$remoteFilePath`"" | Out-Null
+
+              if ($relativePath -ieq 'index.html') {
+                $remoteInfo = Get-SFTPItem -SessionId $sessionId -Path $remoteFilePath
+                $localLen = $fileContent.Length
+                $remoteLen = [int64]$remoteInfo.Length
+                if ($remoteLen -ne $localLen) {
+                  throw "index.html size mismatch after upload. Local=$localLen Remote=$remoteLen (leftover bytes would break the site)"
+                }
+                Write-Host "Verified index.html size: $remoteLen bytes"
+              }
             }
           }
 
