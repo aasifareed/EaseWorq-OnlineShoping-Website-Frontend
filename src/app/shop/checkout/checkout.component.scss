@@ -1433,6 +1433,26 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
     margin-top: 0;
   }
 
+  .checkout-place-order-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0.55rem 0 0.7rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #c0392b;
+    background: rgba(192, 57, 43, 0.12);
+    color: #e74c3c;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    font-weight: 600;
+
+    i {
+      margin-top: 0.12rem;
+      flex-shrink: 0;
+    }
+  }
+
   .checkout-payment-box {
     margin-top: 0.45rem;
     padding-top: 0.35rem;

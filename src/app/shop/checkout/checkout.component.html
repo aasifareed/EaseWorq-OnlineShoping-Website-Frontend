@@ -743,6 +743,10 @@
                                         You will be redirected to PayFast.
                                     </p>
 
+                                    <div class="checkout-place-order-error" *ngIf="placeOrderError" role="alert">
+                                        <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                        <span>{{ placeOrderError }}</span>
+                                    </div>
                                     <div class="checkout-place-order-wrap">
                                         <button type="button" class="btn-solid btn checkout-place-order-btn"
                                             [disabled]="!canPlaceOrder"

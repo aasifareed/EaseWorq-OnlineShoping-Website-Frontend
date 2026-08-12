@@ -4,13 +4,15 @@ import {
   HttpEvent,
   HttpHandler,
   HttpInterceptor,
-  HttpRequest
+  HttpRequest,
+  HttpResponse
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, mergeMap } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { extractAbpErrorMessage, isAbpFailure } from '../utils/abp-http.util';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
@@ -37,6 +39,22 @@ export class JwtInterceptor implements HttpInterceptor {
     }
 
     return next.handle(request).pipe(
+      mergeMap((event) => {
+        // ABP UserFriendlyException is often HTTP 200 with { success: false, error.message }.
+        if (event instanceof HttpResponse && isAbpFailure(event.body)) {
+          return throwError(
+            () =>
+              new HttpErrorResponse({
+                error: event.body,
+                headers: event.headers,
+                status: event.status >= 400 ? event.status : 400,
+                statusText: event.statusText || 'AbpError',
+                url: event.url || req.url
+              })
+          );
+        }
+        return of(event);
+      }),
       catchError((error: HttpErrorResponse) => {
         this.handleHttpError(error, req.url);
         return throwError(() => error);
@@ -49,13 +67,7 @@ export class JwtInterceptor implements HttpInterceptor {
   }
 
   private handleHttpError(error: HttpErrorResponse, url: string): void {
-    const abp = error?.error;
-    const message =
-      abp?.error?.message
-      || abp?.error?.details
-      || abp?.message
-      || error.message
-      || 'Something went wrong. Please try again.';
+    const message = extractAbpErrorMessage(error);
 
     if (error.status === 401) {
       const hadToken = !!this.auth.getToken();
@@ -72,7 +84,7 @@ export class JwtInterceptor implements HttpInterceptor {
     }
 
     if (error.status === 400) {
-      const validation = abp?.error?.validationErrors;
+      const validation = error?.error?.error?.validationErrors;
       if (validation?.length) {
         validation.forEach((v: { message?: string }) => {
           if (v?.message) {
@@ -95,8 +107,6 @@ export class JwtInterceptor implements HttpInterceptor {
       return;
     }
 
-    if (error.status >= 400) {
-      this.toastr.error(message);
-    }
+    this.toastr.error(message);
   }
 }

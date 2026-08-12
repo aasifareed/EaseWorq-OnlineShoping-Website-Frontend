@@ -174,8 +174,8 @@
 
   <div class="main-header-microless">
     <div class="container-fluid">
-      <div class="row align-items-center gx-0">
-        <div class="col-auto">
+      <div class="row header-main-row align-items-center gx-0 flex-nowrap">
+        <div class="col-auto header-logo-col">
           <div class="brand-logo">
             <a [routerLink]="['/home']" class="text-decoration-none brand-logo-link">
               <img
@@ -189,7 +189,7 @@
           </div>
         </div>
 
-        <div class="col px-lg-5">
+        <div class="col header-search-col px-3 px-lg-4">
           <div class="header-search search-wrapper d-flex position-relative">
             <input
               type="text"
@@ -300,8 +300,23 @@
           </div>
         </div>
 
-        <div class="col-auto d-flex align-items-center">
+        <div class="col-auto header-actions-col d-flex align-items-center">
           <div class="d-flex align-items-center action-icons">
+            <a
+              class="header-orders-link text-decoration-none border-end border-secondary-subtle"
+              [routerLink]="['/pages/my-orders']"
+              [attr.aria-label]="myOrdersAriaLabel">
+              <span class="header-cart-icon-wrap">
+                <i class="fa fa-shopping-bag header-action-icon" aria-hidden="true"></i>
+                <span
+                  class="header-cart-badge"
+                  *ngIf="isLoggedIn && myOrderCount !== null && myOrderCount > 0">
+                  {{ myOrderCount > 99 ? '99+' : myOrderCount }}
+                </span>
+              </span>
+              <span class="label header-action-label">Orders</span>
+            </a>
+
             <div class="dropdown border-end border-secondary-subtle header-account-dropdown">
               <a class="text-decoration-none dropdown-toggle no-caret header-action-link" data-bs-toggle="dropdown" aria-expanded="false">
                 <span *ngIf="isLoggedIn" class="account-initials">{{ userInitials }}</span>
@@ -468,17 +483,6 @@
       <div class="flex-grow-1 ps-2">
         <app-menu></app-menu>
       </div>
-
-      <a
-        [routerLink]="['/pages/my-orders']"
-        class="nav-orders-link ms-auto"
-        [attr.aria-label]="myOrdersAriaLabel">
-        <i class="fa fa-shopping-bag nav-orders-icon" aria-hidden="true"></i>
-        <span class="nav-orders-text">My Orders</span>
-        <span class="nav-orders-count" *ngIf="isLoggedIn && myOrderCount !== null">
-          {{ myOrderCount > 99 ? '99+' : myOrderCount }}
-        </span>
-      </a>
     </div>
   </div>
 </header>
