@@ -1,15 +1,15 @@
-name: Deploy Online Shop Storefront to BETA
+name: Deploy Online Shop Storefront to PROD
 
 on:
   push:
     branches:
-      - BETA
+      - PROD
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: windows-latest
-    environment: BETA
+    environment: PROD
 
     steps:
       - name: Checkout Repo
@@ -24,10 +24,10 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build Angular (beta)
+      - name: Build Angular (production)
         shell: pwsh
         run: |
-          npx ng build --configuration beta
+          npx ng build --configuration production
           if (-not (Test-Path "dist\multikart\browser\index.html")) {
             throw "Build output missing: dist/multikart/browser/index.html"
           }
@@ -52,12 +52,17 @@ jobs:
           $port = if ("${{ secrets.IIS_PORT }}") { "${{ secrets.IIS_PORT }}" } else { "22" }
           $username = "${{ secrets.IIS_USERNAME }}"
           $password = "${{ secrets.IIS_PASSWORD }}"
-          $remotePath = "${{ secrets.IIS_DEPLOY_DIR }}"
+          $remotePath = "${{ secrets.PROD_IIS_DEPLOY_DIR }}"
+          $siteName = "${{ secrets.PROD_IIS_SITE_NAME }}"
           $localPath = "./dist/multikart/browser"
 
           if (-not $hostname -or -not $username -or -not $password -or -not $remotePath) {
-            throw "Missing required secrets: IIS_SERVER, IIS_USERNAME, IIS_PASSWORD, IIS_DEPLOY_DIR"
+            throw "Missing required secrets: IIS_SERVER, IIS_USERNAME, IIS_PASSWORD, PROD_IIS_DEPLOY_DIR"
           }
+
+          Write-Host "Deploying storefront PROD"
+          Write-Host "IIS site: $siteName"
+          Write-Host "Remote path: $remotePath"
 
           Install-Module -Name Posh-SSH -Force -Scope CurrentUser -AllowClobber
           Import-Module Posh-SSH
@@ -105,4 +110,4 @@ jobs:
 
           Remove-SFTPSession -SessionId $sftpSession.SessionId | Out-Null
           Remove-SSHSession -SessionId $sshSession.SessionId | Out-Null
-          Write-Host "BETA storefront deploy completed."
+          Write-Host "PROD storefront deploy completed."
