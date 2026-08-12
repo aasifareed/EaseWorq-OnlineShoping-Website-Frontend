@@ -26,6 +26,7 @@ export const environment = {
 //   urls: {
    
 //   },
+
    urls: {
 Account_IsTenantAvailable: 'Account/IsTenantAvailable',
 WebsiteTenantResolver_ResolveTenantByDomain: 'WebsiteTenantResolver/ResolveTenantByDomain',
