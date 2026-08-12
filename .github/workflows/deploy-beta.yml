@@ -73,61 +73,46 @@ jobs:
           function Upload-Directory {
             param($SftpSession, $SshSessionId, $LocalDir, $RemoteDir)
 
+            $sftp = $SftpSession.Session
             $items = Get-ChildItem -Path $LocalDir -Recurse -File
             $root = (Resolve-Path $LocalDir).Path
-            $sessionId = $SftpSession.SessionId
+
+            function Ensure-RemoteDir([string]$Dir) {
+              if ([string]::IsNullOrWhiteSpace($Dir) -or $Dir -eq "/" -or $Dir -eq ".") { return }
+              if ($sftp.Exists($Dir)) { return }
+              $trimmed = $Dir.TrimEnd("/")
+              $slash = $trimmed.LastIndexOf("/")
+              if ($slash -gt 0) {
+                Ensure-RemoteDir $trimmed.Substring(0, $slash)
+              }
+              try { $sftp.CreateDirectory($trimmed) } catch { }
+            }
 
             foreach ($item in $items) {
               $relativePath = $item.FullName.Substring($root.Length + 1)
               $remoteFilePath = ($RemoteDir + "/" + $relativePath) -replace '\\', '/' -replace '//', '/'
 
               $remoteFileDir = $remoteFilePath.Substring(0, $remoteFilePath.LastIndexOf('/'))
-              if ($remoteFileDir -and $remoteFileDir -ne $RemoteDir) {
-                Invoke-SSHCommand -SessionId $SshSessionId -Command "mkdir -p `"$remoteFileDir`"" | Out-Null
-              }
+              Ensure-RemoteDir $remoteFileDir
+              Invoke-SSHCommand -SessionId $SshSessionId -Command "mkdir -p `"$remoteFileDir`"" | Out-Null
 
               Write-Host "Uploading: $relativePath"
 
-              # OpenWrite does NOT truncate. Leftover bytes from a longer previous
-              # file (especially index.html) break the site. Delete via SFTP first,
-              # with SSH fallbacks for Linux/Windows hosts.
-              $removed = $false
-              try {
-                if (Test-SFTPPath -SessionId $sessionId -Path $remoteFilePath) {
-                  Remove-SFTPItem -SessionId $sessionId -Path $remoteFilePath -Force -ErrorAction Stop
-                  $removed = $true
-                }
-              } catch {
-                Write-Host "SFTP remove failed for $relativePath — trying SSH delete"
+              # OpenWrite does not truncate. Delete the remote file first so a
+              # shorter upload cannot leave leftover bytes (this broke index.html).
+              if ($sftp.Exists($remoteFilePath)) {
+                $sftp.DeleteFile($remoteFilePath)
               }
-
-              if (-not $removed) {
-                Invoke-SSHCommand -SessionId $SshSessionId -Command "rm -f `"$remoteFilePath`" 2>/dev/null; if exist `"$remoteFilePath`" del /f /q `"$remoteFilePath`"" | Out-Null
-              }
-
-              $tmpPath = "$remoteFilePath.upload-tmp"
-              try {
-                if (Test-SFTPPath -SessionId $sessionId -Path $tmpPath) {
-                  Remove-SFTPItem -SessionId $sessionId -Path $tmpPath -Force -ErrorAction SilentlyContinue
-                }
-              } catch { }
 
               $fileContent = [System.IO.File]::ReadAllBytes($item.FullName)
-              $stream = $SftpSession.Session.OpenWrite($tmpPath)
+              $stream = $sftp.OpenWrite($remoteFilePath)
               $stream.Write($fileContent, 0, $fileContent.Length)
               $stream.Flush()
               $stream.Close()
               $stream.Dispose()
 
-              try {
-                if (Test-SFTPPath -SessionId $sessionId -Path $remoteFilePath) {
-                  Remove-SFTPItem -SessionId $sessionId -Path $remoteFilePath -Force -ErrorAction SilentlyContinue
-                }
-              } catch { }
-              Invoke-SSHCommand -SessionId $SshSessionId -Command "mv -f `"$tmpPath`" `"$remoteFilePath`" 2>/dev/null || move /y `"$tmpPath`" `"$remoteFilePath`"" | Out-Null
-
-              if ($relativePath -ieq 'index.html') {
-                $attrs = $SftpSession.Session.GetAttributes($remoteFilePath)
+              if ($relativePath -ieq "index.html") {
+                $attrs = $sftp.GetAttributes($remoteFilePath)
                 $localLen = $fileContent.Length
                 $remoteLen = [int64]$attrs.Size
                 if ($remoteLen -ne $localLen) {
