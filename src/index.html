@@ -234,49 +234,29 @@
     </style>
 
     <app-root></app-root>
-    <!-- Facebook chat: load after first paint so it does not block storefront bootstrap -->
-	<div id="fb-root"></div>
-	<div id="fb-chat" class="fb-customerchat" attribution=setup_tool page_id="2123438804574660" theme_color="#ffc400" logged_in_greeting="Hi! Welcome to Sasta Khareedo. How can we help you?" logged_out_greeting="Hi! Welcome to Sasta Khareedo. How can we help you?">
-	</div>
-	<script>
-	  (function () {
-	    function loadFacebookChat() {
-	      if (document.getElementById('facebook-jssdk')) {
-	        return;
-	      }
-	      var js = document.createElement('script');
-	      js.id = 'facebook-jssdk';
-	      js.async = true;
-	      js.defer = true;
-	      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js#xfbml=1&version=v2.12&autoLogAppEvents=1';
-	      document.body.appendChild(js);
-	    }
+    <script>
+      (function () {
+        function loadBootstrapJs() {
+          if (document.getElementById('bootstrap-bundle-js')) {
+            return;
+          }
+          var js = document.createElement('script');
+          js.id = 'bootstrap-bundle-js';
+          js.async = true;
+          js.defer = true;
+          js.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js';
+          js.integrity = 'sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI';
+          js.crossOrigin = 'anonymous';
+          document.body.appendChild(js);
+        }
 
-	    function loadBootstrapJs() {
-	      if (document.getElementById('bootstrap-bundle-js')) {
-	        return;
-	      }
-	      var js = document.createElement('script');
-	      js.id = 'bootstrap-bundle-js';
-	      js.async = true;
-	      js.defer = true;
-	      js.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js';
-	      js.integrity = 'sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI';
-	      js.crossOrigin = 'anonymous';
-	      document.body.appendChild(js);
-	    }
-
-	    if (document.readyState === 'loading') {
-	      document.addEventListener('DOMContentLoaded', loadBootstrapJs, { once: true });
-	    } else {
-	      loadBootstrapJs();
-	    }
-
-	    window.addEventListener('load', function () {
-	      window.setTimeout(loadFacebookChat, 2500);
-	    }, { once: true });
-	  })();
-	</script>
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', loadBootstrapJs, { once: true });
+        } else {
+          loadBootstrapJs();
+        }
+      })();
+    </script>
 </body>
 
 </html>
