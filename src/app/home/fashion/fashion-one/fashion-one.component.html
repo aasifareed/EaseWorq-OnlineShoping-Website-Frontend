@@ -252,13 +252,16 @@
       </section> -->
 
     </div>
-    <app-top-categories-slider
-      *ngIf="!loadingCategorySliders"
-      [title]="'EXPLORE CATEGORIES'"
-      [categoryFilter]="'nonPopular'"
-      [excludeCategoryIds]="popularSliderCategoryIds"
-      [maxItems]="4">
-    </app-top-categories-slider>
+    @defer (on viewport) {
+      <app-top-categories-slider
+        [title]="'EXPLORE CATEGORIES'"
+        [categoryFilter]="'nonPopular'"
+        [excludeCategoryIds]="popularSliderCategoryIds"
+        [maxItems]="4">
+      </app-top-categories-slider>
+    } @placeholder (minimum 200ms) {
+      <div class="home-defer-placeholder" aria-hidden="true"></div>
+    }
   </div>
 </section>
 <!-- Product slider End -->
@@ -344,16 +347,18 @@
 <!-- blog section End -->
 
 <!--  logo section start-->
-<!-- <section class="section-b-space"> -->
   <div class="container-fluid home-content-wrap home-brands-section">
-    <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
-      <div class="col-md-12">
-        <h2 class="home-section-title">TOP BRANDS</h2>
-        <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
+    @defer (on viewport) {
+      <div class="row" *ngIf="loadingPopularBrands || popularBrandLogos.length > 0">
+        <div class="col-md-12">
+          <h2 class="home-section-title">TOP BRANDS</h2>
+          <app-logo *ngIf="!loadingPopularBrands && popularBrandLogos.length > 0" [logos]="popularBrandLogos"></app-logo>
+        </div>
       </div>
-    </div>
+    } @placeholder (minimum 200ms) {
+      <div class="home-defer-placeholder" aria-hidden="true"></div>
+    }
   </div>
-<!-- </section> -->
 <!--  logo section End-->
 
 <app-footer-one></app-footer-one>

@@ -34,9 +34,7 @@
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              "src/favicon.ico",
-              "src/assets",
-              "src/web.config"
+              "src/assets"
             ],
             "styles": [
               "node_modules/font-awesome/scss/font-awesome.scss",
@@ -44,9 +42,7 @@
               "src/assets/scss/app.scss",
               "src/styles.scss"
             ],
-            "scripts": [
-              "node_modules/isotope-layout/dist/isotope.pkgd.min.js"
-            ],
+            "scripts": [],
             "vendorChunk": true,
             "extractLicenses": false,
             "buildOptimizer": false,
@@ -109,7 +105,6 @@
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "assets": [
-              "src/favicon.ico",
               "src/assets"
             ],
             "styles": [

@@ -9,7 +9,7 @@
       class="brand-logo-link">
       <ng-container *ngIf="!isPlaceholderImage(logo.image); else brandFallback">
         <div class="brand-logo-media img-frame--brand">
-          <img [src]="logo.image" [alt]="logo.name || 'brand'" />
+          <img [src]="logo.image" [alt]="logo.name || 'brand'" loading="lazy" decoding="async" />
         </div>
       </ng-container>
       <ng-template #brandFallback>
@@ -20,7 +20,7 @@
       <a [routerLink]="['/shop']" class="brand-logo-link">
         <ng-container *ngIf="!isPlaceholderImage(logo.image); else staticFallback">
           <div class="brand-logo-media img-frame--brand">
-            <img [src]="logo.image" [alt]="logo.name || 'logo'" />
+            <img [src]="logo.image" [alt]="logo.name || 'logo'" loading="lazy" decoding="async" />
           </div>
         </ng-container>
         <ng-template #staticFallback>

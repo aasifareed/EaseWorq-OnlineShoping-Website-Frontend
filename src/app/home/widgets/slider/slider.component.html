@@ -1,12 +1,19 @@
 <owl-carousel-o [options]="HomeSliderConfig" class="home-slider" [ngClass]="class">
-  <ng-container *ngFor="let slider of sliders">
+  <ng-container *ngFor="let slider of sliders; let i = index">
     <ng-template carouselSlide>
       <a class="home-hero-slide-link"
          [routerLink]="slideLink(slider)"
          [queryParams]="slideQueryParams(slider)"
          [attr.href]="isExternalLink(slider) ? externalHref(slider) : null"
          (click)="onSlideClick($event, slider)">
-        <div class="home home-hero-slide" [ngClass]="textClass" [ngStyle]="{'background-image': 'url('+slider.image+')'}">
+        <div class="home home-hero-slide" [ngClass]="textClass">
+          <img
+            class="home-hero-slide__img"
+            [src]="slider.image"
+            [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+            [attr.fetchpriority]="i === 0 ? 'high' : 'auto'"
+            decoding="async"
+            alt="" />
           <div class="container">
             <div class="row">
               <div class="col">
