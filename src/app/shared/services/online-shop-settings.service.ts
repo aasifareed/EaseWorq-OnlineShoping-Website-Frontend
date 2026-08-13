@@ -95,10 +95,9 @@ export class OnlineShopSettingsService {
     this.ensureStoreFavicon(s);
   }
 
-  /** Tab icon uses the same logo as the header once storefront settings are loaded. */
-  private ensureStoreFavicon(storefront?: OnlineShopStorefront | null): void {
-    const logoUrl = (storefront ?? this.snapshot)?.logoUrl;
-    this.storeLogoService.applyFavicon(logoUrl);
+  /** Tab icon is the Sasta Khareedo mark, not the uploaded store header logo. */
+  private ensureStoreFavicon(_storefront?: OnlineShopStorefront | null): void {
+    this.storeLogoService.applyFavicon();
   }
 
   private resolveGoPayFastEnabled(raw: Record<string, unknown>): boolean {

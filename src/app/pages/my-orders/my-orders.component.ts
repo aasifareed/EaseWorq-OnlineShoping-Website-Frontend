@@ -46,7 +46,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./my-orders.component.scss']
 })
 export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
-  readonly pageSize = 20;
+  pageSize = 6;
   readonly orderSearchControl = new FormControl('');
 
   @ViewChild('orderDetailModal') orderDetailModal!: TemplateRef<unknown>;
@@ -100,6 +100,8 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.syncPageSizeFromViewport();
+
     if (this.auth.isLoggedIn()) {
       this.loadPage(1);
     }
@@ -126,6 +128,58 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((notification) => this.refreshAfterOrderUpdate(notification));
 
     this.watchForMissedOrderUpdates();
+    this.watchViewportForPageSize();
+  }
+
+  /**
+   * Phone screens show fewer rows so the table stays short; wide desktops show more.
+   * 6 is the default (tablet / typical laptop).
+   */
+  private resolvePageSize(width: number): number {
+    if (width < 576) {
+      return 4;
+    }
+    if (width < 768) {
+      return 5;
+    }
+    if (width < 1200) {
+      return 6;
+    }
+    if (width < 1400) {
+      return 8;
+    }
+    return 10;
+  }
+
+  private syncPageSizeFromViewport(reload = false): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const nextSize = this.resolvePageSize(window.innerWidth);
+    if (nextSize === this.pageSize) {
+      return;
+    }
+
+    const firstVisible = this.orders.length
+      ? (this.currentPage - 1) * this.pageSize + 1
+      : 1;
+    this.pageSize = nextSize;
+
+    if (reload && this.isLoggedIn) {
+      const nextPage = Math.max(1, Math.ceil(firstVisible / this.pageSize));
+      this.loadPage(nextPage, { silent: true });
+    }
+  }
+
+  private watchViewportForPageSize(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    fromEvent(window, 'resize')
+      .pipe(debounceTime(200), takeUntil(this.destroy$))
+      .subscribe(() => this.syncPageSizeFromViewport(true));
   }
 
   /**

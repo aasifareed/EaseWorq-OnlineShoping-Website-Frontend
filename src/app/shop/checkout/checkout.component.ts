@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { trimRequired, trimPersonName, trimPhoneNumber, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
 import { Observable, of, Subject } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, takeUntil, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Product } from '../../shared/classes/product';
 import { ProductService } from '../../shared/services/product.service';
@@ -77,7 +77,6 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   isBillingCardView = false;
   isShippingCardView = false;
   readonly checkoutVisibleItemCount = 4;
-  @ViewChild('courierRail') courierRail?: ElementRef<HTMLElement>;
   /** True while a Google place selection is resolving, so blur won't clear a city mid-pick. */
   private placeSelectionInFlight = false;
 
@@ -109,7 +108,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   public shippingMethod: OnlineShopShippingMethod = OnlineShopShippingMethod.Shipping;
   /** When false, only top recommended courier options are shown. */
   public showAllCourierOptions = false;
-  readonly courierPreviewLimit = 3;
+  readonly courierPreviewLimit = 4;
 
   readonly OnlineShopPaymentMethod = OnlineShopPaymentMethod;
   readonly OnlineShopShippingMethod = OnlineShopShippingMethod;
@@ -165,7 +164,15 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // One debounced pipeline, so a burst of form and cart events costs a single pricing call.
     this.pricingRequested$
-      .pipe(debounceTime(250), takeUntil(this.destroy$))
+      .pipe(
+        tap(() => {
+          if (this.shouldQuoteShipping()) {
+            this.shippingLoading = true;
+          }
+        }),
+        debounceTime(250),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => this.requestPricing());
 
     this.productService.cartItems
@@ -470,14 +477,16 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onCourierOptionSelected(key: string): void {
     if (this.selectedCourierOptionKey === key) {
-      this.skipCourierSelection();
       return;
     }
 
     this.courierSelectionSkipped = false;
     this.selectedCourierOptionKey = key;
-    // The charge for this courier is whatever the server quotes for it, so re-price rather than
-    // copying the amount out of the option the customer clicked.
+    const option = this.selectedCourierOption;
+    if (option && this.pricing) {
+      this.applyCourierOptionToPricing(option);
+      return;
+    }
     this.pricingRequested$.next();
   }
 
@@ -485,7 +494,49 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   skipCourierSelection(): void {
     this.courierSelectionSkipped = true;
     this.selectedCourierOptionKey = null;
+    if (this.pricing) {
+      this.applyCourierOptionToPricing(null);
+      return;
+    }
     this.pricingRequested$.next();
+  }
+
+  /**
+   * Courier options already include list price, discount and payable shipping from the last quote.
+   * Switching between them only swaps those server figures into the summary — no extra API call.
+   */
+  private applyCourierOptionToPricing(option: CourierShippingOptionResult | null): void {
+    const pricing = this.pricing;
+    if (!pricing) {
+      return;
+    }
+
+    const originalShipping = option?.cargoOriginalAmount ?? 0;
+    const shippingDiscount = option?.shippingDiscountAmount ?? 0;
+    const finalShipping = option?.finalShippingAmount ?? 0;
+    const nonShippingDiscount = pricing.totalDiscount - pricing.shippingDiscountTotal;
+
+    this.pricing = {
+      ...pricing,
+      originalShippingAmount: originalShipping,
+      shippingDiscountTotal: shippingDiscount,
+      finalShippingAmount: finalShipping,
+      totalDiscount: nonShippingDiscount + shippingDiscount,
+      finalTotal: pricing.netMerchandiseAmount + pricing.taxAmount + finalShipping,
+      courierCompany: option?.courierCompany ?? null,
+      courierServiceType: option?.courierServiceType ?? null,
+      pickupLocationId: option?.pickupLocationId ?? pricing.pickupLocationId ?? null,
+      appliedDiscounts: (pricing.appliedDiscounts ?? []).map((row) =>
+        row.scope === 'shipping'
+          ? {
+              ...row,
+              originalAmount: originalShipping,
+              discountAmount: shippingDiscount,
+              finalAmount: finalShipping,
+            }
+          : row
+      ),
+    };
   }
 
   get isCourierSelectionSkipped(): boolean {
@@ -513,16 +564,6 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleItemsExpanded(): void {
     this.itemsExpanded = !this.itemsExpanded;
-  }
-
-  scrollCourierRail(direction: -1 | 1): void {
-    const rail = this.courierRail?.nativeElement;
-    if (!rail) {
-      return;
-    }
-
-    const step = Math.max(132, Math.round(rail.clientWidth * 0.72));
-    rail.scrollBy({ left: direction * step, behavior: 'smooth' });
   }
 
   get displayedProducts(): Product[] {
@@ -643,9 +684,40 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     return labels[key] ?? serviceType;
   }
 
+  serviceTypeEta(serviceType: string): string {
+    const key = (serviceType ?? '').trim().toLowerCase();
+    const labels: Record<string, string> = {
+      overnight: 'By tomorrow',
+      overland: 'In 2–4 days',
+      detain: 'In 2–3 days'
+    };
+    return labels[key] ?? this.serviceTypeLabel(serviceType);
+  }
+
+  courierMonogram(company: string): string {
+    const parts = (company ?? '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) {
+      return '?';
+    }
+    if (parts.length === 1) {
+      return parts[0].slice(0, 3).toUpperCase();
+    }
+    return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+  }
+
+  courierDiscountPercent(option: CourierShippingOptionResult): number | null {
+    if (!this.courierOptionHasDiscount(option) || !(option.cargoOriginalAmount > 0)) {
+      return null;
+    }
+    const pct = Math.round((option.shippingDiscountAmount / option.cargoOriginalAmount) * 100);
+    return pct > 0 ? pct : null;
+  }
+
   courierAccentClass(company: string): string {
-    const key = (company ?? '').trim().toLowerCase().replace(/\s+/g, '-');
-    return `checkout-courier-card--${key || 'default'}`;
+    const raw = (company ?? '').trim().toLowerCase();
+    const known = ['leopard', 'tcs', 'trax', 'mnp', 'daewoo', 'daak', 'tranzo', 'dastaq', 'alfa', 'dex', 'dlx'];
+    const match = known.find((name) => raw.includes(name));
+    return `checkout-delivery-row--${match || 'default'}`;
   }
 
   /**
@@ -974,7 +1046,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       selected &&
       !preview.some((o) => this.courierOptionKey(o) === this.courierOptionKey(selected))
     ) {
-      return [...preview, selected];
+      preview[preview.length - 1] = selected;
     }
     return preview;
   }
@@ -1427,6 +1499,14 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.refreshLocalPickupAvailability();
   }
 
+  private shouldQuoteShipping(): boolean {
+    if (this.shippingMethod !== OnlineShopShippingMethod.Shipping || this.courierSelectionSkipped) {
+      return false;
+    }
+    const address = this.resolveShippingAddressForRate();
+    return this.isAddressConfirmedForShippingRate() && this.isShippingAddressComplete(address);
+  }
+
   private isAddressConfirmedForShippingRate(): boolean {
     if (!this.isBillingCardView) {
       return false;
@@ -1453,15 +1533,11 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const wantsShipping = this.shippingMethod === OnlineShopShippingMethod.Shipping;
     const address = this.resolveShippingAddressForRate();
 
     // A courier quote needs a confirmed, complete address. Until then price the goods alone so the
     // customer still sees a subtotal rather than a spinner.
-    const includeShipping = wantsShipping
-      && !this.courierSelectionSkipped
-      && this.isAddressConfirmedForShippingRate()
-      && this.isShippingAddressComplete(address);
+    const includeShipping = this.shouldQuoteShipping();
 
     const requestId = ++this.pricingRequestId;
     if (includeShipping) {

@@ -36,12 +36,12 @@
         <table class="table mb-0 orders-table">
           <thead>
             <tr>
-              <th>Order #</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Total</th>
-              <th>Paid</th>
-              <th class="text-end order-actions-col">Actions</th>
+              <th scope="col">Order #</th>
+              <th scope="col">Date</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="order-amount-col">Total</th>
+              <th scope="col" class="order-amount-col">Paid</th>
+              <th scope="col" class="text-end order-actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -55,8 +55,8 @@
                   {{ statusLabel(order) }}
                 </span>
               </td>
-              <td>{{ order.totalAmount | number:'1.2-2' }}</td>
-              <td>{{ order.paidAmount | number:'1.2-2' }}</td>
+              <td class="order-amount-col">{{ order.totalAmount | number:'1.2-2' }}</td>
+              <td class="order-amount-col">{{ order.paidAmount | number:'1.2-2' }}</td>
               <td class="text-end order-actions">
                 <div
                   ngbDropdown
