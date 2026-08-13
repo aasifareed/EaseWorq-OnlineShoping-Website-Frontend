@@ -56,22 +56,50 @@ section.my-orders-page {
     --bs-table-border-color: var(--ml-page-heading-border, #e5e5ea);
 
     thead th {
-      font-size: 0.85rem;
+      padding: 0.85rem 1.15rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.2;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
-      background: var(--ml-toolbar-bg, #f8f8f9);
-      color: var(--ml-toolbar-text-strong, #111111);
-      border-bottom: 1px solid var(--ml-page-heading-border, #e5e5ea);
+      letter-spacing: 0.08em;
       white-space: nowrap;
+      vertical-align: middle;
+      color: #111111 !important;
+      background: #ffcc00 !important;
+      border: none !important;
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+
+      &:first-child {
+        padding-left: 1.35rem;
+      }
+
+      &:last-child {
+        padding-right: 1.35rem;
+      }
     }
 
     tbody td {
+      padding: 0.9rem 1.15rem;
       border-bottom: 1px solid var(--ml-page-heading-border, #e5e5ea);
       vertical-align: middle;
+
+      &:first-child {
+        padding-left: 1.35rem;
+      }
+
+      &:last-child {
+        padding-right: 1.35rem;
+      }
     }
 
     tbody tr:last-child td {
       border-bottom: none;
+    }
+
+    .order-amount-col {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
   }
 
@@ -765,9 +793,10 @@ body.dark {
     --bs-table-border-color: var(--border-subtle);
 
     thead th {
-      background: var(--surface-elevated) !important;
-      color: var(--text-primary) !important;
-      border-bottom-color: var(--border) !important;
+      background: #ffcc00 !important;
+      color: #111111 !important;
+      border: none !important;
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
     }
 
     tbody td {

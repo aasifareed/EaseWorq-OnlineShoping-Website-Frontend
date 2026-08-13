@@ -10,7 +10,7 @@
         <div class="checkout-form">
             <form [formGroup]="checkoutForm">
                 <div class="row checkout-layout g-2 g-lg-3">
-                    <div class="col-xl-7 col-lg-7 checkout-col-left">
+                    <div class="col-xl-5 col-lg-5 checkout-col-left">
                         <div class="checkout-card checkout-card--billing">
                             <div class="checkout-card__header checkout-card__header--billing">
                                 <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-truck"></i></span>
@@ -377,7 +377,7 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-5 col-lg-5 checkout-col-right">
+                    <div class="col-xl-7 col-lg-7 checkout-col-right">
                         <div class="checkout-card checkout-card--summary checkout-details">
                             <div class="checkout-card__header">
                                 <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>
@@ -482,16 +482,16 @@
                                 </div>
 
                                 <div class="checkout-delivery-section" *ngIf="products.length">
-                                    <div class="checkout-chip-section checkout-shipping-row">
-                                        <div class="checkout-chip-section__label">Shipping Method</div>
+                                    <div class="checkout-chip-section checkout-shipping-row"
+                                        *ngIf="shippingMethod === OnlineShopShippingMethod.LocalPickup && availableShippingMethods.length">
                                         <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles"
                                             role="radiogroup" aria-label="Delivery method">
                                             <label *ngFor="let method of availableShippingMethods"
                                                 class="checkout-chip checkout-chip--tile checkout-chip--choice"
                                                 [class.checkout-chip--selected]="shippingMethod === method"
-                                                [for]="'shipping-' + method">
-                                                <input type="radio" class="checkout-chip__input" name="shippingMethod"
-                                                    [id]="'shipping-' + method" [value]="method"
+                                                [for]="'shipping-pickup-' + method">
+                                                <input type="radio" class="checkout-chip__input" name="shippingMethodPickup"
+                                                    [id]="'shipping-pickup-' + method" [value]="method"
                                                     [ngModel]="shippingMethod"
                                                     (ngModelChange)="onShippingMethodChange($event)"
                                                     [ngModelOptions]="{standalone: true}">
@@ -503,11 +503,6 @@
                                             </label>
                                         </div>
                                     </div>
-
-                                    <p class="checkout-shipping-hint text-muted"
-                                        *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && shippingLoading">
-                                        Calculating shipping…
-                                    </p>
 
                                     <div class="checkout-pickup-panel"
                                         *ngIf="shippingMethod === OnlineShopShippingMethod.LocalPickup">
@@ -524,144 +519,146 @@
                                         <p class="checkout-pickup-panel__note">No shipping fee for local pickup.</p>
                                     </div>
 
-                                    <div class="checkout-courier-panel"
+                                    <div class="checkout-courier-panel checkout-delivery-picker"
                                         *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && (shippingLoading || showShippingBreakdown || shippingCourierOptions.length)">
-                                        <div class="checkout-courier-panel__header">
-                                            <div class="checkout-courier-panel__title-wrap">
-                                                <h4 class="checkout-courier-panel__title">Choose your courier</h4>
-                                                <span class="checkout-courier-panel__count"
+                                        <div class="checkout-delivery-picker__head">
+                                            <div class="checkout-delivery-picker__head-main">
+                                                <h4 class="checkout-delivery-picker__title">Choose your courier</h4>
+                                                <p class="checkout-delivery-picker__meta"
                                                     *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                                    {{ shippingCourierOptions.length }} delivery options
-                                                </span>
+                                                    <span>
+                                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                                        {{ shippingDestinationCity }}
+                                                    </span>
+                                                    <span *ngIf="quotedWeight">
+                                                        <i class="fa fa-balance-scale" aria-hidden="true"></i>
+                                                        ~{{ quotedWeight }}
+                                                    </span>
+                                                    <span>
+                                                        <i class="fa fa-cube" aria-hidden="true"></i>
+                                                        {{ shippingCourierOptions.length }} delivery options
+                                                    </span>
+                                                </p>
                                             </div>
-                                        </div>
-
-                                        <div class="checkout-courier-panel__body">
-                                            <p class="checkout-courier-panel__meta"
-                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                                <span class="checkout-courier-meta-item">
-                                                    <i class="fa fa-map-marker" aria-hidden="true"></i>
-                                                    {{ shippingDestinationCity }}
-                                                </span>
-                                                <span class="checkout-courier-meta-item" *ngIf="quotedWeight">
-                                                    <i class="fa fa-balance-scale" aria-hidden="true"></i>
-                                                    ~{{ quotedWeight }}
-                                                </span>
-                                                <span class="checkout-courier-meta-item" *ngIf="deliveryEstimateHint">
-                                                    <i class="fa fa-clock-o" aria-hidden="true"></i>
-                                                    {{ deliveryEstimateHint }}
-                                                </span>
-                                            </p>
-
-                                            <p class="checkout-courier-panel__note"
-                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                                <i class="fa fa-info-circle" aria-hidden="true"></i>
-                                                <span>
-                                                    Delivery availability varies by area. Choose an available courier
-                                                    below, or select Help Me Arrange Delivery and we'll assist you.
-                                                </span>
-                                            </p>
-
-                                            <div class="checkout-courier-rail-wrap"
-                                                *ngIf="showShippingBreakdown && visibleCourierOptions.length">
-                                                <button type="button"
-                                                    class="checkout-courier-rail__arrow checkout-courier-rail__arrow--prev"
-                                                    (click)="scrollCourierRail(-1)"
-                                                    aria-label="Scroll courier options left">
-                                                    <i class="fa fa-chevron-left" aria-hidden="true"></i>
-                                                </button>
-
-                                                <div class="checkout-courier-rail" #courierRail role="radiogroup"
-                                                    aria-label="Courier delivery options">
-                                                    <button type="button"
-                                                        class="checkout-courier-card checkout-courier-card--rail"
-                                                        [ngClass]="courierAccentClass(option.courierCompany)"
-                                                        [class.checkout-courier-card--selected]="isCourierOptionSelected(option)"
-                                                        *ngFor="let option of visibleCourierOptions"
-                                                        (click)="onCourierOptionSelected(courierOptionKey(option))"
-                                                        [attr.aria-checked]="isCourierOptionSelected(option)"
-                                                        role="radio">
-                                                        <span class="checkout-courier-card__top">
-                                                            <span class="checkout-courier-card__top-stack">
-                                                                <span class="checkout-courier-card__badge"
-                                                                    *ngIf="courierOptionBadge(option)">{{ courierOptionBadge(option) }}</span>
-                                                                <span class="checkout-courier-card__check" aria-hidden="true">
-                                                                    <i class="fa fa-check"></i>
-                                                                </span>
-                                                            </span>
+                                            <div class="checkout-delivery-picker__method"
+                                                *ngIf="availableShippingMethods.length">
+                                                <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles checkout-chip-group--compact"
+                                                    role="radiogroup" aria-label="Delivery method">
+                                                    <label *ngFor="let method of availableShippingMethods"
+                                                        class="checkout-chip checkout-chip--tile checkout-chip--choice"
+                                                        [class.checkout-chip--selected]="shippingMethod === method"
+                                                        [for]="'shipping-' + method">
+                                                        <input type="radio" class="checkout-chip__input" name="shippingMethod"
+                                                            [id]="'shipping-' + method" [value]="method"
+                                                            [ngModel]="shippingMethod"
+                                                            (ngModelChange)="onShippingMethodChange($event)"
+                                                            [ngModelOptions]="{standalone: true}">
+                                                        <span class="checkout-chip__text">
+                                                            <i class="fa" [ngClass]="method === OnlineShopShippingMethod.Shipping ? 'fa-truck' : 'fa-map-marker'" aria-hidden="true"></i>
+                                                            <span class="checkout-chip__label">{{ shippingMethodLabels[method] }}</span>
+                                                            <i class="fa fa-check checkout-chip__check" aria-hidden="true"></i>
                                                         </span>
-                                                        <span class="checkout-courier-card__body">
-                                                            <span class="checkout-courier-card__company">{{ option.courierCompany }}</span>
-                                                            <span class="checkout-courier-card__service">
-                                                                {{ serviceTypeLabel(option.courierServiceType) }}
-                                                            </span>
-                                                        </span>
-                                                        <span class="checkout-courier-card__footer">
-                                                            <span class="checkout-courier-card__was"
-                                                                *ngIf="courierOptionHasDiscount(option)">
-                                                                {{ option.cargoOriginalAmount |
-                                                                    shopCurrency:productService?.Currency.currency }}
-                                                            </span>
-                                                            <span class="checkout-courier-card__price">
-                                                                {{ option.finalShippingAmount |
-                                                                    shopCurrency:productService?.Currency.currency }}
-                                                            </span>
-                                                        </span>
-                                                    </button>
+                                                    </label>
                                                 </div>
-
-                                                <button type="button"
-                                                    class="checkout-courier-rail__arrow checkout-courier-rail__arrow--next"
-                                                    (click)="scrollCourierRail(1)"
-                                                    aria-label="Scroll courier options right">
-                                                    <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                                                </button>
-                                            </div>
-
-                                            <div class="checkout-courier-optout"
-                                                *ngIf="showShippingBreakdown && shippingCourierOptions.length">
-                                                <button type="button"
-                                                    class="checkout-courier-optout__btn"
-                                                    [class.checkout-courier-optout__btn--active]="isCourierSelectionSkipped"
-                                                    (click)="skipCourierSelection()"
-                                                    [attr.aria-pressed]="isCourierSelectionSkipped">
-                                                    <i class="fa"
-                                                        [ngClass]="isCourierSelectionSkipped ? 'fa-check-circle' : 'fa-headphones'"
-                                                        aria-hidden="true"></i>
-                                                    Help Me Arrange Delivery
-                                                </button>
-                                                <p class="checkout-courier-optout__note" *ngIf="isCourierSelectionSkipped">
-                                                    We'll contact you to confirm an available delivery option and shipping
-                                                    charge before dispatch.
-                                                </p>
-                                            </div>
-
-                                            <div class="checkout-courier-footer"
-                                                *ngIf="(selectedCourierOption && showShippingBreakdown) || hiddenCourierOptionsCount > 0 || (showAllCourierOptions && shippingCourierOptions.length > courierPreviewLimit)">
-                                                <button type="button"
-                                                    class="checkout-courier-more"
-                                                    *ngIf="!showAllCourierOptions && hiddenCourierOptionsCount > 0"
-                                                    (click)="toggleCourierOptionsExpanded()">
-                                                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
-                                                    Show {{ hiddenCourierOptionsCount }} more options
-                                                </button>
-                                                <button type="button"
-                                                    class="checkout-courier-more"
-                                                    *ngIf="showAllCourierOptions && shippingCourierOptions.length > courierPreviewLimit"
-                                                    (click)="toggleCourierOptionsExpanded()">
-                                                    <i class="fa fa-chevron-up" aria-hidden="true"></i>
-                                                    Show fewer options
-                                                </button>
-                                                <p class="checkout-courier-panel__hint"
-                                                    *ngIf="selectedCourierOption && showShippingBreakdown">
-                                                    Selected:
-                                                    <strong>{{ selectedCourierOption.courierCompany }}</strong>
-                                                    · {{ serviceTypeLabel(selectedCourierOption.courierServiceType) }}
-                                                    · {{ selectedCourierOption.finalShippingAmount |
-                                                        shopCurrency:productService?.Currency.currency }}
-                                                </p>
                                             </div>
                                         </div>
+
+                                        <div class="checkout-delivery-loader"
+                                            *ngIf="shippingLoading"
+                                            role="status"
+                                            aria-live="polite">
+                                            <span class="checkout-delivery-loader__spinner" aria-hidden="true"></span>
+                                            <span>Finding delivery options…</span>
+                                        </div>
+
+                                        <p class="checkout-delivery-picker__note"
+                                            *ngIf="showShippingBreakdown && shippingCourierOptions.length">
+                                            <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                            <span>
+                                                Delivery availability varies by area. Choose an available courier
+                                                below, or select Help Me Arrange Delivery and we'll assist you.
+                                            </span>
+                                        </p>
+
+                                        <div class="checkout-delivery-list"
+                                            *ngIf="showShippingBreakdown && visibleCourierOptions.length"
+                                            role="radiogroup"
+                                            aria-label="Courier delivery options">
+                                            <button type="button"
+                                                class="checkout-delivery-row"
+                                                *ngFor="let option of visibleCourierOptions"
+                                                [ngClass]="courierAccentClass(option.courierCompany)"
+                                                [class.checkout-delivery-row--selected]="isCourierOptionSelected(option)"
+                                                [class.checkout-delivery-row--badged]="!!courierOptionBadge(option)"
+                                                (click)="onCourierOptionSelected(courierOptionKey(option))"
+                                                role="radio"
+                                                [attr.aria-checked]="isCourierOptionSelected(option)">
+                                                <span class="checkout-delivery-row__badge"
+                                                    *ngIf="courierOptionBadge(option)">
+                                                    {{ courierOptionBadge(option) }}
+                                                </span>
+                                                <span class="checkout-delivery-row__radio" aria-hidden="true"></span>
+                                                <span class="checkout-delivery-row__logo">{{ courierMonogram(option.courierCompany) }}</span>
+                                                <span class="checkout-delivery-row__main">
+                                                    <span class="checkout-delivery-row__company">{{ option.courierCompany }}</span>
+                                                    <span class="checkout-delivery-row__service">{{ serviceTypeLabel(option.courierServiceType) }}</span>
+                                                    <span class="checkout-delivery-row__eta">
+                                                        <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                                        {{ serviceTypeEta(option.courierServiceType) }}
+                                                    </span>
+                                                </span>
+                                                <span class="checkout-delivery-row__price">
+                                                    <span class="checkout-delivery-row__amount">
+                                                        {{ option.finalShippingAmount | shopCurrency:productService?.Currency.currency }}
+                                                    </span>
+                                                    <span class="checkout-delivery-row__was"
+                                                        *ngIf="courierOptionHasDiscount(option)">
+                                                        <s>{{ option.cargoOriginalAmount | shopCurrency:productService?.Currency.currency }}</s>
+                                                        <span class="checkout-delivery-row__off"
+                                                            *ngIf="courierDiscountPercent(option) as offPct">
+                                                            {{ offPct }}% OFF
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            </button>
+                                        </div>
+
+                                        <button type="button"
+                                            class="checkout-courier-more"
+                                            *ngIf="!showAllCourierOptions && hiddenCourierOptionsCount > 0"
+                                            (click)="toggleCourierOptionsExpanded()">
+                                            Show {{ hiddenCourierOptionsCount }} more options
+                                        </button>
+                                        <button type="button"
+                                            class="checkout-courier-more"
+                                            *ngIf="showAllCourierOptions && shippingCourierOptions.length > courierPreviewLimit"
+                                            (click)="toggleCourierOptionsExpanded()">
+                                            Show fewer options
+                                        </button>
+
+                                        <button type="button"
+                                            class="checkout-delivery-row checkout-delivery-row--assist"
+                                            *ngIf="showShippingBreakdown && shippingCourierOptions.length"
+                                            [class.checkout-delivery-row--selected]="isCourierSelectionSkipped"
+                                            (click)="skipCourierSelection()"
+                                            role="radio"
+                                            [attr.aria-checked]="isCourierSelectionSkipped"
+                                            aria-label="Help Me Arrange Delivery">
+                                            <span class="checkout-delivery-row__radio" aria-hidden="true"></span>
+                                            <span class="checkout-delivery-row__logo checkout-delivery-row__logo--assist">
+                                                <i class="fa fa-headphones" aria-hidden="true"></i>
+                                            </span>
+                                            <span class="checkout-delivery-row__main">
+                                                <span class="checkout-delivery-row__company">Help Me Arrange Delivery</span>
+                                                <span class="checkout-delivery-row__service">Personal assistance</span>
+                                                <span class="checkout-delivery-row__eta">We'll contact you</span>
+                                            </span>
+                                        </button>
+
+                                        <p class="checkout-delivery-picker__assist-note" *ngIf="isCourierSelectionSkipped">
+                                            We'll contact you to confirm an available delivery option and shipping
+                                            charge before dispatch.
+                                        </p>
                                     </div>
 
                                     <ul class="checkout-delivery-section__charges"
