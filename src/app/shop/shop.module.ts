@@ -41,6 +41,7 @@ import { CompareComponent } from './compare/compare.component';
 import { CheckoutComponent } from './checkout/checkout.component';
 import { SuccessComponent } from './checkout/success/success.component';
 import { FailureComponent } from './checkout/failure/failure.component';
+import { PayFastReturnComponent } from './checkout/payfast-return/payfast-return.component';
 
 import {RouterModule} from '@angular/router';
 
@@ -74,6 +75,7 @@ import {RouterModule} from '@angular/router';
     CheckoutComponent,
     SuccessComponent,
     FailureComponent,
+    PayFastReturnComponent,
   ],
   imports: [
     CommonModule,

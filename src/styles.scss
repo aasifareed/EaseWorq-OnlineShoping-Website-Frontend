@@ -1,5 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Capacitor Android WebView — notch / status bar */
+body.is-native-app {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* SweetAlert2 — My Orders remove confirmation (renders on document.body) */
 .my-orders-swal {
   border-radius: 12px !important;

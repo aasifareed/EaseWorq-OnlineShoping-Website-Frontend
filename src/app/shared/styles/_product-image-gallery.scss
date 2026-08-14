@@ -141,8 +141,21 @@
   }
 }
 
-::ng-deep .Quickview .product-image-gallery .gallery-main {
+::ng-deep .Quickview .product-image-gallery .gallery-main,
+::ng-deep .Quickview .product-image-gallery .gallery-main.is-single {
   height: 320px;
+  min-height: 0;
   max-height: 320px;
   overflow: hidden;
+}
+
+@media (max-width: 991px) {
+  ::ng-deep .Quickview .product-image-gallery .gallery-main,
+  ::ng-deep .Quickview .product-image-gallery .gallery-main.is-single {
+    width: 104px;
+    height: 104px;
+    min-height: 0;
+    max-height: 104px;
+    padding: 6px;
+  }
 }

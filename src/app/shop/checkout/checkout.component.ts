@@ -582,7 +582,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   productImage(product: Product): string {
-    return product?.pictureUrl || product?.images?.[0]?.src || 'assets/images/product/placeholder.svg';
+    return this.productService.normalizeImageUrl(product?.pictureUrl || product?.images?.[0]?.src)
+      || this.productService.defaultProductImage;
   }
 
   /** Customer-facing variant only — hide internal defaults like 0 / empty. */

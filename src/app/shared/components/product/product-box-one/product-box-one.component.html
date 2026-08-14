@@ -11,8 +11,7 @@
     </button>
     <div class="mc-card__img-clip">
       <a [routerLink]="productLink" class="mc-card__img-link">
-        <img [defaultImage]="'assets/images/product/placeholder.svg'"
-             [lazyLoad]="cardImageSrc"
+        <img [src]="(cardImageSrc | remoteSrc | async) || 'assets/images/product/placeholder.svg'"
              class="mc-card__img"
              [alt]="product?.images?.[0]?.alt || product?.title"
              (error)="onCardImageError($event)" />
@@ -59,7 +58,7 @@
 <article class="shop-list-card" *ngIf="!loader && listMode">
   <div class="shop-list-card__image">
     <a [routerLink]="productLink">
-      <img [src]="cardImageSrc"
+      <img [src]="(cardImageSrc | remoteSrc | async) || 'assets/images/product/placeholder.svg'"
            [alt]="product?.images?.[0]?.alt || product?.title"
            (error)="onCardImageError($event)">
     </a>

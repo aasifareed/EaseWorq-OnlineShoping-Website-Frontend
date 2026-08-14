@@ -6,6 +6,7 @@ import { OnlineShopStorefront } from '../../models/online-shop-storefront.model'
 import { OnlineShopPageService } from '../../services/online-shop-page.service';
 import { OnlineShopSettingsService } from '../../services/online-shop-settings.service';
 import { StoreLogoService } from '../../services/store-logo.service';
+import { environment } from 'src/environments/environment';
 
 /** Fallback links when no published CMS pages are returned yet. */
 export const DEFAULT_FOOTER_PAGE_LINKS: OnlineShopPageMenuItem[] = [
@@ -30,6 +31,7 @@ export class FooterOneComponent implements OnInit, OnDestroy {
   public storefront: OnlineShopStorefront | null = null;
   /** Same brand logo source as the main header (StoreLogoService). */
   public storeLogoUrl: string | null = null;
+  readonly useBrandMark = !!environment.isMobileApp;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -127,6 +129,26 @@ export class FooterOneComponent implements OnInit, OnDestroy {
 
   pageLink(slug: string): string[] {
     return this.pageService.pageLink(slug);
+  }
+
+  linkIcon(slug: string): string {
+    const key = (slug || '').toLowerCase();
+    if (key.includes('about')) {
+      return 'fa-user-o';
+    }
+    if (key.includes('privacy')) {
+      return 'fa-shield';
+    }
+    if (key.includes('return') || key.includes('refund')) {
+      return 'fa-refresh';
+    }
+    if (key.includes('ship') || key.includes('deliver')) {
+      return 'fa-truck';
+    }
+    if (key.includes('term')) {
+      return 'fa-file-text-o';
+    }
+    return 'fa-file-o';
   }
 
   private loadFooterPages(): void {

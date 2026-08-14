@@ -6,6 +6,10 @@ import { catchError, map, shareReplay, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { ShopContextService } from './shop-context.service';
 import { asBackgroundRequest } from '../interceptors/background-request';
+import { rewriteMediaUrl } from './media-url';
+
+/** Icon-only SK mark (no “Sasta Khareedo” wordmark). Used in the APK header/footer and as the launcher. */
+export const STORE_MARK_LOGO = 'assets/images/logo-sk-mark.svg';
 
 interface StoreLogoCacheEntry {
   tenantId: number;
@@ -22,6 +26,7 @@ export class StoreLogoService {
   private readonly isBrowser: boolean;
 
   readonly logoUrl$ = this.logoSubject.asObservable();
+  readonly useBrandMark = !!environment.isMobileApp;
 
   constructor(
     private http: HttpClient,
@@ -44,12 +49,12 @@ export class StoreLogoService {
     const resolvedTenantId = tenantId ?? this.shopContext.resolveTenantId();
     const resolvedStoreId = storeId ?? this.shopContext.resolveStoreId();
     if (!resolvedTenantId || !resolvedStoreId) {
-      return of(null);
+      return of(this.emitDisplayLogo(null));
     }
 
     const cached = this.readCache(resolvedTenantId, resolvedStoreId);
     if (cached !== undefined) {
-      this.logoSubject.next(cached);
+      this.emitDisplayLogo(cached);
       this.applyFavicon();
     }
 
@@ -61,17 +66,17 @@ export class StoreLogoService {
     this.initializeRequest$ = this.http.get(url, asBackgroundRequest()).pipe(
       map((resp: { result?: Record<string, unknown> }) => {
         const row = resp?.result ?? {};
-        const logoUrl = String(row.url ?? row.Url ?? '').trim() || null;
+        const logoUrl = rewriteMediaUrl(String(row.url ?? row.Url ?? '').trim()) || null;
         this.writeCache(resolvedTenantId, resolvedStoreId, logoUrl);
         return logoUrl;
       }),
       tap((logoUrl) => {
-        this.logoSubject.next(logoUrl);
+        this.emitDisplayLogo(logoUrl);
         this.applyFavicon();
       }),
       catchError(() => {
         if (cached === undefined) {
-          this.logoSubject.next(null);
+          this.emitDisplayLogo(null);
           this.writeCache(resolvedTenantId, resolvedStoreId, null);
         }
         return of(this.snapshot);
@@ -84,6 +89,10 @@ export class StoreLogoService {
 
   /** Read cached logo for current tenant/store without calling the API. */
   getCachedLogo(): string | null {
+    if (this.useBrandMark) {
+      return this.emitDisplayLogo(null);
+    }
+
     const tenantId = this.shopContext.resolveTenantId();
     const storeId = this.shopContext.resolveStoreId();
     if (!tenantId || !storeId) {
@@ -92,11 +101,18 @@ export class StoreLogoService {
 
     const cached = this.readCache(tenantId, storeId);
     if (cached !== undefined) {
-      this.logoSubject.next(cached);
-      return cached;
+      const logoUrl = cached ? rewriteMediaUrl(cached) : null;
+      return this.emitDisplayLogo(logoUrl);
     }
 
     return this.snapshot;
+  }
+
+  /** APK shows the icon-only mark; website keeps the uploaded store wordmark. */
+  private emitDisplayLogo(logoUrl: string | null): string | null {
+    const display = this.useBrandMark ? STORE_MARK_LOGO : logoUrl;
+    this.logoSubject.next(display);
+    return display;
   }
 
   private readCache(tenantId: number, storeId: string): string | null | undefined {
@@ -115,7 +131,8 @@ export class StoreLogoService {
         return undefined;
       }
 
-      return parsed.logoUrl ?? null;
+      const logoUrl = parsed.logoUrl ?? null;
+      return logoUrl ? rewriteMediaUrl(logoUrl) : null;
     } catch {
       return undefined;
     }
@@ -151,7 +168,7 @@ export class StoreLogoService {
       return;
     }
 
-    const href = 'assets/images/favicon-store.svg?v=sasta-khareedo-1';
+    const href = 'assets/images/favicon-store.svg?v=sasta-khareedo-2';
     const type = 'image/svg+xml';
 
     const rels = ['icon', 'shortcut icon'];

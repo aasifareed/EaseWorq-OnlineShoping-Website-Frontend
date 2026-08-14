@@ -9,8 +9,8 @@
         </nav>
         <div class="checkout-form">
             <form [formGroup]="checkoutForm">
-                <div class="row checkout-layout g-2 g-lg-3">
-                    <div class="col-xl-5 col-lg-5 checkout-col-left">
+                <div class="row checkout-layout gx-2 gx-lg-3 gy-0">
+                    <div class="col-12 col-lg-5 checkout-col-left">
                         <div class="checkout-card checkout-card--billing">
                             <div class="checkout-card__header checkout-card__header--billing">
                                 <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-truck"></i></span>
@@ -38,7 +38,7 @@
                                 </div>
                             <div class="checkout-address-form-block__content">
                             <div class="row check-out g-2 checkout-billing-fields" formGroupName="billing">
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Customer Name <span class="required-mark">*</span></div>
                                     <input type="text" name="customerName" formControlName="customerName"
                                         (blur)="trimField('billing','customerName')" placeholder="" autocomplete="off">
@@ -47,7 +47,7 @@
                                     <div *ngIf="control('billing.customerName').touched && control('billing.customerName').errors?.personName"
                                         class="text text-danger">Enter a valid name (letters only).</div>
                                 </div>
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Phone <span class="required-mark">*</span></div>
                                     <input type="text" name="customerMobileNo" formControlName="customerMobileNo"
                                         (blur)="trimField('billing','customerMobileNo')" placeholder="" autocomplete="off">
@@ -56,7 +56,7 @@
                                     <div *ngIf="control('billing.customerMobileNo').touched && control('billing.customerMobileNo').errors?.phone"
                                         class="text text-danger">Enter a valid phone number (digits; optional leading +).</div>
                                 </div>
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Email Address <span class="required-mark">*</span></div>
                                     <input type="text" name="customerEmail" formControlName="customerEmail"
                                         (blur)="trimField('billing','customerEmail')" placeholder="" autocomplete="off">
@@ -65,7 +65,7 @@
                                     <div *ngIf="control('billing.customerEmail').touched && control('billing.customerEmail').errors?.email"
                                         class="text text-danger">Invalid email.</div>
                                 </div>
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Address <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="address" formControlName="address"
@@ -86,7 +86,7 @@
                                     <div *ngIf="control('billing.address').touched && control('billing.address').errors?.maxlength"
                                         class="text text-danger">Maximum 100 characters allowed.</div>
                                 </div>
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Town / City <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="town" formControlName="town"
@@ -107,7 +107,7 @@
                                     <div *ngIf="control('billing.town').touched && control('billing.town').errors?.mustSelectSuggestion"
                                         class="text text-danger">Please select a town/city from the suggestions.</div>
                                 </div>
-                                <div class="form-group col-md-6 col-sm-6 col-12">
+                                <div class="form-group col-12 col-md-6">
                                     <div class="field-label">State / County <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="state" formControlName="state"
@@ -186,7 +186,7 @@
                                 </div>
                                 <div class="checkout-address-form-block__content">
                                 <div class="row check-out g-2">
-                                    <div class="form-group col-md-6 col-sm-6 col-12">
+                                    <div class="form-group col-12 col-md-6">
                                         <div class="field-label">Receiver Name <span class="required-mark">*</span></div>
                                         <input type="text" formControlName="customerName"
                                             (blur)="trimField('shipping','customerName')" autocomplete="off">
@@ -195,7 +195,7 @@
                                         <div *ngIf="control('shipping.customerName').touched && control('shipping.customerName').errors?.personName"
                                             class="text text-danger">Enter a valid name (letters only).</div>
                                     </div>
-                                    <div class="form-group col-md-6 col-sm-6 col-12">
+                                    <div class="form-group col-12 col-md-6">
                                         <div class="field-label">Phone <span class="required-mark">*</span></div>
                                         <input type="text" formControlName="customerMobileNo"
                                             (blur)="trimField('shipping','customerMobileNo')" autocomplete="off">
@@ -223,7 +223,7 @@
                                         <div *ngIf="control('shipping.address').touched && control('shipping.address').errors?.required"
                                             class="text text-danger">Address is required.</div>
                                     </div>
-                                    <div class="form-group col-md-6 col-sm-6 col-12">
+                                    <div class="form-group col-12 col-md-6">
                                         <div class="field-label">Town/City <span class="required-mark">*</span></div>
                                         <div class="address-autocomplete-wrap">
                                             <input type="text" formControlName="town"
@@ -244,7 +244,7 @@
                                         <div *ngIf="control('shipping.town').touched && control('shipping.town').errors?.mustSelectSuggestion"
                                             class="text text-danger">Please select a town/city from the suggestions.</div>
                                     </div>
-                                    <div class="form-group col-md-6 col-sm-6 col-12">
+                                    <div class="form-group col-12 col-md-6">
                                         <div class="field-label">State / County <span class="required-mark">*</span></div>
                                         <div class="address-autocomplete-wrap">
                                             <input type="text" formControlName="state"
@@ -265,7 +265,7 @@
                                         <div *ngIf="control('shipping.state').touched && control('shipping.state').errors?.mustSelectSuggestion"
                                             class="text text-danger">Please select a state from the suggestions.</div>
                                     </div>
-                                    <div class="form-group col-md-6 col-sm-6 col-12">
+                                    <div class="form-group col-12 col-md-6">
                                         <div class="field-label">Postal Code <span class="required-mark">*</span></div>
                                         <input type="text" formControlName="postalcode"
                                             (blur)="trimField('shipping','postalcode')" autocomplete="off">
@@ -377,7 +377,7 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-7 col-lg-7 checkout-col-right">
+                    <div class="col-12 col-lg-7 checkout-col-right">
                         <div class="checkout-card checkout-card--summary checkout-details">
                             <div class="checkout-card__header">
                                 <span class="checkout-card__icon" aria-hidden="true"><i class="fa fa-file-text-o"></i></span>

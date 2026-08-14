@@ -14,6 +14,7 @@ import { CompareComponent } from './compare/compare.component';
 import { CheckoutComponent } from './checkout/checkout.component';
 import { SuccessComponent } from './checkout/success/success.component';
 import { FailureComponent } from './checkout/failure/failure.component';
+import { PayFastReturnComponent } from './checkout/payfast-return/payfast-return.component';
 
 import { Resolver } from '../shared/services/resolver.service';
 import { authGuard } from '../shared/guards/auth.guard';
@@ -72,6 +73,10 @@ const routes: Routes = [
     path: 'checkout',
     component: CheckoutComponent,
     canActivate: [authGuard]
+  },
+  {
+    path: 'checkout/payfast-return',
+    component: PayFastReturnComponent
   },
   {
     path: 'checkout/success/:id',

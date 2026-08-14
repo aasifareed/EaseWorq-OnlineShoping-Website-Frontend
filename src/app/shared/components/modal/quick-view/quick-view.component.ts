@@ -90,7 +90,7 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
     return 'ok';
   }
 
-  /** Combined stock line — avoids duplicating "In Stock" + "Available quantity". */
+  /** Combined stock line — avoids duplicating "In Stock" + "Available". */
   get stockStatusLine(): string {
     if (this.isFullyInCart) {
       return 'In cart · Full quantity already added';

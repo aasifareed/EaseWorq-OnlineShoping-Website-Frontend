@@ -160,22 +160,25 @@ export class FashionOneComponent implements OnInit, OnDestroy {
   }
 
   private loadHomeBanners(): void {
-    this.loadingHomeBanners = true;
-    this.sliders = [];
+    this.loadingHomeBanners = !this.sliders.length;
     this.homeBannerService.getHomeBanners().subscribe({
       next: (banners) => {
         if (banners?.length) {
           this.sliders = banners.map((b) => ({
             image: b.image,
             linkUrl: b.linkUrl,
-            title: (b as any).title,
-            subTitle: (b as any).subTitle
+            title: b.title,
+            subTitle: b.subTitle
           }));
+        } else if (!this.sliders.length) {
+          this.sliders = [];
         }
         this.loadingHomeBanners = false;
       },
       error: () => {
-        this.sliders = [];
+        if (!this.sliders.length) {
+          this.sliders = [];
+        }
         this.loadingHomeBanners = false;
       }
     });

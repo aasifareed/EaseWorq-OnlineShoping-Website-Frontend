@@ -64,23 +64,30 @@
   }
 
   .qv-layout {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 28px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    column-gap: 28px;
+    row-gap: 16px;
+    align-items: start;
   }
 
   .qv-gallery {
-    flex: 0 0 46%;
-    max-width: 46%;
+    grid-column: 1;
+    grid-row: 1 / span 3;
     min-width: 0;
   }
 
-  .qv-info {
-    flex: 1 1 54%;
+  .qv-info,
+  .qv-qty,
+  .qv-actions {
+    grid-column: 2;
     min-width: 0;
+    text-align: left !important;
+  }
+
+  .qv-info {
     padding-top: 4px;
-    padding-right: 24px;
+    padding-right: 8px;
   }
 
   .product-image-gallery {
@@ -92,7 +99,7 @@
   .product-image-gallery .gallery-main.is-single {
     height: 320px;
     max-height: 320px;
-    min-height: 260px;
+    min-height: 0;
     flex: 0 0 auto;
     overflow: hidden;
     border-radius: 10px;
@@ -120,21 +127,23 @@
   .qv-title {
     margin: 0 0 6px;
     padding: 0;
-    font-size: 1.65rem;
+    font-size: 1.45rem;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.25;
     letter-spacing: -0.02em;
     color: #111111;
     text-transform: none;
+    text-align: left !important;
   }
 
   .qv-price {
-    margin: 0 0 14px;
+    margin: 0 0 10px;
     padding: 0;
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     line-height: 1.25;
     color: #111111;
+    text-align: left !important;
 
     del {
       margin-left: 8px;
@@ -145,10 +154,11 @@
   }
 
   .qv-stock {
-    margin: 0 0 16px;
-    font-size: 0.9rem;
+    margin: 0 0 8px;
+    font-size: 0.86rem;
     font-weight: 600;
     line-height: 1.4;
+    text-align: left !important;
 
     &--ok {
       color: #b45309;
@@ -164,11 +174,12 @@
   }
 
   .qv-stock-note {
-    margin: -10px 0 16px;
+    margin: 0 0 10px;
     font-size: 0.8rem;
     font-weight: 500;
     line-height: 1.4;
     color: #6b7280;
+    text-align: left !important;
   }
 
   .qv-details {
@@ -202,7 +213,15 @@
   }
 
   .qv-qty {
-    margin: 0 0 20px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+
+    .qv-section-label {
+      margin: 0;
+    }
   }
 
   .qv-qty-box {
@@ -338,31 +357,117 @@
   }
 
   @media (max-width: 991px) {
-    .qv-layout {
-      flex-direction: column;
-      gap: 20px;
+    .modal-dialog {
+      width: calc(100% - 20px);
+      max-width: 100%;
+      margin: 10px auto;
+      max-height: calc(100dvh - 20px);
     }
 
-    .qv-gallery,
+    .modal-content.quick-view-modal,
+    .quick-view-modal.modal-content {
+      max-height: calc(100dvh - 20px);
+      display: flex;
+      flex-direction: column;
+      border-radius: 14px;
+    }
+
+    .quick-view-modal .modal-body {
+      padding: 16px 16px 14px;
+      overflow-y: auto;
+      max-height: calc(100dvh - 20px);
+    }
+
+    .qv-layout {
+      grid-template-columns: 104px minmax(0, 1fr);
+      column-gap: 0.9rem;
+      row-gap: 0.9rem;
+    }
+
+    .qv-gallery {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
     .qv-info {
-      flex: 1 1 auto;
-      max-width: 100%;
-      padding-right: 0;
+      grid-column: 2;
+      grid-row: 1;
+      padding: 0 2.6rem 0 0;
+    }
+
+    .qv-qty,
+    .qv-actions,
+    .gallery-thumbs {
+      grid-column: 1 / -1;
     }
 
     .product-image-gallery .gallery-main,
     .product-image-gallery .gallery-main.is-single {
-      height: 280px;
-      max-height: 280px;
+      width: 104px !important;
+      height: 104px !important;
+      min-height: 0 !important;
+      max-height: 104px !important;
+      padding: 6px;
     }
 
-    .qv-info {
-      padding-top: 0;
+    .product-image-gallery .gallery-nav {
+      display: none;
+    }
+
+    .product-image-gallery .gallery-thumbs {
+      display: none;
+    }
+
+    .product-image-gallery .gallery-thumb-btn {
+      flex-basis: 48px;
+      width: 48px;
+      height: 48px;
+    }
+
+    .qv-title {
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+
+    .qv-price {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .qv-stock {
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
+
+    .qv-stock-note {
+      margin: 0;
+      font-size: 0.75rem;
+    }
+
+    .qv-details {
+      display: none;
+    }
+
+    .qv-qty-btn,
+    .qv-qty-input {
+      min-height: 40px;
     }
 
     .qv-close {
-      top: 8px;
-      right: 8px;
+      top: 12px;
+      right: 12px;
+      width: 40px;
+      height: 40px;
+    }
+
+    .qv-actions.quick-view-actions {
+      gap: 8px;
+
+      .qv-btn {
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: 0.75rem;
+      }
     }
   }
 }
@@ -371,12 +476,12 @@
 ::ng-deep body.dark .Quickview {
   .modal-content.quick-view-modal,
   .quick-view-modal.modal-content {
-    background: #181c24;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: #141414;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .quick-view-modal .modal-body {
-    background: #181c24 !important;
+    background: #141414 !important;
   }
 
   .qv-close {
@@ -391,9 +496,12 @@
     }
   }
 
-  .qv-title,
-  .qv-price {
+  .qv-title {
     color: #f5f7fa;
+  }
+
+  .qv-price {
+    color: #ffc400;
   }
 
   .qv-price del {

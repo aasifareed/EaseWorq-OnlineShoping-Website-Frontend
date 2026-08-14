@@ -175,14 +175,15 @@
   <div class="main-header-microless">
     <div class="container-fluid">
       <div class="row header-main-row align-items-center gx-0 flex-nowrap">
-        <div class="col-auto header-logo-col">
+        <div class="col-auto header-logo-col" [class.header-logo-col--mark]="useBrandMark">
           <div class="brand-logo">
             <a [routerLink]="['/home']" class="text-decoration-none brand-logo-link">
               <img
                 *ngIf="storeLogoUrl"
-                [src]="storeLogoUrl"
+                [src]="(storeLogoUrl | remoteSrc | async) || storeLogoUrl"
                 [alt]="storeName"
                 class="store-logo-img"
+                [class.store-logo-img--mark]="useBrandMark"
                 decoding="async"
                 fetchpriority="high"
               />
@@ -191,7 +192,7 @@
           </div>
         </div>
 
-        <div class="col header-search-col px-3 px-lg-4">
+        <div class="col header-search-col px-2 px-lg-4">
           <div class="header-search search-wrapper d-flex position-relative">
             <input
               type="text"
@@ -303,6 +304,10 @@
         </div>
 
         <div class="col-auto header-actions-col d-flex align-items-center">
+          <div
+            id="header-actions-panel"
+            class="header-actions-panel"
+            [class.is-open]="headerActionsOpen">
           <div class="d-flex align-items-center action-icons">
             <a
               class="header-orders-link text-decoration-none border-end border-secondary-subtle"
@@ -350,7 +355,7 @@
               *ngIf="isLoggedIn"
               class="border-end border-secondary-subtle header-notifications"
               ngbDropdown
-              placement="bottom-end">
+              placement="bottom-end auto">
               <button
                 type="button"
                 ngbDropdownToggle
@@ -435,6 +440,21 @@
               <span class="label header-action-label">Cart</span>
             </a>
           </div>
+          </div>
+
+          <button
+            type="button"
+            class="header-actions-toggle d-lg-none"
+            [class.is-open]="headerActionsOpen"
+            (click)="toggleHeaderActions($event)"
+            [attr.aria-expanded]="headerActionsOpen"
+            aria-controls="header-actions-panel"
+            aria-label="Toggle header menu">
+            <i class="fa" [ngClass]="headerActionsOpen ? 'fa-times' : 'fa-bars'" aria-hidden="true"></i>
+            <ng-container *ngIf="cartCount$ | async as count">
+              <span class="header-actions-toggle__badge" *ngIf="count > 0">{{ count > 99 ? '99+' : count }}</span>
+            </ng-container>
+          </button>
         </div>
       </div>
     </div>
@@ -442,29 +462,50 @@
 
   <div class="bg-warning navigation-bar" *ngIf="!hideNavigationBar">
     <div class="container-fluid d-flex align-items-center h-100" >
-      <div class="all-cat-wrapper" (mouseenter)="openMenu()" (mouseleave)="closeMenu()">
-        <div class="all-cat-btn px-4 h-100 d-flex align-items-center border-end border-dark">
+      <div class="all-cat-wrapper" (mouseenter)="openMenuFromHover()" (mouseleave)="closeMenuFromHover()">
+        <button type="button" class="all-cat-btn px-4 h-100 d-flex align-items-center border-end border-dark"
+          (click)="toggleCategoryMenu($event)"
+          [attr.aria-expanded]="isOpen">
         <i class="fa fa-bars me-2"></i> ALL CATEGORIES
-      </div>
-
-      <!-- paanel code  -->
-      <!-- paanel code  -->
+      </button>
 
       <!-- Dropdown Panel -->
       <div class="all-cat-dropdown" [class.open]="isOpen">
 
         <!-- Left: Main category list -->
         <ul class="cat-main-list">
-          <li *ngFor="let cat of categories" (mouseenter)="setActive(cat)" [class.active]="activeCat?.id === cat.id">
-            <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
-              class="cat-main-link">
-              {{ cat.title }}
-              <i class="fa fa-angle-right ms-auto" *ngIf="cat.children?.length"></i>
-            </a>
+          <li *ngFor="let cat of categories"
+              (mouseenter)="setActiveFromHover(cat)"
+              [class.active]="activeCat?.id === cat.id"
+              [class.is-expanded]="isCatExpanded(cat)">
+            <div class="cat-main-row">
+              <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
+                class="cat-main-link"
+                (click)="onMainCategoryNavigate()">
+                {{ cat.title }}
+              </a>
+              <button type="button"
+                      class="cat-main-chevron"
+                      *ngIf="cat.children?.length"
+                      (click)="toggleCatChildren($event, cat)"
+                      [attr.aria-expanded]="isCatExpanded(cat)"
+                      [attr.aria-label]="'Show ' + cat.title + ' subcategories'">
+                <i class="fa" [ngClass]="isCatExpanded(cat) ? 'fa-angle-down' : 'fa-angle-right'" aria-hidden="true"></i>
+              </button>
+            </div>
+            <ul class="cat-mobile-children" *ngIf="cat.children?.length && isCatExpanded(cat)">
+              <li *ngFor="let child of cat.children">
+                <a [routerLink]="['/shop']" [queryParams]="{ category: child.id }"
+                  class="cat-mobile-child-link"
+                  (click)="onMainCategoryNavigate()">
+                  {{ child.title }}
+                </a>
+              </li>
+            </ul>
           </li>
         </ul>
 
-        <!-- Right: Sub-categories panel -->
+        <!-- Right: Sub-categories panel (desktop) -->
         <div class="cat-sub-panel" *ngIf="activeCat?.children?.length">
           <ul class="cat-sub-list">
             <li *ngFor="let child of activeCat.children">
@@ -481,8 +522,17 @@
       <!-- paanel code  -->
       <!-- paanel code  -->
       </div>
+
+      <nav class="header-quick-links d-lg-none" aria-label="Primary">
+        <a routerLink="/home"
+           routerLinkActive="is-active"
+           [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a routerLink="/shop"
+           routerLinkActive="is-active"
+           [routerLinkActiveOptions]="{ exact: true }">Shop</a>
+      </nav>
       
-      <div class="flex-grow-1 ps-2">
+      <div class="flex-grow-1 ps-2 d-none d-lg-block">
         <app-menu></app-menu>
       </div>
     </div>

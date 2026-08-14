@@ -13,6 +13,7 @@ import { Product } from '../classes/product';
 import { AuthService } from './auth.service';
 
 import { asBackgroundRequest } from '../interceptors/background-request';
+import { rewriteMediaUrl } from './media-url';
 
 
 
@@ -986,7 +987,7 @@ export class OnlineShopOrderService {
   private normalizeSuccessDetail(raw: any): OnlineShopOrderSuccessDetail {
     const products = (raw?.products ?? raw?.Products ?? []).map((p: any) => ({
       productName: String(p?.productName ?? p?.ProductName ?? ''),
-      productImageUrl: p?.productImageUrl ?? p?.ProductImageUrl,
+      productImageUrl: rewriteMediaUrl(p?.productImageUrl ?? p?.ProductImageUrl),
       quantity: Number(p?.quantity ?? p?.Quantity ?? 0),
       unitPrice: Number(p?.unitPrice ?? p?.UnitPrice ?? 0),
       lineTotal: Number(p?.lineTotal ?? p?.LineTotal ?? 0)

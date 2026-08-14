@@ -116,6 +116,6 @@ export class FailureComponent implements OnInit {
   }
 
   productImage(url?: string): string {
-    return url || 'assets/images/product/1.jpg';
+    return this.productService.normalizeImageUrl(url) || this.productService.defaultProductImage;
   }
 }

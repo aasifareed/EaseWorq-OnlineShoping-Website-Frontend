@@ -16,6 +16,7 @@ import { OnlineShopStorefront } from '../models/online-shop-storefront.model';
 import { asBackgroundRequest } from '../interceptors/background-request';
 import { OnlineShopCartLineInput } from './online-shop-checkout.service';
 import { SearchProductSuggestion } from './online-shop-search.service';
+import { rewriteMediaUrl, rewriteProductMedia } from './media-url';
 
 // Bumped with the pricing engine conversion so carts holding cached money are discarded.
 const ONLINE_SHOP_CART_VERSION = 3;
@@ -34,16 +35,27 @@ function loadCartFromStorage(): Product[] {
   }
 
   try {
-    return JSON.parse(localStorage.getItem('cartItems') || '[]');
+    const items = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    return Array.isArray(items) ? items.map((item: Product) => rewriteProductMedia(item)) : [];
+  } catch {
+    return [];
+  }
+}
+
+function readStoredProducts(key: string): Product[] {
+  try {
+    const raw = typeof localStorage === 'undefined' ? '[]' : (localStorage[key] || '[]');
+    const items = JSON.parse(raw);
+    return Array.isArray(items) ? items.map((item: Product) => rewriteProductMedia(item)) : [];
   } catch {
     return [];
   }
 }
 
 const state = {
-  products: JSON.parse(localStorage['products'] || '[]'),
-  wishlist: JSON.parse(localStorage['wishlistItems'] || '[]'),
-  compare: JSON.parse(localStorage['compareItems'] || '[]'),
+  products: readStoredProducts('products'),
+  wishlist: readStoredProducts('wishlistItems'),
+  compare: readStoredProducts('compareItems'),
   cart: loadCartFromStorage()
 }
 
@@ -290,7 +302,7 @@ private apiRoot(): string {
             // ignore quota errors
           }
         }),
-        startWith(JSON.parse(localStorage['products'] || '[]') as Product[]),
+        startWith(readStoredProducts('products')),
         shareReplay(1),
       );
     }
@@ -1137,12 +1149,7 @@ private apiRoot(): string {
     if (!raw || this.isGenericPlaceholderUrl(raw)) {
       return '';
     }
-    if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('assets/')) {
-      return raw;
-    }
-    const base = (environment.baseUrl || '').replace(/\/$/, '');
-    const path = raw.startsWith('/') ? raw : `/${raw}`;
-    return `${base}${path}`;
+    return rewriteMediaUrl(raw);
   }
 
   /** Brand logo URL, or empty when missing so the storefront shows the brand name instead. */
@@ -1234,16 +1241,7 @@ private apiRoot(): string {
 
   /** Fix API paths that use backslashes so browsers load images correctly. */
   normalizeImageUrl(url: string | null | undefined): string {
-    if (url == null || String(url).trim() === '') {
-      return '';
-    }
-    let u = String(url).trim().replace(/\\/g, '/');
-    if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('assets/')) {
-      return u;
-    }
-    const base = (environment.baseUrl || '').replace(/\/$/, '');
-    const path = u.startsWith('/') ? u : `/${u}`;
-    return `${base}${path}`;
+    return rewriteMediaUrl(url);
   }
 
   /** Merge primary pictureUrl into pictureUrls without duplicates. */

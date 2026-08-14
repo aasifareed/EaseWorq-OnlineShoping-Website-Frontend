@@ -32,7 +32,7 @@
         <p class="mb-0 orders-muted">You have not placed any orders yet.</p>
       </div>
 
-      <div *ngIf="!loading && orders.length" class="table-responsive orders-panel">
+      <div *ngIf="!loading && orders.length" class="table-responsive orders-panel orders-table-wrap">
         <table class="table mb-0 orders-table">
           <thead>
             <tr>
@@ -47,7 +47,7 @@
           <tbody>
             <tr *ngFor="let order of orders">
               <td class="fw-semibold">{{ order.onlineOrderNumber }}</td>
-              <td>{{ formatDate(order.orderDate) }}</td>
+              <td>{{ formatListDate(order.orderDate) }}</td>
               <td>
                 <span
                   class="order-status-badge"
@@ -58,71 +58,107 @@
               <td class="order-amount-col">{{ order.totalAmount | number:'1.2-2' }}</td>
               <td class="order-amount-col">{{ order.paidAmount | number:'1.2-2' }}</td>
               <td class="text-end order-actions">
-                <div
-                  ngbDropdown
-                  [placement]="['bottom-end', 'top-end']"
-                  container="body"
-                  class="order-actions-menu">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-order-more"
-                    ngbDropdownToggle
-                    aria-label="Order actions">
-                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                  </button>
-                  <div ngbDropdownMenu class="order-actions-dropdown shadow-lg">
-                    <button type="button" class="dropdown-item" (click)="showDetail(order)">
-                      <i class="fa fa-eye" aria-hidden="true"></i>
-                      <span>Show Detail</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="dropdown-item"
-                      [disabled]="isReceiptLoading(order.id)"
-                      (click)="downloadReceipt(order)">
-                      <i class="fa fa-download" aria-hidden="true"></i>
-                      <span>{{ isReceiptLoading(order.id) ? 'Preparing…' : 'Download Receipt' }}</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="dropdown-item"
-                      [disabled]="isReceiptLoading(order.id)"
-                      (click)="previewReceipt(order)">
-                      <i class="fa fa-file-text-o" aria-hidden="true"></i>
-                      <span>Preview Receipt</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="dropdown-item"
-                      (click)="trackOrder(order)">
-                      <i class="fa fa-history" aria-hidden="true"></i>
-                      <span>Track Order</span>
-                    </button>
-                    <button
-                      *ngIf="canRetryPayment(order)"
-                      type="button"
-                      class="dropdown-item dropdown-item-retry"
-                      [disabled]="isRetrying(order.id)"
-                      (click)="retryPayment(order)">
-                      <i class="fa fa-refresh" aria-hidden="true"></i>
-                      <span>{{ isRetrying(order.id) ? 'Redirecting…' : 'Retry Payment' }}</span>
-                    </button>
-                    <div class="dropdown-divider"></div>
-                    <button
-                      type="button"
-                      class="dropdown-item dropdown-item-remove"
-                      [disabled]="isRemoving(order.id)"
-                      (click)="removeFromList(order)">
-                      <i class="fa fa-trash-o" aria-hidden="true"></i>
-                      <span>{{ isRemoving(order.id) ? 'Removing…' : 'Remove from list' }}</span>
-                    </button>
-                  </div>
-                </div>
+                <ng-container [ngTemplateOutlet]="orderActionsTpl" [ngTemplateOutletContext]="{ $implicit: order }"></ng-container>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <div *ngIf="!loading && orders.length" class="orders-cards">
+        <article class="order-card" *ngFor="let order of orders">
+          <div class="order-card__top">
+            <div class="order-card__identity">
+              <div class="order-card__number">{{ order.onlineOrderNumber }}</div>
+              <div class="order-card__date">{{ formatListDate(order.orderDate) }}</div>
+            </div>
+            <div class="order-card__top-right">
+              <span
+                class="order-status-badge"
+                [ngStyle]="statusChipStyles(order.orderStatusColorCode)">
+                {{ statusLabel(order) }}
+              </span>
+              <ng-container [ngTemplateOutlet]="orderActionsTpl" [ngTemplateOutletContext]="{ $implicit: order }"></ng-container>
+            </div>
+          </div>
+          <div class="order-card__meta">
+            <div class="order-card__stat">
+              <span>Total</span>
+              <strong>{{ order.totalAmount | number:'1.2-2' }}</strong>
+            </div>
+            <div class="order-card__stat">
+              <span>Paid</span>
+              <strong>{{ order.paidAmount | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+          <button type="button" class="order-card__view" (click)="showDetail(order)">
+            View details
+          </button>
+        </article>
+      </div>
+
+      <ng-template #orderActionsTpl let-order>
+        <div
+          ngbDropdown
+          [placement]="['bottom-end', 'top-end']"
+          container="body"
+          class="order-actions-menu">
+          <button
+            type="button"
+            class="btn btn-sm btn-order-more"
+            ngbDropdownToggle
+            aria-label="Order actions">
+            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+          </button>
+          <div ngbDropdownMenu class="order-actions-dropdown shadow-lg">
+            <button type="button" class="dropdown-item" (click)="showDetail(order)">
+              <i class="fa fa-eye" aria-hidden="true"></i>
+              <span>Show Detail</span>
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              [disabled]="isReceiptLoading(order.id)"
+              (click)="downloadReceipt(order)">
+              <i class="fa fa-download" aria-hidden="true"></i>
+              <span>{{ isReceiptLoading(order.id) ? 'Preparing…' : 'Download Receipt' }}</span>
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              [disabled]="isReceiptLoading(order.id)"
+              (click)="previewReceipt(order)">
+              <i class="fa fa-file-text-o" aria-hidden="true"></i>
+              <span>Preview Receipt</span>
+            </button>
+            <button
+              type="button"
+              class="dropdown-item"
+              (click)="trackOrder(order)">
+              <i class="fa fa-history" aria-hidden="true"></i>
+              <span>Track Order</span>
+            </button>
+            <button
+              *ngIf="canRetryPayment(order)"
+              type="button"
+              class="dropdown-item dropdown-item-retry"
+              [disabled]="isRetrying(order.id)"
+              (click)="retryPayment(order)">
+              <i class="fa fa-refresh" aria-hidden="true"></i>
+              <span>{{ isRetrying(order.id) ? 'Redirecting…' : 'Retry Payment' }}</span>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button
+              type="button"
+              class="dropdown-item dropdown-item-remove"
+              [disabled]="isRemoving(order.id)"
+              (click)="removeFromList(order)">
+              <i class="fa fa-trash-o" aria-hidden="true"></i>
+              <span>{{ isRemoving(order.id) ? 'Removing…' : 'Remove from list' }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-template>
 
       <div *ngIf="!loading && orders.length" class="orders-pagination">
         <span class="orders-muted orders-pagination-summary">

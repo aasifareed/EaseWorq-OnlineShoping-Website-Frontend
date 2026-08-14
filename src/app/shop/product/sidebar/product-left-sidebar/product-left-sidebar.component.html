@@ -24,7 +24,7 @@
                        (click)="openLightbox($event)"
                        (keydown.enter)="openLightbox($event)">
                     <img *ngFor="let slide of [activeSlide]"
-                         [src]="galleryImages[slide]?.src || placeholderImage"
+                         [src]="(galleryImages[slide]?.src | remoteSrc | async) || placeholderImage"
                          [alt]="galleryImages[slide]?.alt || product?.title"
                          class="gallery-main-img"
                          (error)="onImageError($event, slide)">
@@ -40,7 +40,7 @@
                           [class.active]="activeSlide === i"
                           (click)="selectGalleryImage(i, $event)"
                           [attr.aria-label]="'Show image ' + (i + 1)">
-                    <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event, i)">
+                    <img [src]="(image.src | remoteSrc | async) || image.src" [alt]="image.alt" (error)="onImageError($event, i)">
                   </button>
                 </div>
               </div>
@@ -215,7 +215,7 @@
       <div class="product-lightbox__image-frame">
         <img *ngFor="let slide of [activeSlide]"
              class="product-lightbox__image"
-             [src]="galleryImages[slide]?.src || placeholderImage"
+             [src]="(galleryImages[slide]?.src | remoteSrc | async) || placeholderImage"
              [alt]="galleryImages[slide]?.alt || product?.title"
              (error)="onImageError($event, slide)">
       </div>
@@ -236,7 +236,7 @@
               [class.active]="activeSlide === i"
               (click)="selectGalleryImage(i, $event)"
               [attr.aria-label]="'Show image ' + (i + 1)">
-        <img [src]="image.src" [alt]="image.alt" (error)="onImageError($event, i)">
+        <img [src]="(image.src | remoteSrc | async) || image.src" [alt]="image.alt" (error)="onImageError($event, i)">
       </button>
     </div>
   </div>
