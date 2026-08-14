@@ -38,6 +38,12 @@ import { SignalRService } from '../../shared/services/signal-r.service';
 import { ShopNotificationItem } from '../../shared/models/notification.model';
 import { PayFastPaymentService } from '../../shop/checkout/pay-fast-payment.service';
 import { statusChipStyle } from '../../shared/utils/color-contrast.util';
+import {
+  downloadBlobInBrowser,
+  isNativeApp,
+  previewBlobInBrowser,
+  saveAndShareNativePdf,
+} from '../../shared/services/native-receipt';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -388,19 +394,7 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.receiptLoadingOrderId = order.id;
     this.onlineShopOrder.downloadOrderReceiptPdf(order.id, email).subscribe({
       next: (response) => {
-        this.receiptLoadingOrderId = null;
-        if (!response || response.size === 0) {
-          this.toastr.error('Receipt could not be generated.');
-          return;
-        }
-
-        const blob = new Blob([response], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = this.buildReceiptPdfFileName(order);
-        anchor.click();
-        window.URL.revokeObjectURL(url);
+        void this.openReceiptPdf(response, order, 'download');
       },
       error: (err) => {
         this.receiptLoadingOrderId = null;
@@ -418,28 +412,57 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.receiptLoadingOrderId = order.id;
     this.onlineShopOrder.previewOrderReceiptPdf(order.id, email).subscribe({
       next: (response) => {
-        this.receiptLoadingOrderId = null;
-        if (!response || response.size === 0) {
-          this.toastr.error('Receipt could not be generated.');
-          return;
-        }
-
-        const blob = new Blob([response], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const previewWindow = window.open(url, '_blank');
-        if (!previewWindow) {
-          window.URL.revokeObjectURL(url);
-          this.toastr.warning('Please allow pop-ups to preview the receipt.');
-          return;
-        }
-
-        previewWindow.addEventListener('unload', () => window.URL.revokeObjectURL(url));
+        void this.openReceiptPdf(response, order, 'preview');
       },
       error: (err) => {
         this.receiptLoadingOrderId = null;
         this.toastr.error(this.resolveReceiptErrorMessage(err, 'Could not preview receipt.'));
       },
     });
+  }
+
+  private async openReceiptPdf(
+    response: Blob,
+    order: OnlineShopOrderListItem,
+    mode: 'download' | 'preview',
+  ): Promise<void> {
+    this.receiptLoadingOrderId = null;
+    if (!response || response.size === 0) {
+      this.toastr.error('Receipt could not be generated.');
+      return;
+    }
+
+    const blob = new Blob([response], { type: 'application/pdf' });
+    const fileName = this.buildReceiptPdfFileName(order);
+
+    if (isNativeApp()) {
+      try {
+        const dialogTitle = mode === 'preview' ? 'Preview Receipt' : 'Download Receipt';
+        const { savedPath } = await saveAndShareNativePdf(blob, fileName, dialogTitle);
+        this.toastr.success(
+          mode === 'preview'
+            ? 'Choose an app to open the receipt.'
+            : `Receipt saved to ${savedPath}.`,
+        );
+      } catch (err) {
+        this.toastr.error(
+          this.resolveReceiptErrorMessage(
+            err,
+            mode === 'preview' ? 'Could not preview receipt.' : 'Could not download receipt.',
+          ),
+        );
+      }
+      return;
+    }
+
+    if (mode === 'download') {
+      downloadBlobInBrowser(blob, fileName);
+      return;
+    }
+
+    if (!previewBlobInBrowser(blob)) {
+      this.toastr.warning('Please allow pop-ups to preview the receipt.');
+    }
   }
 
   private buildReceiptPdfFileName(order: OnlineShopOrderListItem): string {
@@ -855,6 +878,22 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return isNaN(d.getTime()) ? value : d.toLocaleString();
   }
 
+  formatListDate(value: string): string {
+    if (!value) {
+      return '—';
+    }
+    const d = new Date(value);
+    return isNaN(d.getTime())
+      ? value
+      : d.toLocaleString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        });
+  }
+
   formatShortDate(value: string): string {
     if (!value) {
       return '';
@@ -874,6 +913,6 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   productImage(url?: string): string {
-    return url || this.productService.defaultProductImage;
+    return this.productService.normalizeImageUrl(url) || this.productService.defaultProductImage;
   }
 }

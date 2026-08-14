@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  isMobileApp: false,
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
   // baseUrl: 'https://pos-api.qa-behzitech.store/',

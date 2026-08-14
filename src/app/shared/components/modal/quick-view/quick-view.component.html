@@ -24,7 +24,7 @@
                              (click)="openLightbox($event)"
                              (keydown.enter)="openLightbox($event)">
                             <img *ngFor="let slide of [selectedIndex]"
-                                 [src]="productImages[slide] || placeholderImage"
+                                 [src]="(productImages[slide] | remoteSrc | async) || placeholderImage"
                                  [alt]="product?.title"
                                  class="gallery-main-img"
                                  (error)="onImageError($event, slide)">
@@ -40,12 +40,12 @@
                                 [class.active]="selectedIndex === i"
                                 (click)="selectThumbnail(i, $event)"
                                 [attr.aria-label]="'Show image ' + (i + 1)">
-                            <img [src]="image" [alt]="product?.title" (error)="onImageError($event, i)">
+                            <img [src]="(image | remoteSrc | async) || image" [alt]="product?.title" (error)="onImageError($event, i)">
                         </button>
                     </div>
                 </div>
 
-                <div class="qv-info product-right">
+                <div class="qv-info">
                     <h2 class="qv-title">{{ product?.title }}</h2>
                     <p class="qv-price">
                         {{ (product?.price | discount:product) * (currency?.price ?? 1) | shopCurrency:currency?.currency }}
@@ -62,13 +62,11 @@
                     </p>
                     <p class="qv-stock-note" *ngIf="stockNote">{{ stockNote }}</p>
 
-                    <div class="qv-details">
+                    <div class="qv-details" *ngIf="hasProductDescription">
                         <h6 class="qv-section-label">Product Details</h6>
-                        <p class="qv-description"
-                           [class.qv-description--fallback]="!hasProductDescription">
-                            {{ productDescriptionText }}
-                        </p>
+                        <p class="qv-description">{{ productDescriptionText }}</p>
                     </div>
+                </div>
 
                     <div class="qv-qty" *ngIf="!isFullyInCart">
                         <h6 class="qv-section-label">Quantity</h6>
@@ -96,7 +94,7 @@
                         </div>
                     </div>
 
-                    <div class="qv-actions product-buttons quick-view-actions">
+                    <div class="qv-actions quick-view-actions">
                         <a href="javascript:void(0)"
                            class="btn qv-btn qv-btn--primary"
                            [class.disabled]="selectableQuantity <= 0 || counter > selectableQuantity"
@@ -118,7 +116,6 @@
                           <span>View Full Details</span>
                         </a>
                     </div>
-                </div>
             </div>
         </div>
     </div>

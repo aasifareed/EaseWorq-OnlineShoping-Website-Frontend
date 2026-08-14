@@ -19,6 +19,7 @@ import { ElementsComponent } from './elements/elements.component';
 import { SiteNotAvailableComponent } from './site-not-available/site-not-available.component';
 import { storefrontBootstrapFactory } from './storefront-bootstrap';
 import { TenantService } from './shared/services/tenant.service';
+import { HomeBannerService } from './shared/services/home-banner.service';
 
 
 // AoT requires an exported function for factories
@@ -60,7 +61,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     {
       provide: APP_INITIALIZER,
       useFactory: storefrontBootstrapFactory,
-      deps: [TenantService, Router],
+      deps: [TenantService, Router, HomeBannerService],
       multi: true,
     },
   ],

@@ -9,9 +9,9 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../services/product.service';
 import { OnlineShopSettingsService } from '../../services/online-shop-settings.service';
 import { OnlineShopStorefront } from '../../models/online-shop-storefront.model';
@@ -28,6 +28,7 @@ import {
 } from '../../services/online-shop-search.service';
 import { StoreLogoService } from '../../services/store-logo.service';
 import { OnlineShopOrderService } from '../../services/online-shop-order.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-header-one',
@@ -44,6 +45,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
 
   public storefront: OnlineShopStorefront | null = null;
   storeLogoUrl: string | null = null;
+  readonly useBrandMark = !!environment.isMobileApp;
   readonly cartCount$: Observable<number>;
   isDarkMode = true;
 
@@ -54,6 +56,7 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
   searchSuggestions: SearchSuggestionsResult = { products: [], categories: [] };
   justAddedSuggestionId: string | null = null;
   cartRevision = 0;
+  headerActionsOpen = false;
   /** null until we know, so the chip never claims "0 orders" on a guess. */
   myOrderCount: number | null = null;
 
@@ -97,6 +100,29 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     if (this.searchDropdownOpen && searchWrapper && !searchWrapper.contains(target)) {
       this.closeSearchDropdown();
     }
+
+    const toggle = this.elementRef.nativeElement.querySelector('.header-actions-toggle');
+    const panel = this.elementRef.nativeElement.querySelector('.header-actions-panel');
+    if (this.headerActionsOpen && !toggle?.contains(target) && !panel?.contains(target)) {
+      this.closeHeaderActions();
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (!this.isBrowser || window.innerWidth >= 992) {
+      this.closeHeaderActions();
+    }
+  }
+
+  toggleHeaderActions(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.headerActionsOpen = !this.headerActionsOpen;
+  }
+
+  closeHeaderActions(): void {
+    this.headerActionsOpen = false;
   }
 
   get isLoggedIn(): boolean {
@@ -326,6 +352,13 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
 
     this.watchMyOrderCount();
 
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.closeHeaderActions();
+        this.closeMenu();
+      });
+
     this.searchInput$
       .pipe(
         debounceTime(300),
@@ -381,6 +414,31 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
     this.isOpen = true;
   }
 
+  openMenuFromHover(): void {
+    if (!this.isMobileCategoryMenu()) {
+      this.openMenu();
+    }
+  }
+
+  closeMenuFromHover(): void {
+    if (!this.isMobileCategoryMenu()) {
+      this.closeMenu();
+    }
+  }
+
+  toggleCategoryMenu(event?: Event): void {
+    if (!this.isMobileCategoryMenu()) {
+      return;
+    }
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (this.isOpen) {
+      this.closeMenu();
+    } else {
+      this.openMenu();
+    }
+  }
+
   filterbyCategory(): void {
     this.productService.getCategories().subscribe({
       next: (resp) => {
@@ -397,6 +455,33 @@ export class HeaderOneComponent implements OnInit, OnDestroy {
 
   setActive(cat: Category): void {
     this.activeCat = cat;
+  }
+
+  setActiveFromHover(cat: Category): void {
+    if (!this.isMobileCategoryMenu()) {
+      this.setActive(cat);
+    }
+  }
+
+  isCatExpanded(cat: Category): boolean {
+    return !!cat?.children?.length && this.activeCat?.id === cat.id;
+  }
+
+  toggleCatChildren(event: Event, cat: Category): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!cat.children?.length) {
+      return;
+    }
+    this.activeCat = this.activeCat?.id === cat.id ? null : cat;
+  }
+
+  onMainCategoryNavigate(): void {
+    this.closeMenu();
+  }
+
+  private isMobileCategoryMenu(): boolean {
+    return this.isBrowser && window.innerWidth < 992;
   }
 
   onSearchInput(): void {

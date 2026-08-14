@@ -50,11 +50,15 @@ app-bundle-product > section.section-b-space {
   padding-top: 0.85rem !important;
 }
 
-/* --- Checkout (no breadcrumb, compact top gap) --- */
+/* --- Checkout / cart (no breadcrumb, compact top gap) --- */
 app-checkout > section.checkout-page--compact,
-app-checkout > section.section-b-space {
-  margin-top: 0.35rem !important;
-  padding-top: 0.5rem !important;
+app-checkout > section.section-b-space,
+app-cart > section.cart-page--compact,
+app-cart > section.section-b-space,
+app-my-orders > section.my-orders-page,
+app-my-orders > section.section-b-space {
+  margin-top: 0.75rem !important;
+  padding-top: 0.85rem !important;
 }
 
 app-collection-left-sidebar > section.section-b-space,
@@ -77,6 +81,15 @@ section.home-hero-slider.container {
   padding-top: 0 !important;
   padding-left: 20px !important;
   padding-right: 20px !important;
+}
+
+@media (max-width: 991px) {
+  .home-hero-slider.container,
+  app-fashion-one > section.home-hero-slider.container,
+  section.home-hero-slider.container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
 }
 
 /* Tighter gap when free-shipping announce sits above the hero */

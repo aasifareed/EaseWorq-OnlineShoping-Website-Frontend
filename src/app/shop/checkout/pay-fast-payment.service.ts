@@ -26,6 +26,15 @@ export interface CreatePayFastCheckoutRequest {
   customerEmail?: string;
   customerMobileNo?: string;
   description?: string;
+  /** APK: backend returns to the app deep link after PayFast instead of the website. */
+  isMobileApp?: boolean;
+  /** Capacitor origin, e.g. https://sastakhareedo.com — PayFast SUCCESS/FAILURE land here, not on the Host tunnel. */
+  mobileReturnBaseUrl?: string;
+}
+
+export interface PayFastMobileReturnResult {
+  success: boolean;
+  orderId?: string | null;
 }
 
 /** ABP wraps controller payloads as { result: T, success, __abp }. */
@@ -49,15 +58,37 @@ export class PayFastPaymentService {
   createCheckout(request: CreatePayFastCheckoutRequest): Observable<PayFastCheckoutResponse> {
     const url = `${this.apiRoot()}api/services/app/OnlineShopPayment/CreateCheckout`;
     // const url = `${this.apiRoot()}api/payfast/create-checkout`;
-    return this.http.post<AbpAjaxResponse<PayFastCheckoutResponse> | PayFastCheckoutResponse>(url, request).pipe(
+    return this.http.post<AbpAjaxResponse<PayFastCheckoutResponse> | PayFastCheckoutResponse>(url, {
+      ...request,
+      ...this.mobileReturnHints(),
+    }).pipe(
       map((body) => this.normalizeCheckoutResponse(body))
     );
   }
 
   retryCheckout(orderId: string): Observable<PayFastCheckoutResponse> {
     const url = `${this.apiRoot()}api/services/app/OnlineShopPayment/RetryCheckout`;
-    return this.http.post<AbpAjaxResponse<PayFastCheckoutResponse> | PayFastCheckoutResponse>(url, { orderId }).pipe(
+    return this.http.post<AbpAjaxResponse<PayFastCheckoutResponse> | PayFastCheckoutResponse>(url, {
+      orderId,
+      ...this.mobileReturnHints(),
+    }).pipe(
       map((body) => this.normalizeCheckoutResponse(body))
+    );
+  }
+
+  completeMobileReturn(fields: Record<string, string>): Observable<PayFastMobileReturnResult> {
+    const url = `${this.apiRoot()}api/services/app/OnlineShopPayment/CompleteMobileReturn`;
+    return this.http.post<AbpAjaxResponse<PayFastMobileReturnResult> | PayFastMobileReturnResult>(
+      url,
+      { fields }
+    ).pipe(
+      map((body) => {
+        const payload = (body as AbpAjaxResponse<PayFastMobileReturnResult>)?.result ?? (body as PayFastMobileReturnResult);
+        return {
+          success: !!payload?.success,
+          orderId: payload?.orderId ?? null,
+        };
+      })
     );
   }
 
@@ -84,6 +115,16 @@ export class PayFastPaymentService {
 
     document.body.appendChild(form);
     form.submit();
+  }
+
+  private mobileReturnHints(): { isMobileApp: boolean; mobileReturnBaseUrl?: string } {
+    if (!environment.isMobileApp || typeof window === 'undefined') {
+      return { isMobileApp: false };
+    }
+    return {
+      isMobileApp: true,
+      mobileReturnBaseUrl: window.location.origin,
+    };
   }
 
   private normalizeCheckoutResponse(body: any): PayFastCheckoutResponse {

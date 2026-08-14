@@ -19,7 +19,7 @@
         [class.img-frame--category-empty]="isPlaceholderImage(category.image)">
         <img
           *ngIf="!isPlaceholderImage(category.image)"
-          [src]="category.image"
+          [src]="(category.image | remoteSrc | async) || category.image"
           [alt]="displayCategoryName(category.name)"
           loading="lazy"
           decoding="async" />
@@ -44,7 +44,7 @@
             [class.img-frame--category-empty]="isPlaceholderImage(category.image)">
             <img
               *ngIf="!isPlaceholderImage(category.image)"
-              [src]="category.image"
+              [src]="(category.image | remoteSrc | async) || category.image"
               [alt]="displayCategoryName(category.name)" />
             <div class="top-category-img__shade"></div>
             <div class="top-category-caption">
@@ -68,7 +68,7 @@
           [class.img-frame--category-empty]="isPlaceholderImage(category.image)">
           <img
             *ngIf="!isPlaceholderImage(category.image)"
-            [src]="category.image"
+            [src]="(category.image | remoteSrc | async) || category.image"
             [alt]="displayCategoryName(category.name)" />
           <div class="top-category-img__shade"></div>
           <div class="top-category-caption">

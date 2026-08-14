@@ -33,15 +33,23 @@
   </div>
 </div>
 
-<!-- Delivery deals: shown here only on small screens; the top header carries them on desktop -->
-<app-delivery-deals-banner class="home-delivery-deals"></app-delivery-deals-banner>
-
 <!-- Home slider start-->
 <section class="py-0 container home-hero-slider" [class.home-hero-slider--after-promo]="!!freeShippingPromo">
-  <app-slider [sliders]="sliders" [textClass]="'p-left'" [buttonText]="'Shop Now'">
+  <div
+    *ngIf="loadingHomeBanners && !sliders.length"
+    class="home-hero-skeleton"
+    aria-hidden="true"></div>
+  <app-slider
+    *ngIf="sliders.length"
+    [sliders]="sliders"
+    [textClass]="'p-left'"
+    [buttonText]="'Shop Now'">
   </app-slider>
 </section>
 <!-- Home slider End -->
+
+<!-- Delivery deals: below banners on small screens; desktop still uses the top header bar -->
+<app-delivery-deals-banner class="home-delivery-deals"></app-delivery-deals-banner>
 
 <!-- collection banner start-->
 <!-- collection banner start Categories slides-->

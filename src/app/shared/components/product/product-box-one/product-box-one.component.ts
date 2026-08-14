@@ -73,7 +73,7 @@ export class ProductBoxOneComponent implements OnInit, OnChanges {
 
   get stockLabel(): string {
     return this.isInStock
-      ? `Available quantity: ${this.stockQty}`
+      ? `Available: ${this.stockQty}`
       : 'Out of stock';
   }
 
