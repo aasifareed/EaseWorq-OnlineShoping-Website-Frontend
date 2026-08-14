@@ -24,6 +24,8 @@ import { ThemeService } from './shared/services/theme.service';
 
 import { TenantService } from './shared/services/tenant.service';
 
+import { initNativeApp } from './shared/services/native-app';
+
 
 
 @Component({
@@ -84,6 +86,8 @@ export class AppComponent implements OnInit {
       translate.addLangs(['en', 'fr']);
 
       this.themeService.init();
+
+      initNativeApp(this.router);
 
       document.getElementById('storefront-bootstrap-loader')?.remove();
 

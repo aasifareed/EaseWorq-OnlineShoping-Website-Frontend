@@ -36,6 +36,7 @@ import { ShopCurrencyPipe } from './pipes/shop-currency.pipe';
 import { ContrastTextPipe } from './pipes/contrast-text.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
 import { ExcerptPipe } from './pipes/excerpt.pipe';
+import { RemoteSrcPipe } from './pipes/remote-src.pipe';
 import { TopCategoriesSliderComponent } from './components/top-categories-slider/top-categories-slider.component';
 import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner/delivery-deals-banner.component';
 
@@ -64,6 +65,7 @@ import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner
     ContrastTextPipe,
     RelativeTimePipe,
     ExcerptPipe,
+    RemoteSrcPipe,
     TopCategoriesSliderComponent,
     DeliveryDealsBannerComponent,
   ],
@@ -110,6 +112,7 @@ import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner
     ContrastTextPipe,
     RelativeTimePipe,
     ExcerptPipe,
+    RemoteSrcPipe,
     TopCategoriesSliderComponent,
     DeliveryDealsBannerComponent,
   ]

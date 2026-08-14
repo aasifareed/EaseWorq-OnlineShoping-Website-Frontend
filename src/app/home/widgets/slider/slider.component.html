@@ -11,9 +11,9 @@
             class="home-hero-slide__img"
             [src]="slider.image"
             [attr.loading]="i === 0 ? 'eager' : 'lazy'"
-            [attr.fetchpriority]="i === 0 ? 'high' : 'auto'"
-            decoding="async"
-            alt="" />
+            [attr.fetchpriority]="i === 0 ? 'high' : 'low'"
+            [attr.decoding]="i === 0 ? 'sync' : 'async'"
+            alt="Promotional banner" />
           <div class="container">
             <div class="row">
               <div class="col">

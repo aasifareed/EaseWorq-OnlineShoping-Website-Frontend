@@ -13,6 +13,7 @@ import { ShopContextService } from './shop-context.service';
 import { StoreLogoService } from './store-logo.service';
 import { normalizeStoreGuid, resolveStoreIdFromApiPayload } from '../utils/shop-context.util';
 import { asBackgroundRequest } from '../interceptors/background-request';
+import { rewriteMediaUrl } from './media-url';
 
 @Injectable({
   providedIn: 'root',
@@ -155,8 +156,8 @@ export class OnlineShopSettingsService {
       storeId: resolveStoreIdFromApiPayload(raw) ?? normalizeStoreGuid(this.shopContext.getStoreId()),
       isOnlineShopEnabled: (raw.isOnlineShopEnabled ?? raw.IsOnlineShopEnabled) !== false,
       storeName: (raw.storeName ?? raw.StoreName) as string | undefined,
-      logoUrl: (raw.logoUrl ?? raw.LogoUrl) as string | undefined,
-      bannerImageUrl: (raw.bannerImageUrl ?? raw.BannerImageUrl) as string | undefined,
+      logoUrl: rewriteMediaUrl((raw.logoUrl ?? raw.LogoUrl) as string | undefined) || undefined,
+      bannerImageUrl: rewriteMediaUrl((raw.bannerImageUrl ?? raw.BannerImageUrl) as string | undefined) || undefined,
       storeAddress: (raw.storeAddress ?? raw.StoreAddress) as string | undefined,
       phoneNumber: (raw.phoneNumber ?? raw.PhoneNumber) as string | undefined,
       whatsAppNumber: (raw.whatsAppNumber ?? raw.WhatsAppNumber) as string | undefined,
@@ -185,7 +186,7 @@ export class OnlineShopSettingsService {
       receiptFooterText: (raw.receiptFooterText ?? raw.ReceiptFooterText) as string | undefined,
       metaTitle: (raw.metaTitle ?? raw.MetaTitle) as string | undefined,
       metaDescription: (raw.metaDescription ?? raw.MetaDescription) as string | undefined,
-      metaImageUrl: (raw.metaImageUrl ?? raw.MetaImageUrl) as string | undefined,
+      metaImageUrl: rewriteMediaUrl((raw.metaImageUrl ?? raw.MetaImageUrl) as string | undefined) || undefined,
     };
   }
 }

@@ -1,6 +1,6 @@
 <div class="pro_inventory" *ngIf="displayStock > 0">
     <p class="product-stock-available">
-      Available quantity: <strong>{{ displayStock }}</strong>
+      Available: <strong>{{ displayStock }}</strong>
     </p>
     <p class="active product-stock-low" *ngIf="displayStock <= 5">
       Hurry! We have only {{ displayStock }} product in stock.

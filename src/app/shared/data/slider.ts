@@ -3,6 +3,7 @@ export let HomeSlider: any = {
     loop: true,
     nav: true,
     dots: false,
+    autoHeight: true,
     autoplay: true,
     autoplayTimeout: 5000,
     autoplayHoverPause: true,

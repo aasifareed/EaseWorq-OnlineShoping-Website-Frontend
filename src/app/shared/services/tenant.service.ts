@@ -103,7 +103,8 @@ export class TenantService {
       return null;
     }
 
-    if (!environment.production && this.isLocalDevHost()) {
+    // APK uses the storefront domain as WebView origin (CORS) and for tenant resolve.
+    if (environment.isMobileApp || (!environment.production && this.isLocalDevHost())) {
       return environment.devHostName?.trim() || window.location.hostname?.trim() || null;
     }
 

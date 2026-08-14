@@ -4,13 +4,52 @@
   padding-right: 20px !important;
 }
 
+@media (max-width: 991px) {
+  .home-hero-slider.container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+}
+
 .home-hero-slider--after-promo.home-hero-slider.container {
   margin-top: 22px !important;
+}
+
+.home-hero-skeleton {
+  width: 100%;
+  aspect-ratio: 16 / 6;
+  min-height: 140px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.14) 45%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: home-hero-skeleton-shine 1.1s linear infinite;
+}
+
+@keyframes home-hero-skeleton-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 991px) {
+  .home-hero-skeleton {
+    aspect-ratio: 16 / 9;
+    min-height: 120px;
+  }
 }
 
 /* Desktop shows the deals in the top header bar instead. */
 .home-delivery-deals {
   display: block;
+  margin-top: 8px;
 }
 
 @media (min-width: 1200px) {
