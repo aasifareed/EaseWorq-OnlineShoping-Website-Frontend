@@ -13,11 +13,16 @@
     "build:ssr": "ng build --prod && ng run multikart:server:production",
     "prerender": "ng run multikart:prerender",
     "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points",
-    "build:android": "ng build --configuration android",
-    "cap:sync": "ng build --configuration android && npx cap sync android",
-    "cap:copy": "ng build --configuration android && npx cap copy android",
+    "build:android": "ng build --configuration android && npx cap sync android",
+    "build:android:beta": "ng build --configuration android-beta && npx cap sync android",
+    "build:android:prod": "ng build --configuration android-prod && npx cap sync android",
+    "cap:sync": "npx cap sync android",
+    "cap:copy": "npx cap copy android",
     "cap:open": "npx cap open android",
-    "cap:apk": "cd android && gradlew.bat assembleDebug"
+    "cap:apk": "cd android && gradlew.bat assembleDebug",
+    "apk:local": "node scripts/build-apk.js local",
+    "apk:beta": "node scripts/build-apk.js beta",
+    "apk:prod": "node scripts/build-apk.js prod"
   },
   "private": true,
   "dependencies": {

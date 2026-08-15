@@ -1,6 +1,8 @@
 package com.fareedmart.onlineshop;
 
+import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -15,6 +17,67 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends BridgeActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        rewriteProductAppLinkIntent(getIntent());
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        rewriteProductAppLinkIntent(intent);
+        setIntent(intent);
+        super.onNewIntent(intent);
+    }
+
+    /**
+     * Capacitor serves the SPA from https://sastakhareedo.com. App Link paths like
+     * /shop/product/{slug} are not local files, so rewrite them to the existing hash route
+     * before Capacitor/WebView load. PayFast return URLs are left unchanged.
+     */
+    private void rewriteProductAppLinkIntent(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        Uri uri = intent.getData();
+        if (uri == null) {
+            return;
+        }
+        String path = uri.getPath();
+        if (path == null) {
+            return;
+        }
+        String lowerPath = path.toLowerCase(Locale.US);
+        if (lowerPath.contains("payfast-return") || lowerPath.contains("/shop/checkout/")) {
+            return;
+        }
+        if (!lowerPath.startsWith("/shop/product/")) {
+            return;
+        }
+
+        String slug = path.substring("/shop/product/".length());
+        if (slug.toLowerCase(Locale.US).startsWith("left/sidebar/")) {
+            slug = slug.substring("left/sidebar/".length());
+        }
+        if (slug.endsWith("/")) {
+            slug = slug.substring(0, slug.length() - 1);
+        }
+        int slash = slug.indexOf('/');
+        if (slash >= 0) {
+            slug = slug.substring(0, slash);
+        }
+        if (slug.isEmpty()) {
+            return;
+        }
+
+        String dest = "https://sastakhareedo.com/#/shop/product/" + slug;
+        String query = uri.getEncodedQuery();
+        if (query != null && !query.isEmpty()) {
+            dest += "?" + query;
+        }
+        intent.setData(Uri.parse(dest));
+    }
 
     @Override
     protected void load() {
