@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, map, shareReplay, startWith, delay, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, shareReplay, startWith, delay, switchMap, take, tap } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { Product } from '../classes/product';
 import {
@@ -249,17 +249,39 @@ export class ProductService {
     }
   }
 
-  /** Resolver + detail: POS id, cached grid row, then legacy JSON slug/title. */
+  /** Resolver: cache, then storefront API by inventory id or SEO slug (cold load / pasted URL / App Link). */
   resolveProductForShop(routeKey: string): Observable<Product | undefined> {
     const persisted = this.getPersistedShopProduct(routeKey);
-    if (persisted) {
+    if (persisted?.title) {
       return of({ ...persisted });
     }
     const cached = this.getCachedShopProduct(routeKey);
-    if (cached) {
+    if (cached?.title) {
       return of({ ...cached });
     }
-    return this.getProductBySlug(routeKey);
+
+    const key = String(routeKey || '').trim();
+    if (!key) {
+      return of(undefined);
+    }
+
+    return this.tenantService.whenReady().pipe(
+      take(1),
+      switchMap(() => this.getProductDetailForOnlineShop(key)),
+      map((resp) => {
+        const item = resp?.result ?? resp?.Result;
+        if (!item) {
+          return undefined;
+        }
+        const mapped = this.mapInventoryItemToProduct(item);
+        if (mapped?.id) {
+          this.persistShopProduct(mapped);
+          this.cacheShopProducts([mapped]);
+        }
+        return mapped?.title ? mapped : undefined;
+      }),
+      catchError(() => this.getProductBySlug(key)),
+    );
   }
 
   constructor(

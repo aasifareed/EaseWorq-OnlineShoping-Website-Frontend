@@ -40,6 +40,7 @@
                 <data android:scheme="@string/custom_url_scheme" />
             </intent-filter>
 
+            <!-- Production: path-based only. Hash routes cannot be matched by pathPrefix. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -47,8 +48,15 @@
                 <data android:scheme="https" />
                 <data android:host="sastakhareedo.com" />
                 <data android:host="www.sastakhareedo.com" />
-                <data android:host="beta.sastakhareedo.com" />
                 <data android:pathPrefix="/shop/product" />
+            </intent-filter>
+
+            <!-- Beta: domain-level so https://beta.sastakhareedo.com/#/shop/product/{slug} matches (path is /). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="beta.sastakhareedo.com" />
             </intent-filter>
 
         </activity>

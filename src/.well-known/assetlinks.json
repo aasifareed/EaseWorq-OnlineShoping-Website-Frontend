@@ -4,7 +4,9 @@
     "target": {
       "namespace": "android_app",
       "package_name": "com.fareedmart.onlineshop",
-      "sha256_cert_fingerprints": []
+      "sha256_cert_fingerprints": [
+        "3B:0C:D8:21:52:FB:A7:1C:46:56:B8:85:CB:54:B0:E2:00:9A:D1:B7:AE:25:75:02:02:DD:BA:5B:E7:DB:50:99"
+      ]
     }
   }
 ]

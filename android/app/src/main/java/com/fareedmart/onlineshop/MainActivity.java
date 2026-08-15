@@ -32,9 +32,9 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Capacitor serves the SPA from https://sastakhareedo.com. App Link paths like
-     * /shop/product/{slug} are not local files, so rewrite them to the existing hash route
-     * before Capacitor/WebView load. PayFast return URLs are left unchanged.
+     * Keep App Links inside the Capacitor SPA (hostname sastakhareedo.com).
+     * Beta hash URLs are https://beta.sastakhareedo.com/#/shop/product/{slug} — path is "/",
+     * product is in the fragment. PayFast return URLs are left unchanged.
      */
     private void rewriteProductAppLinkIntent(Intent intent) {
         if (intent == null) {
@@ -44,39 +44,83 @@ public class MainActivity extends BridgeActivity {
         if (uri == null) {
             return;
         }
-        String path = uri.getPath();
-        if (path == null) {
-            return;
-        }
+
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.US);
+        String path = uri.getPath() == null ? "" : uri.getPath();
+        String fragment = uri.getFragment() == null ? "" : uri.getFragment();
         String lowerPath = path.toLowerCase(Locale.US);
-        if (lowerPath.contains("payfast-return") || lowerPath.contains("/shop/checkout/")) {
-            return;
-        }
-        if (!lowerPath.startsWith("/shop/product/")) {
+        String lowerFragment = fragment.toLowerCase(Locale.US);
+
+        if (lowerPath.contains("payfast-return")
+                || lowerPath.contains("/shop/checkout/")
+                || lowerFragment.contains("shop/checkout")
+                || lowerFragment.contains("payfast-return")) {
             return;
         }
 
-        String slug = path.substring("/shop/product/".length());
+        String slug = productSlugFromUri(uri);
+        String query = uri.getEncodedQuery();
+        if (slug != null && !slug.isEmpty()) {
+            String dest = "https://sastakhareedo.com/#/shop/product/" + slug;
+            if (query != null && !query.isEmpty()) {
+                dest += "?" + query;
+            }
+            intent.setData(Uri.parse(dest));
+            return;
+        }
+
+        // Domain-level beta links: stay on the local WebView origin, keep the hash route.
+        if ("beta.sastakhareedo.com".equals(host) && !fragment.isEmpty()) {
+            String hash = fragment.startsWith("/") ? fragment : "/" + fragment;
+            String dest = "https://sastakhareedo.com/#" + hash;
+            if (query != null && !query.isEmpty() && !hash.contains("?")) {
+                dest += "?" + query;
+            }
+            intent.setData(Uri.parse(dest));
+        }
+    }
+
+    private static String productSlugFromUri(Uri uri) {
+        String fromPath = productSlugFromPath(uri.getPath());
+        if (fromPath != null) {
+            return fromPath;
+        }
+        String fragment = uri.getFragment();
+        if (fragment == null || fragment.isEmpty()) {
+            return null;
+        }
+        int q = fragment.indexOf('?');
+        if (q >= 0) {
+            fragment = fragment.substring(0, q);
+        }
+        if (!fragment.startsWith("/")) {
+            fragment = "/" + fragment;
+        }
+        return productSlugFromPath(fragment);
+    }
+
+    private static String productSlugFromPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        String normalized = path;
+        if (normalized.endsWith("/") && normalized.length() > 1) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        String lower = normalized.toLowerCase(Locale.US);
+        String prefix = "/shop/product/";
+        if (!lower.startsWith(prefix)) {
+            return null;
+        }
+        String slug = normalized.substring(prefix.length());
         if (slug.toLowerCase(Locale.US).startsWith("left/sidebar/")) {
             slug = slug.substring("left/sidebar/".length());
-        }
-        if (slug.endsWith("/")) {
-            slug = slug.substring(0, slug.length() - 1);
         }
         int slash = slug.indexOf('/');
         if (slash >= 0) {
             slug = slug.substring(0, slash);
         }
-        if (slug.isEmpty()) {
-            return;
-        }
-
-        String dest = "https://sastakhareedo.com/#/shop/product/" + slug;
-        String query = uri.getEncodedQuery();
-        if (query != null && !query.isEmpty()) {
-            dest += "?" + query;
-        }
-        intent.setData(Uri.parse(dest));
+        return slug.isEmpty() ? null : slug;
     }
 
     @Override
