@@ -18,6 +18,7 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   activeSlug = '';
   category: any;
 
+  private expandedIds = new Set<string>();
   private paramsSub?: Subscription;
 
   constructor(
@@ -30,7 +31,8 @@ export class CategoriesComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.paramsSub = this.route.queryParams.subscribe(params => {
       this.activeSlug = params['category'] ? String(params['category']) : '';
-      this.showAll = false;
+      this.expandActivePath();
+      this.ensureActiveParentVisible();
     });
     this.filterbyCategory();
   }
@@ -46,12 +48,23 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     return this.productService.findCategoryPathFlexible(this.category, this.activeSlug);
   }
 
-  isOpen(cat: any): boolean {
-    const path = this.categoryPathResolved;
-    if (path?.length) {
-      return path.some((p) => String(p.id) === String(cat.id));
+  isExpanded(cat: any): boolean {
+    const id = this.nodeId(cat);
+    return !!id && this.expandedIds.has(id);
+  }
+
+  toggleExpanded(event: Event, cat: any): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const id = this.nodeId(cat);
+    if (!id) {
+      return;
     }
-    return String(this.activeSlug) === String(cat.id);
+    if (this.expandedIds.has(id)) {
+      this.expandedIds.delete(id);
+    } else {
+      this.expandedIds.add(id);
+    }
   }
 
   isCategoryActive(node: any): boolean {
@@ -61,48 +74,11 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     if (String(node.id) === String(this.activeSlug)) {
       return true;
     }
-    const cur = this.navCurrent;
-    if (cur && String(cur.id) === String(node.id)) {
-      return true;
-    }
     const slug = this.productService.normalizeCategoryKey(this.activeSlug);
     return (
       this.productService.normalizeCategoryKey(String(node.title)) === slug ||
       this.productService.normalizeCategoryKey(String(node.id)) === slug
     );
-  }
-
-  get navCurrent(): any | null {
-    if (!this.activeSlug || !this.category?.length) {
-      return null;
-    }
-    const path = this.categoryPathResolved;
-    return path?.length ? path[path.length - 1] : null;
-  }
-
-  get navParent(): any | null {
-    if (!this.activeSlug || !this.category?.length) {
-      return null;
-    }
-    const path = this.categoryPathResolved;
-    return path && path.length > 1 ? path[path.length - 2] : null;
-  }
-
-  get navChildren(): any[] {
-    const cur = this.navCurrent;
-    return Array.isArray(cur?.children) ? cur.children : [];
-  }
-
-  /** Microless back target: parent category, or root list when at top level. */
-  get backLabel(): string {
-    return this.navParent?.title ? String(this.navParent.title) : 'All Categories';
-  }
-
-  get backQueryParams(): Record<string, string> {
-    if (this.navParent?.id !== undefined && this.navParent?.id !== null && this.navParent?.id !== '') {
-      return { category: String(this.navParent.id) };
-    }
-    return {};
   }
 
   hasChildren(node: any): boolean {
@@ -121,7 +97,48 @@ export class CategoriesComponent implements OnInit, OnDestroy {
     this.productService.getCategories().subscribe({
       next: (resp) => {
         this.category = resp.result;
+        this.expandActivePath();
+        this.ensureActiveParentVisible();
       }
     });
+  }
+
+  private expandActivePath(): void {
+    const path = this.categoryPathResolved;
+    if (!path?.length) {
+      return;
+    }
+    path.forEach((node) => {
+      const id = this.nodeId(node);
+      if (id && this.hasChildren(node)) {
+        this.expandedIds.add(id);
+      }
+    });
+  }
+
+  private ensureActiveParentVisible(): void {
+    if (!this.activeSlug || this.showAll) {
+      return;
+    }
+    const list = Array.isArray(this.category) ? this.category : [];
+    if (list.length <= this.previewLimit) {
+      return;
+    }
+    const path = this.categoryPathResolved;
+    const rootId = this.nodeId(path?.[0]);
+    if (!rootId) {
+      return;
+    }
+    const rootIndex = list.findIndex((cat) => this.nodeId(cat) === rootId);
+    if (rootIndex >= this.previewLimit) {
+      this.showAll = true;
+    }
+  }
+
+  private nodeId(node: any): string {
+    if (node?.id === undefined || node?.id === null || node?.id === '') {
+      return '';
+    }
+    return String(node.id);
   }
 }
