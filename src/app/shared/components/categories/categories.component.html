@@ -1,34 +1,52 @@
 <div class="collection-collapse-block border-0 microless-category" [class.open]="collapse">
     <h3 class="collapse-block-title" (click)="collapse = !collapse">Category</h3>
     <div class="collection-collapse-block-content">
-        <!-- Root list: forward into categories -->
-        <div class="collection-brand-filter collection-brand-filter--expandable" *ngIf="!activeSlug || !navCurrent">
+        <div class="collection-brand-filter collection-brand-filter--expandable">
             <ul class="category-list">
-                <li *ngFor="let cat of visibleCategories">
-                    <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
-                        [class.active]="isCategoryActive(cat)"
-                        [class.has-children]="hasChildren(cat)">
-                        {{ cat.title }}
-                        <span *ngIf="cat.count">({{ cat.count }})</span>
-                    </a>
-                    <ul *ngIf="isOpen(cat) && cat.children?.length">
-                        <li *ngFor="let child of cat.children">
-                            <a [routerLink]="['/shop']"
-                                [queryParams]="{ category: child.id }"
-                                [class.active]="isCategoryActive(child)"
-                                [class.has-children]="hasChildren(child)">
-                                {{ child.title }}
-                                <span *ngIf="child.count">({{ child.count }})</span>
-                            </a>
-                            <ul *ngIf="isOpen(child) && child.children?.length">
+                <li *ngFor="let cat of visibleCategories" [class.is-expanded]="isExpanded(cat)">
+                    <div class="category-row">
+                        <a [routerLink]="['/shop']" [queryParams]="{ category: cat.id }"
+                            [class.active]="isCategoryActive(cat)">
+                            {{ cat.title }}
+                            <span *ngIf="cat.count">({{ cat.count }})</span>
+                        </a>
+                        <button type="button"
+                                class="category-chevron"
+                                *ngIf="hasChildren(cat)"
+                                (click)="toggleExpanded($event, cat)"
+                                [attr.aria-expanded]="isExpanded(cat)"
+                                [attr.aria-label]="'Show ' + cat.title + ' subcategories'">
+                            <i class="fa" [ngClass]="isExpanded(cat) ? 'fa-angle-down' : 'fa-angle-right'" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <ul class="category-children" *ngIf="hasChildren(cat) && isExpanded(cat)">
+                        <li *ngFor="let child of cat.children" [class.is-expanded]="isExpanded(child)">
+                            <div class="category-row">
+                                <a [routerLink]="['/shop']"
+                                    [queryParams]="{ category: child.id }"
+                                    [class.active]="isCategoryActive(child)">
+                                    {{ child.title }}
+                                    <span *ngIf="child.count">({{ child.count }})</span>
+                                </a>
+                                <button type="button"
+                                        class="category-chevron"
+                                        *ngIf="hasChildren(child)"
+                                        (click)="toggleExpanded($event, child)"
+                                        [attr.aria-expanded]="isExpanded(child)"
+                                        [attr.aria-label]="'Show ' + child.title + ' subcategories'">
+                                    <i class="fa" [ngClass]="isExpanded(child) ? 'fa-angle-down' : 'fa-angle-right'" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <ul class="category-children" *ngIf="hasChildren(child) && isExpanded(child)">
                                 <li *ngFor="let grand of child.children">
-                                    <a [routerLink]="['/shop']"
-                                        [queryParams]="{ category: grand.id }"
-                                        [class.active]="isCategoryActive(grand)"
-                                        [class.has-children]="hasChildren(grand)">
-                                        {{ grand.title }}
-                                        <span *ngIf="grand.count">({{ grand.count }})</span>
-                                    </a>
+                                    <div class="category-row">
+                                        <a [routerLink]="['/shop']"
+                                            [queryParams]="{ category: grand.id }"
+                                            [class.active]="isCategoryActive(grand)">
+                                            {{ grand.title }}
+                                            <span *ngIf="grand.count">({{ grand.count }})</span>
+                                        </a>
+                                    </div>
                                 </li>
                             </ul>
                         </li>
@@ -41,30 +59,6 @@
                     (click)="showAll = !showAll">
               {{ showAll ? 'Show less' : 'Show more' }}
             </button>
-        </div>
-
-        <!-- Drill-down: back to parent / All Categories, current title, forward to children -->
-        <div class="collection-brand-filter microless-category-branch" *ngIf="activeSlug && navCurrent">
-            <a class="microless-cat-back"
-               [routerLink]="['/shop']"
-               [queryParams]="backQueryParams">
-                <span class="microless-cat-back-chevron" aria-hidden="true">&lt;</span>
-                {{ backLabel }}
-            </a>
-
-            <div class="microless-cat-current">{{ navCurrent.title }}</div>
-
-            <ul class="microless-cat-children" *ngIf="navChildren.length">
-                <li *ngFor="let child of navChildren">
-                    <a [routerLink]="['/shop']"
-                       [queryParams]="{ category: child.id }"
-                       [class.active]="isCategoryActive(child)"
-                       [class.has-children]="hasChildren(child)">
-                        {{ child.title }}
-                        <span *ngIf="child.count">({{ child.count }})</span>
-                    </a>
-                </li>
-            </ul>
         </div>
     </div>
 </div>
