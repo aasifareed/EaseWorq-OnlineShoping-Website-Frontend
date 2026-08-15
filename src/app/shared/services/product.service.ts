@@ -1197,7 +1197,7 @@ private apiRoot(): string {
     );
   }
 
-  /** Popular brands for the home page carousel (admin IsPopular flag). */
+  /** Popular brands for the home page carousel (admin IsPopular flag; not filtered by stock). */
   getHomePopularBrandsForOnline(input?: {
     tenantId?: number;
     storeId?: string;
