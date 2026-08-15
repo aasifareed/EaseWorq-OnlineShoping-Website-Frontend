@@ -1,23 +1,17 @@
-// Capacitor Android APK for local Host (dev tunnel).
-// Use `npm run apk:beta` / `npm run apk:prod` for deployed APIs.
+// Capacitor Android APK pointed at the BETA API (no local dev tunnel).
 
 export const environment = {
-  production: false,
+  production: true,
   isMobileApp: true,
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
-  baseUrl: 'https://wqw3kv18-44374.uks1.devtunnels.ms/',
-  /** Sent to WebsiteTenantResolver (APK WebView is not the real storefront host). */
-  devHostName: 'https://sastakhareedo.com',
-  /** Subdomain tenancy name used when running on localhost in development. */
+  baseUrl: 'https://beta-onlineshopping-api.sastakhareedo.com/',
+  /** Sent to WebsiteTenantResolver. Beta TenantDomains maps this host, not sastakhareedo.com. */
+  devHostName: 'beta.sastakhareedo.com',
   devTenancyName: 'beta-ak-mobile-shop',
-  /** Fixed tenant id used when running locally in development (mirrors admin panel). */
   devTenantId: 1,
-  /** Optional fallback only — resolved at runtime from subdomain + APIs. */
   tenantId: null as number | null,
-  /** Optional fallback only — resolved from GetForStorefront when omitted. */
   storeId: null as string | null,
-  /** Google Maps JavaScript API key (Places Autocomplete). */
   googleMapsApiKey: 'AIzaSyDyeIndELQj_horM-429SavXuMHojQ62P0',
   googleClientId: '463817211807-kd2tc0n3us50bc4qt5srp9jvr7qoa4oi.apps.googleusercontent.com',
   urls: {

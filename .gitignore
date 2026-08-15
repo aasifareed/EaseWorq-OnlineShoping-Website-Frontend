@@ -30,6 +30,7 @@
 /android/captures/
 /android/*.apk
 /android/*.aab
+/apk/
 
 # Logs
 npm-debug.log*

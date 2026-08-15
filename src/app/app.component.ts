@@ -1,4 +1,4 @@
-import { Component, PLATFORM_ID, Inject, OnInit } from '@angular/core';
+import { Component, PLATFORM_ID, Inject, NgZone, OnInit } from '@angular/core';
 
 import { isPlatformBrowser } from '@angular/common';
 
@@ -75,7 +75,9 @@ export class AppComponent implements OnInit {
 
     private signalRService: SignalRService,
 
-    private auth: AuthService
+    private auth: AuthService,
+
+    private ngZone: NgZone
 
   ) {
 
@@ -87,7 +89,7 @@ export class AppComponent implements OnInit {
 
       this.themeService.init();
 
-      initNativeApp(this.router);
+      initNativeApp(this.router, this.ngZone);
 
       document.getElementById('storefront-bootstrap-loader')?.remove();
 
