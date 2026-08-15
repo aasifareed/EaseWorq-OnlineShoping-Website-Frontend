@@ -21,7 +21,11 @@ export class Resolver {
     const navState = typeof history !== 'undefined'
       ? (history.state as { product?: Product })?.product
       : undefined;
-    if (navState && slug && String(navState.id) === slug) {
+    const navSlug = String(navState?.slug || '').trim().toLowerCase();
+    if (navState && slug && (
+      String(navState.id) === slug
+      || (navSlug && navSlug === slug.toLowerCase())
+    )) {
       return { ...navState };
     }
 
