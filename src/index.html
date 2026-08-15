@@ -31,6 +31,21 @@
         }
       })();
     </script>
+    <script>
+      (function () {
+        try {
+          if (location.hash && location.hash.indexOf('#/shop/product/') === 0) {
+            return;
+          }
+          var path = (location.pathname || '').replace(/\/+$/, '');
+          var match = path.match(/^\/shop\/product\/(?:left\/sidebar\/)?([^/]+)$/i);
+          if (!match || !match[1]) {
+            return;
+          }
+          location.replace('/#/shop/product/' + encodeURIComponent(match[1]) + (location.search || ''));
+        } catch (e) {}
+      })();
+    </script>
 
     <div id="storefront-bootstrap-loader" class="sk-boot" aria-live="polite" aria-busy="true">
       <div class="sk-boot__glow" aria-hidden="true"></div>
