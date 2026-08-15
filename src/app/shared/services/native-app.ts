@@ -112,10 +112,11 @@ export function pathFromProductAppLink(url: string): ProductAppLink | null {
     return null;
   }
 
+  const rawHash = extractHash(url);
   try {
     const parsed = new URL(url);
     const slug = productSlugFromPath(parsed.pathname)
-      || productSlugFromPath(hashPath(parsed.hash));
+      || productSlugFromPath(hashPath(parsed.hash || rawHash));
     if (!slug) {
       return null;
     }
@@ -124,20 +125,21 @@ export function pathFromProductAppLink(url: string): ProductAppLink | null {
       slug,
       queryParams: {
         ...queryParamsFromSearch(parsed.search),
-        ...queryParamsFromSearch(hashSearch(parsed.hash)),
+        ...queryParamsFromSearch(hashSearch(parsed.hash || rawHash)),
       },
     };
   } catch {
-    const hashIdx = url.indexOf('#/');
-    if (hashIdx >= 0) {
-      const hash = url.slice(hashIdx);
-      const slug = productSlugFromPath(hashPath(hash));
-      if (slug) {
-        return { slug, queryParams: queryParamsFromSearch(hashSearch(hash)) };
-      }
+    const slug = productSlugFromPath(hashPath(rawHash));
+    if (slug) {
+      return { slug, queryParams: queryParamsFromSearch(hashSearch(rawHash)) };
     }
     return null;
   }
+}
+
+function extractHash(url: string): string {
+  const hashIdx = url.indexOf('#');
+  return hashIdx >= 0 ? url.slice(hashIdx) : '';
 }
 
 function productSlugFromPath(pathname: string): string | null {
