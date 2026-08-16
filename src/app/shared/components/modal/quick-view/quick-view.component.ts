@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
 import { Product } from '../../../classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
 import { shopProductLink } from '../../../constants/storefront-routes';
+import { isBlankHtml } from '../../../utils/html-text';
 
 @Component({
   selector: 'app-quick-view',
@@ -114,15 +115,11 @@ export class QuickViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   get hasProductDescription(): boolean {
-    return !!(this.product?.description && String(this.product.description).trim());
+    return !isBlankHtml(this.product?.description);
   }
 
-  get productDescriptionText(): string {
-    if (!this.hasProductDescription) {
-      return 'No description available.';
-    }
-    const text = String(this.product.description).trim();
-    return text.length > 200 ? `${text.substring(0, 200)}...` : text;
+  get productDescriptionHtml(): string {
+    return String(this.product?.description ?? '').trim();
   }
 
   get selectedImage(): string {

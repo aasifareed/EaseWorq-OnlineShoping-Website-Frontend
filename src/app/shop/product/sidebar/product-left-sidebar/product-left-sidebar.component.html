@@ -46,18 +46,34 @@
               </div>
               <div class="col-lg-6 rtl-text">
                 <div class="product-right pdp-info">
-                  <h1 class="pdp-title">{{ displayTitle }}</h1>
-                  <p class="pdp-price" *ngIf="!product?.discount">
-                    {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
-                  </p>
-                  <div class="pdp-price-wrap" *ngIf="product?.discount">
-                    <p class="pdp-price">
-                      {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
-                    </p>
-                    <p class="pdp-price-was">
-                      <del>{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
-                      <span class="pdp-discount">{{ product?.discount }}% off</span>
-                    </p>
+                  <div class="pdp-heading">
+                    <div class="pdp-heading__main">
+                      <h1 class="pdp-title">{{ displayTitle }}</h1>
+                      <p class="pdp-price" *ngIf="!product?.discount">
+                        {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
+                      </p>
+                      <div class="pdp-price-wrap" *ngIf="product?.discount">
+                        <p class="pdp-price">
+                          {{ (product?.price | discount:product) * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}
+                        </p>
+                        <p class="pdp-price-was">
+                          <del>{{ product?.price * productService.Currency?.price | shopCurrency:productService.Currency?.currency }}</del>
+                          <span class="pdp-discount">{{ product?.discount }}% off</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div class="pdp-offer-chips" *ngIf="productCouponOffers.length">
+                      <button type="button"
+                              class="pdp-offer-chip"
+                              *ngFor="let offer of productCouponOffers; trackBy: trackByOfferId"
+                              (click)="useProductCouponOffer(offer)"
+                              [attr.title]="'Copy and apply ' + offer.code"
+                              [attr.aria-label]="'Copy and apply coupon ' + offer.code">
+                        <span class="pdp-offer-chip__code">{{ offer.code }}</span>
+                        <span class="pdp-offer-chip__benefit">{{ offer.benefitLabel }}</span>
+                      </button>
+                      <p class="pdp-offer-hint">Tap a code to copy &amp; apply</p>
+                    </div>
                   </div>
 
                   <ul class="color-variant" *ngIf="Color(product?.variants).length">
@@ -93,25 +109,66 @@
                     </div>
                   </div>
 
-                  <div class="pdp-qty" *ngIf="!isFullyInCart">
-                    <h6 class="pdp-section-label">Quantity</h6>
-                    <div class="pdp-qty-box" role="group" aria-label="Quantity">
-                      <button type="button"
-                              class="pdp-qty-btn"
-                              (click)="decrement()"
-                              [disabled]="counter <= 1"
-                              aria-label="Decrease quantity">−</button>
-                      <input type="text"
-                             name="quantity"
-                             class="pdp-qty-input"
-                             [value]="counter"
-                             disabled
-                             aria-label="Selected quantity"/>
-                      <button type="button"
-                              class="pdp-qty-btn"
-                              (click)="increment()"
-                              [disabled]="!canIncrementCounter"
-                              aria-label="Increase quantity">+</button>
+                  <div class="pdp-buy-tools">
+                    <div class="pdp-qty" *ngIf="!isFullyInCart">
+                      <h6 class="pdp-section-label">Quantity</h6>
+                      <div class="pdp-qty-box" role="group" aria-label="Quantity">
+                        <button type="button"
+                                class="pdp-qty-btn"
+                                (click)="decrement()"
+                                [disabled]="counter <= 1"
+                                aria-label="Decrease quantity">−</button>
+                        <input type="text"
+                               name="quantity"
+                               class="pdp-qty-input"
+                               [value]="counter"
+                               disabled
+                               aria-label="Selected quantity"/>
+                        <button type="button"
+                                class="pdp-qty-btn"
+                                (click)="increment()"
+                                [disabled]="!canIncrementCounter"
+                                aria-label="Increase quantity">+</button>
+                      </div>
+                    </div>
+
+                    <div class="pdp-coupon">
+                      <h6 class="pdp-section-label">Coupon</h6>
+                      <div class="pdp-coupon__row">
+                        <input
+                          type="text"
+                          class="pdp-coupon__input"
+                          placeholder="Enter code"
+                          autocomplete="off"
+                          [(ngModel)]="couponCodeInput"
+                          [disabled]="couponApplying"
+                          (keyup.enter)="applyProductCoupon()"
+                        />
+                        <button
+                          type="button"
+                          class="pdp-coupon__apply"
+                          [disabled]="couponApplying"
+                          (click)="applyProductCoupon()">
+                          <i class="fa" [ngClass]="couponApplying ? 'fa-spinner fa-spin' : 'fa-tag'" aria-hidden="true"></i>
+                          {{ couponApplying ? '…' : 'Apply' }}
+                        </button>
+                      </div>
+                      <ul class="pdp-coupon__list" *ngIf="productCouponStatuses.length">
+                        <li
+                          class="pdp-coupon__chip"
+                          *ngFor="let coupon of productCouponStatuses"
+                          [class.pdp-coupon__chip--rejected]="!coupon.isValid">
+                          <span class="pdp-coupon__code">{{ coupon.couponCode }}</span>
+                          <span class="pdp-coupon__message">{{ coupon.message }}</span>
+                          <button
+                            type="button"
+                            class="pdp-coupon__remove"
+                            (click)="removeProductCoupon(coupon.couponCode)"
+                            [attr.aria-label]="'Remove ' + coupon.couponCode">
+                            ×
+                          </button>
+                        </li>
+                      </ul>
                     </div>
                   </div>
 
@@ -151,7 +208,7 @@
                     <a ngbNavLink>Description</a>
                     <ng-template ngbNavContent>
                       <div class="pdp-tab-panel">
-                        <p class="pdp-description">{{ productDescriptionFull }}</p>
+                        <div class="pdp-description" [innerHTML]="productDescriptionFull"></div>
                       </div>
                     </ng-template>
                   </li>

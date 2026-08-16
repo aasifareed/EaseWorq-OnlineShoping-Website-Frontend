@@ -5,6 +5,7 @@ import { map, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TenantService } from './tenant.service';
 import { asBackgroundRequest } from '../interceptors/background-request';
+import { stripHtml } from '../utils/html-text';
 
 export interface SearchProductSuggestion {
   /** @deprecated Use productInventoryId */
@@ -110,7 +111,7 @@ export class OnlineShopSearchService {
           productUnitStock,
           stock: productUnitStock,
           isAvailable: this.toBoolean(p.isAvailable ?? p.IsAvailable, true),
-          description: String(p.description || p.Description || '').trim() || undefined,
+          description: stripHtml(String(p.description || p.Description || '')) || undefined,
           categoryName: String(p.categoryName || p.CategoryName || '').trim() || undefined,
           categoryId: String(p.categoryId || p.CategoryId || '').trim() || undefined,
           brandId: String(p.brandId || p.BrandId || '').trim() || undefined,

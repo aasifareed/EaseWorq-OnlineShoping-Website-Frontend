@@ -1,14 +1,16 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { stripHtml } from '../utils/html-text';
 
 @Pipe({ name: 'excerpt' })
 export class ExcerptPipe implements PipeTransform {
   transform(text: string | null | undefined, limit = 30): string {
-    if (!text) {
+    const plain = stripHtml(text);
+    if (!plain) {
       return '';
     }
-    if (text.length <= limit) {
-      return text;
+    if (plain.length <= limit) {
+      return plain;
     }
-    return `${text.substring(0, limit)}...`;
+    return `${plain.substring(0, limit)}...`;
   }
 }

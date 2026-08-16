@@ -22,6 +22,20 @@
     padding-top: 4px;
   }
 
+  .pdp-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin: 0 0 14px;
+  }
+
+  .pdp-heading__main {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
   .pdp-title {
     margin: 0 0 8px;
     font-size: 1.75rem;
@@ -33,7 +47,7 @@
   }
 
   .pdp-price {
-    margin: 0 0 14px;
+    margin: 0;
     font-size: 1.4rem;
     font-weight: 700;
     line-height: 1.25;
@@ -41,11 +55,64 @@
   }
 
   .pdp-price-wrap {
-    margin: 0 0 14px;
+    margin: 0;
 
     .pdp-price {
       margin-bottom: 4px;
     }
+  }
+
+  .pdp-offer-chips {
+    flex: 1 1 180px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 340px;
+  }
+
+  .pdp-offer-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 8px 12px;
+    border: 1px dashed #d97706;
+    border-radius: 10px;
+    background: #fffbeb;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+
+    &:hover,
+    &:focus-visible {
+      border-style: solid;
+      background: #fef3c7;
+      outline: none;
+    }
+  }
+
+  .pdp-offer-chip__code {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #111111;
+  }
+
+  .pdp-offer-chip__benefit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #b45309;
+  }
+
+  .pdp-offer-hint {
+    flex: 1 0 100%;
+    margin: 0;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    text-align: right;
   }
 
   .pdp-price-was {
@@ -111,8 +178,110 @@
     margin: 0 0 18px;
   }
 
-  .pdp-qty {
+  .pdp-buy-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 16px;
     margin: 0 0 20px;
+  }
+
+  .pdp-qty {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .pdp-coupon {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  .pdp-coupon__row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .pdp-coupon__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111111;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+
+    &::placeholder {
+      text-transform: none;
+      color: #9ca3af;
+    }
+  }
+
+  .pdp-coupon__apply {
+    flex: 0 0 auto;
+    min-width: 88px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 8px;
+    background: #FFC400;
+    color: #111111;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  .pdp-coupon__list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pdp-coupon__chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(60, 185, 110, 0.12);
+    color: #111111;
+    font-size: 0.78rem;
+  }
+
+  .pdp-coupon__chip--rejected {
+    background: rgba(240, 113, 103, 0.12);
+  }
+
+  .pdp-coupon__code {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  .pdp-coupon__message {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #4b5563;
+  }
+
+  .pdp-coupon__remove {
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
   }
 
   .pdp-qty-box {
@@ -253,8 +422,50 @@
   .pdp-description {
     margin: 0;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.65;
     color: #4b5563;
+
+    ::ng-deep p {
+      margin: 0 0 0.85rem;
+    }
+
+    ::ng-deep p:last-child {
+      margin-bottom: 0;
+    }
+
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4,
+    ::ng-deep strong,
+    ::ng-deep b {
+      font-weight: 700;
+      color: #111111;
+    }
+
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4 {
+      margin: 1.1rem 0 0.5rem;
+      font-size: 1rem;
+    }
+
+    ::ng-deep ul,
+    ::ng-deep ol {
+      margin: 0 0 0.85rem;
+      padding-left: 1.35rem;
+    }
+
+    ::ng-deep ul {
+      list-style-type: disc;
+    }
+
+    ::ng-deep ol {
+      list-style-type: decimal;
+    }
+
+    ::ng-deep li {
+      margin-bottom: 0.35rem;
+    }
 
     &--fallback {
       color: #9ca3af;
@@ -298,8 +509,27 @@
 
 :host-context(body.dark) .product-detail-page {
   .pdp-title,
-  .pdp-price {
+  .pdp-price,
+  .pdp-offer-chip__code {
     color: #f5f7fa;
+  }
+
+  .pdp-offer-chip {
+    background: rgba(255, 196, 0, 0.12);
+    border-color: #FFC400;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(255, 196, 0, 0.22);
+    }
+  }
+
+  .pdp-offer-chip__benefit {
+    color: #FFC400;
+  }
+
+  .pdp-offer-hint {
+    color: #8b93a1;
   }
 
   .pdp-stock--ok {
@@ -323,6 +553,14 @@
 
   .pdp-description {
     color: #c5ccd8;
+
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4,
+    ::ng-deep strong,
+    ::ng-deep b {
+      color: #f5f7fa;
+    }
 
     &--fallback {
       color: #8b93a1;
@@ -349,6 +587,25 @@
     border-left-color: rgba(255, 255, 255, 0.1);
     border-right-color: rgba(255, 255, 255, 0.1);
     color: #f5f7fa;
+  }
+
+  .pdp-coupon__input {
+    background: #1f2430;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #f5f7fa;
+
+    &::placeholder {
+      color: #8b93a1;
+    }
+  }
+
+  .pdp-coupon__chip {
+    background: rgba(255, 196, 0, 0.12);
+    color: #f5f7fa;
+  }
+
+  .pdp-coupon__message {
+    color: #c5ccd8;
   }
 
   .pdp-actions {
