@@ -1,0 +1,8 @@
+@import '../register/register.component.scss';
+
+.field-hint {
+  display: block;
+  margin: 6px 0 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted, #9ca3af);
+}

@@ -68,7 +68,11 @@ TcsCourier_CreateBookingFromOrder: "TcsCourier/CreateBookingFromOrder",
 //OnlineShopUsersAppServcie
 OnlinseShopUsers_SignupForOnlineShop: "OnlinseShopUsers/SignupForOnlineShop",
 OnlinseShopUsers_ResetPasswordRequestForOnlineShop: "OnlinseShopUsers/ResetPasswordRequestForOnlineShop",
+OnlinseShopUsers_CheckOtpForOnlineShop: "OnlinseShopUsers/CheckOtpForOnlineShop",
+OnlinseShopUsers_ExpireOldOtpForOnlineShop: "OnlinseShopUsers/ExpireOldOtpForOnlineShop",
+OnlinseShopUsers_ChangePasswordByOtpForOnlineShop: "OnlinseShopUsers/ChangePasswordByOtpForOnlineShop",
 OnlinseShopUsers_GetCustomerProfileForOnlineShop: "OnlinseShopUsers/GetCustomerProfileForOnlineShop",
+OnlinseShopUsers_UpdateCustomerProfileForOnlineShop: "OnlinseShopUsers/UpdateCustomerProfileForOnlineShop",
 
 // OnlineShopAvailableProduct_GetAllAvailableProductsForOnlineShop:
 // 'OnlineShopAvailableProduct/GetAllAvailableProductsForOnlineShop',

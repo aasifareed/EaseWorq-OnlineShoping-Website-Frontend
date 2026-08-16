@@ -15,6 +15,17 @@ export interface FreeShippingPromo {
   minSpend?: number;
 }
 
+export interface ProductCouponOffer {
+  id: string;
+  title: string;
+  code: string;
+  type: string;
+  amount: number | null;
+  minSpend: number;
+  isFirstOrder: boolean;
+  benefitLabel: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -67,6 +78,65 @@ export class FreeShippingPromoService {
     );
 
     return this.promoRequest$;
+  }
+
+  getProductCoupons(productId: string): Observable<ProductCouponOffer[]> {
+    const catalogId = String(productId ?? '').trim();
+    if (!catalogId) {
+      return of([]);
+    }
+
+    return this.tenantService.whenReady().pipe(
+      switchMap((ctx) => {
+        const urls = environment.urls as Record<string, string>;
+        const path = urls.OnlineShopCoupon_GetProductCoupons
+          || 'OnlineShopCoupon/GetProductCouponsForStorefront';
+        const url =
+          `${this.apiRoot()}api/services/app/${path}` +
+          `?TenantId=${ctx.tenantId}&ProductId=${encodeURIComponent(catalogId)}`;
+        return this.http.get(url, asBackgroundRequest()).pipe(
+          map((resp: { result?: Array<Record<string, unknown>> | null }) => {
+            const rows = Array.isArray(resp?.result) ? resp.result : [];
+            return rows
+              .map((row) => this.mapProductCouponOffer(row))
+              .filter((offer): offer is ProductCouponOffer => !!offer);
+          }),
+          catchError(() => of([]))
+        );
+      })
+    );
+  }
+
+  private mapProductCouponOffer(row: Record<string, unknown>): ProductCouponOffer | null {
+    const code = String(row.code ?? row.Code ?? '').trim().toUpperCase();
+    if (!code) {
+      return null;
+    }
+
+    const type = String(row.type ?? row.Type ?? '').trim().toLowerCase();
+    const amountRaw = row.amount ?? row.Amount;
+    const amount = amountRaw == null || amountRaw === '' ? null : Number(amountRaw);
+
+    return {
+      id: String(row.id ?? row.Id ?? code),
+      title: String(row.title ?? row.Title ?? '').trim(),
+      code,
+      type,
+      amount: Number.isFinite(amount) ? amount : null,
+      minSpend: Number(row.minSpend ?? row.MinSpend ?? 0) || 0,
+      isFirstOrder: !!(row.isFirstOrder ?? row.IsFirstOrder),
+      benefitLabel: this.productCouponBenefitLabel(type, Number.isFinite(amount) ? amount : null)
+    };
+  }
+
+  private productCouponBenefitLabel(type: string, amount: number | null): string {
+    if (type === 'percentage' && amount != null) {
+      return `${amount}% off`;
+    }
+    if (type === 'fixed' && amount != null) {
+      return `Rs. ${amount} off`;
+    }
+    return 'Discount';
   }
 
   private apiRoot(): string {

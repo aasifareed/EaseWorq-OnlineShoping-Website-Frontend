@@ -213,6 +213,27 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
     return pass === confirm ? null : { mismatch: true };
   }
 
+  touchedInvalid(name: string): boolean {
+    const control = this.registerForm.get(name);
+    return !!control && control.touched && control.invalid;
+  }
+
+  hasError(name: string, error: string): boolean {
+    return !!this.registerForm.get(name)?.hasError(error);
+  }
+
+  showPasswordMismatch(): boolean {
+    if (!this.registerForm.errors?.['mismatch']) {
+      return false;
+    }
+    const password = this.registerForm.get('password');
+    const confirm = this.registerForm.get('confirmPassword');
+    if (!password?.touched && !confirm?.touched) {
+      return false;
+    }
+    return String(confirm?.value ?? '').length > 0;
+  }
+
   submit(): void {
     if (this.registerForm.invalid || this.loading) {
       this.registerForm.markAllAsTouched();

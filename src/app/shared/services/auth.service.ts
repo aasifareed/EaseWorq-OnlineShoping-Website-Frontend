@@ -239,6 +239,9 @@ export class AuthService {
     }
 
     localStorage.setItem(AuthService.PROFILE_KEY, JSON.stringify(merged));
+    if (merged.customerEmail) {
+      localStorage.setItem(AuthService.EMAIL_KEY, merged.customerEmail);
+    }
   }
 
   /** Loads name/email from session API and merges into stored checkout profile. */
@@ -329,6 +332,59 @@ export class AuthService {
     );
   }
 
+  updateCustomerProfile(payload: {
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    address: string;
+    townCity: string;
+    stateCounty: string;
+    postalCode: string;
+  }): Observable<ShopCustomerProfile | null> {
+    const email = this.getCustomerEmail();
+    if (!email) {
+      return throwError(() => ({ error: { message: 'Please log in to update your profile.' } }));
+    }
+
+    const body = {
+      storeId: this.storeId,
+      tenantId: this.tenantId,
+      customerEmail: email,
+      firstName: payload.firstName.trim(),
+      lastName: payload.lastName.trim(),
+      phoneNumber: payload.phoneNumber?.trim() || '',
+      address: payload.address.trim(),
+      townCity: payload.townCity.trim(),
+      stateCounty: payload.stateCounty.trim(),
+      postalCode: payload.postalCode.trim()
+    };
+
+    const path = environment.urls.OnlinseShopUsers_UpdateCustomerProfileForOnlineShop
+      || 'OnlinseShopUsers/UpdateCustomerProfileForOnlineShop';
+
+    return this.http.post<any>(
+      `${this.apiRoot()}api/services/app/${path}`,
+      body
+    ).pipe(
+      tap((resp) => {
+        const data = resp?.result ?? resp;
+        if (!data) {
+          return;
+        }
+        this.saveCustomerProfile({
+          customerName: data.customerName ?? data.CustomerName,
+          customerMobileNo: data.customerMobileNo ?? data.CustomerMobileNo,
+          customerEmail: data.customerEmail ?? data.CustomerEmail ?? email,
+          address: data.address ?? data.Address,
+          town: data.town ?? data.Town,
+          state: data.state ?? data.State,
+          postalcode: data.postalcode ?? data.Postalcode ?? data.postalCode ?? data.PostalCode,
+        });
+      }),
+      map(() => this.getCustomerProfile())
+    );
+  }
+
   getInitials(): string {
     const email = this.getCustomerEmail();
     if (!email) {
@@ -399,20 +455,59 @@ export class AuthService {
 
   resetPasswordRequest(emailAddress: string): Observable<string> {
     const body = {
-      emailAddress: emailAddress.trim(),
+      emailAddress: String(emailAddress || '').trim(),
       phoneNumber: '',
       tenantId: this.tenantId
     };
 
-    return this.http.post<any>(`${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_ResetPasswordRequestForOnlineShop}`, body).pipe(
-      map((resp) => {
-        const code = resp?.result ?? resp;
-        const ok = code === 200 || code === 'OK' || code === 0;
-        if (!ok && typeof code !== 'number') {
-          return 'If an account exists for this email, reset instructions have been sent.';
-        }
-        return 'Password reset instructions have been sent to your email.';
-      })
+    return this.http.post<any>(
+      `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_ResetPasswordRequestForOnlineShop}`,
+      body
+    ).pipe(
+      map(() => 'A 5-digit code has been sent to your email.')
+    );
+  }
+
+  checkPasswordResetOtp(emailAddress: string, otpCode: string): Observable<void> {
+    const body = {
+      emailAddress: String(emailAddress || '').trim(),
+      otpCode: String(otpCode || '').trim(),
+      tenantId: this.tenantId
+    };
+
+    return this.http.post<any>(
+      `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_CheckOtpForOnlineShop}`,
+      body
+    ).pipe(map(() => undefined));
+  }
+
+  expirePasswordResetOtp(emailAddress: string): Observable<void> {
+    const body = {
+      emailAddress: String(emailAddress || '').trim(),
+      tenantId: this.tenantId
+    };
+
+    return this.http.post<any>(
+      `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_ExpireOldOtpForOnlineShop}`,
+      body
+    ).pipe(
+      map(() => undefined),
+      catchError(() => of(undefined))
+    );
+  }
+
+  changePasswordByOtp(emailAddress: string, password: string): Observable<string> {
+    const body = {
+      emailAddress: String(emailAddress || '').trim(),
+      password,
+      tenantId: this.tenantId
+    };
+
+    return this.http.post<any>(
+      `${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_ChangePasswordByOtpForOnlineShop}`,
+      body
+    ).pipe(
+      map(() => 'Password changed successfully. You can now log in.')
     );
   }
 

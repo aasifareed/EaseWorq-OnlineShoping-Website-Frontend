@@ -1,83 +1,81 @@
 <app-breadcrumb [title]="'Profile'" [breadcrumb]="'Profile'"></app-breadcrumb>
-<!-- personal deatail section start -->
-<section class="contact-page register-page">
+<section class="register-page section-b-space">
     <div class="container">
         <div class="row">
-            <div class="col-sm-12">
-                <h3>PERSONAL DETAIL</h3>
-                <form class="theme-form">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="name">First Name</label>
-                            <input type="text" class="form-control" id="name" placeholder="Enter Your name" required="">
+            <div class="col-lg-12">
+                <h3>My Profile</h3>
+                <div class="theme-card">
+                    <form class="theme-form" [formGroup]="form" (ngSubmit)="submit()">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="fname">First Name <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="fname" formControlName="firstName"
+                                       placeholder="First Name"
+                                       [class.is-invalid]="touchedInvalid('firstName')">
+                                <small class="field-error" *ngIf="touchedInvalid('firstName')">First name is required.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lname">Last Name <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="lname" formControlName="lastName"
+                                       placeholder="Last Name"
+                                       [class.is-invalid]="touchedInvalid('lastName')">
+                                <small class="field-error" *ngIf="touchedInvalid('lastName')">Last name is required.</small>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="email">Last Name</label>
-                            <input type="text" class="form-control" id="last-name" placeholder="Email" required="">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" formControlName="email">
+                                <small class="field-hint">Email is used to sign in and cannot be changed here.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="phone">Phone / WhatsApp</label>
+                                <input type="text" class="form-control" id="phone" formControlName="phone"
+                                       placeholder="+92XXXXXXXXXX">
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="review">Phone number</label>
-                            <input type="text" class="form-control" id="review" placeholder="Enter your number" required="">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label for="address">Address <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="address" formControlName="address"
+                                       placeholder="Street address"
+                                       [class.is-invalid]="touchedInvalid('address')">
+                                <small class="field-error" *ngIf="touchedInvalid('address') && hasError('address', 'required')">Address is required.</small>
+                                <small class="field-error" *ngIf="touchedInvalid('address') && hasError('address', 'maxlength')">Maximum 100 characters allowed.</small>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="email">Email</label>
-                            <input type="text" class="form-control" id="email" placeholder="Email" required="">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="town">Town/City <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="town" formControlName="town"
+                                       placeholder="Town/City"
+                                       [class.is-invalid]="touchedInvalid('town')">
+                                <small class="field-error" *ngIf="touchedInvalid('town')">Town/City is required.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="state">State / County <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="state" formControlName="state"
+                                       placeholder="State / County"
+                                       [class.is-invalid]="touchedInvalid('state')">
+                                <small class="field-error" *ngIf="touchedInvalid('state')">State / County is required.</small>
+                            </div>
                         </div>
-                        <div class="col-md-12">
-                            <label for="review">Write Your Message</label>
-                            <textarea class="form-control mb-0" placeholder="Write Your Message" id="exampleFormControlTextarea1" rows="6"></textarea>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="postalcode">Postal Code <span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" id="postalcode" formControlName="postalcode"
+                                       placeholder="Postal Code"
+                                       [class.is-invalid]="touchedInvalid('postalcode')">
+                                <small class="field-error" *ngIf="touchedInvalid('postalcode')">Postal code is required.</small>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-solid" [disabled]="saving || loading">
+                            <i class="fa" [ngClass]="saving ? 'fa-spinner fa-spin me-2' : 'fa-save me-2'" aria-hidden="true"></i>
+                            {{ saving ? 'Saving…' : 'Save profile' }}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </section>
-<!-- Section ends -->
-<!-- address section start -->
-<section class="contact-page register-page section-b-space">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12">
-                <h3>SHIPPING ADDRESS</h3>
-                <form class="theme-form">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="name">flat / plot</label>
-                            <input type="text" class="form-control" id="home-ploat" placeholder="company name" required="">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="name">Address *</label>
-                            <input type="text" class="form-control" id="address-two" placeholder="Address" required="">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="email">Zip Code *</label>
-                            <input type="text" class="form-control" id="zip-code" placeholder="zip-code" required="">
-                        </div>
-                        <div class="col-md-6 select_input">
-                            <label for="review">Country *</label>
-                            <select class="form-control" size="1">
-                                <option value="India">India</option>
-                                <option value="UAE">UAE</option>
-                                <option value="U.K">U.K</option>
-                                <option value="US">US</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="review">City *</label>
-                            <input type="text" class="form-control" id="city" placeholder="City" required="">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="review">Region/State *</label>
-                            <input type="text" class="form-control" id="region-state" placeholder="Region/state" required="">
-                        </div>
-                        <div class="col-md-12">
-                            <button class="btn btn-sm btn-solid" type="submit">Save setting</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- Section ends -->

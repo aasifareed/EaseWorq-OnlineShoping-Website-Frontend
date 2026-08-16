@@ -336,6 +336,7 @@
                   <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
                 </ng-container>
                 <ng-container *ngIf="isLoggedIn">
+                  <li><a class="dropdown-item" [routerLink]="['/pages/profile']">Profile</a></li>
                   <li><a class="dropdown-item" [routerLink]="['/pages/my-orders']">My Orders</a></li>
                   <li><hr class="dropdown-divider"></li>
                   <li><button type="button" class="dropdown-item" (click)="logout()">
