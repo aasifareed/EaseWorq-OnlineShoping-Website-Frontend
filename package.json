@@ -45,6 +45,7 @@
     "@capacitor/filesystem": "^6.0.2",
     "@capacitor/share": "^6.0.3",
     "@capacitor/status-bar": "^6.0.2",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@ks89/angular-modal-gallery": "^10.0.1",
     "@microsoft/signalr": "^8.0.7",
     "@ng-bootstrap/ng-bootstrap": "^16.0.0-rc.2",

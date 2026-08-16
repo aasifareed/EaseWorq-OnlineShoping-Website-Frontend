@@ -57,7 +57,8 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
       address: ['', [trimRequired(), trimMaxLength(100)]],
       town: ['', trimRequired()],
       state: ['', trimRequired()],
-      postalcode: ['', trimRequired()],
+      country: [{ value: 'Pakistan', disabled: true }],
+      postalcode: [''],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
@@ -299,6 +300,10 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
         this.toastr.error(msg || 'Google sign-in failed. Please try again.');
       }
     });
+  }
+
+  onGoogleFailed(message: string): void {
+    this.toastr.error(message || 'Google sign-in failed. Please try again.');
   }
 
 }

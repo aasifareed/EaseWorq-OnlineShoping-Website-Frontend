@@ -4,4 +4,5 @@
     <string name="title_activity_main">Sasta Khareedo</string>
     <string name="package_name">com.fareedmart.onlineshop</string>
     <string name="custom_url_scheme">com.fareedmart.onlineshop</string>
+    <string name="server_client_id">845543032039-b34k6kg6h54i25vdrjjb3vco49uln8a2.apps.googleusercontent.com</string>
 </resources>

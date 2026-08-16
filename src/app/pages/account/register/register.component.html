@@ -123,18 +123,26 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="postalcode">Postal Code <span class="required-mark">*</span></label>
+                                <label for="country">Country</label>
+                                <input type="text" class="form-control" id="country" formControlName="country"
+                                       readonly>
+                                <small class="field-hint">Deliveries are currently available in Pakistan only.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="postalcode">Postal Code <span class="optional-mark">(optional)</span></label>
                                 <input type="text" class="form-control" id="postalcode" formControlName="postalcode"
-                                       placeholder="Postal Code"
-                                       [class.is-invalid]="touchedInvalid('postalcode')">
-                                <small class="field-error" *ngIf="touchedInvalid('postalcode')">Postal code is required.</small>
+                                       placeholder="Postal Code">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-solid" [disabled]="loading">
                             <i class="fa" [ngClass]="loading ? 'fa-spinner fa-spin me-2' : 'fa-user-plus me-2'" aria-hidden="true"></i>
                             {{ loading ? 'Creating…' : 'create Account' }}
                         </button>
-                        <app-google-sign-in-button [disabled]="loading" (credential)="onGoogleCredential($event)"></app-google-sign-in-button>
+                        <app-google-sign-in-button
+                            [disabled]="loading"
+                            (credential)="onGoogleCredential($event)"
+                            (failed)="onGoogleFailed($event)">
+                        </app-google-sign-in-button>
                     </form>
                 </div>
             </div>

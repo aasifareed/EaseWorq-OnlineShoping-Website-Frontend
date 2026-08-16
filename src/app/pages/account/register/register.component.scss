@@ -4,6 +4,13 @@
   margin-left: 2px;
 }
 
+.optional-mark {
+  color: var(--theme-muted, #9ca3af);
+  font-weight: 500;
+  font-size: 0.85em;
+  margin-left: 2px;
+}
+
 .register-page .theme-card .theme-form {
   .row > [class*="col-"] {
     margin-bottom: 8px;
@@ -18,6 +25,12 @@
     margin-bottom: 0;
   }
 
+  input.form-control:disabled,
+  input.form-control[readonly] {
+    opacity: 0.85;
+    cursor: default;
+  }
+
   .address-autocomplete-wrap {
     margin-bottom: 0;
   }
@@ -29,6 +42,14 @@
     font-weight: 600;
     line-height: 1.3;
     color: var(--error-text, var(--danger, #ef4444));
+  }
+
+  .field-hint {
+    display: block;
+    margin: 6px 0 10px;
+    font-size: 0.78rem;
+    line-height: 1.3;
+    color: var(--theme-muted, #9ca3af);
   }
 
   .form-control.is-invalid {

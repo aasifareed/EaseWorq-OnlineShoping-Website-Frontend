@@ -91,4 +91,8 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  onGoogleFailed(message: string): void {
+    this.toastr.error(message || 'Google sign-in failed. Please try again.');
+  }
+
 }

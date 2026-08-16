@@ -330,19 +330,41 @@
                 <i *ngIf="!isLoggedIn" class="fa fa-user-o header-action-icon"></i>
                 <span class="label header-action-label">Account</span>
               </a>
-              <ul class="dropdown-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
+              <ul class="dropdown-menu dropdown-menu-end header-account-menu shadow-lg" [class.dropdown-menu-dark]="isDarkMode">
                 <ng-container *ngIf="!isLoggedIn">
-                  <li><a class="dropdown-item" [routerLink]="['/pages/login']">Log In</a></li>
-                  <li><a class="dropdown-item" [routerLink]="['/pages/register']">Sign Up</a></li>
+                  <li>
+                    <a class="dropdown-item header-account-menu__item" [routerLink]="['/pages/login']">
+                      <i class="fa fa-sign-in header-account-menu__icon" aria-hidden="true"></i>
+                      <span>Log In</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item header-account-menu__item" [routerLink]="['/pages/register']">
+                      <i class="fa fa-user-plus header-account-menu__icon" aria-hidden="true"></i>
+                      <span>Sign Up</span>
+                    </a>
+                  </li>
                 </ng-container>
                 <ng-container *ngIf="isLoggedIn">
-                  <li><a class="dropdown-item" [routerLink]="['/pages/profile']">Profile</a></li>
-                  <li><a class="dropdown-item" [routerLink]="['/pages/my-orders']">My Orders</a></li>
+                  <li>
+                    <a class="dropdown-item header-account-menu__item" [routerLink]="['/pages/profile']">
+                      <i class="fa fa-user header-account-menu__icon" aria-hidden="true"></i>
+                      <span>Profile</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item header-account-menu__item" [routerLink]="['/pages/my-orders']">
+                      <i class="fa fa-shopping-bag header-account-menu__icon" aria-hidden="true"></i>
+                      <span>My Orders</span>
+                    </a>
+                  </li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><button type="button" class="dropdown-item" (click)="logout()">
-                    <i class="fa fa-sign-out me-2" aria-hidden="true"></i>
-                    Log Out
-                  </button></li>
+                  <li>
+                    <button type="button" class="dropdown-item header-account-menu__item" (click)="logout()">
+                      <i class="fa fa-sign-out header-account-menu__icon" aria-hidden="true"></i>
+                      <span>Log Out</span>
+                    </button>
+                  </li>
                 </ng-container>
               </ul>
             </div>
