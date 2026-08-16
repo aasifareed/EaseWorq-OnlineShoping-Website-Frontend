@@ -14,9 +14,9 @@ import {
 import { SizeModalComponent } from '../../../../shared/components/modal/size-modal/size-modal.component';
 import { isBlankHtml } from '../../../../shared/utils/html-text';
 import {
+  FreeShippingPromoService,
   ProductCouponOffer,
-  ProductCouponOffersService,
-} from '../../../../shared/services/product-coupon-offers.service';
+} from '../../../../shared/services/free-shipping-promo.service';
 
 @Component({
   selector: 'app-product-left-sidebar',
@@ -70,7 +70,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     private toastr: ToastrService,
     private auth: AuthService,
     private checkout: OnlineShopCheckoutService,
-    private productCouponOffersService: ProductCouponOffersService,
+    private productCouponOffersService: FreeShippingPromoService,
     public productService: ProductService
   ) {}
 
@@ -403,7 +403,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     }
 
     const requestId = ++this.couponOffersRequestId;
-    this.productCouponOffersService.getForProduct(productId)
+    this.productCouponOffersService.getProductCoupons(productId)
       .pipe(takeUntil(this.destroy$))
       .subscribe((offers) => {
         if (requestId !== this.couponOffersRequestId) {

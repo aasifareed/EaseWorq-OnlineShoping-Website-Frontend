@@ -35,6 +35,15 @@ export class LoginComponent implements OnInit {
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
   }
 
+  touchedInvalid(name: string): boolean {
+    const control = this.loginForm.get(name);
+    return !!control && control.touched && control.invalid;
+  }
+
+  hasError(name: string, error: string): boolean {
+    return !!this.loginForm.get(name)?.hasError(error);
+  }
+
   submit(): void {
     if (this.loginForm.invalid || this.loading) {
       this.loginForm.markAllAsTouched();

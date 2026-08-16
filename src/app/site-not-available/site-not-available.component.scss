@@ -1,15 +1,23 @@
 .site-not-available {
+  box-sizing: border-box;
   min-height: 100vh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem;
   background: #fff;
+  overflow: auto;
 }
 
 .site-not-available__image {
   display: block;
-  width: min(1100px, 96vw);
+  box-sizing: border-box;
+  width: auto;
   height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 3rem);
   object-fit: contain;
+  object-position: center;
+  flex-shrink: 1;
 }
