@@ -29,7 +29,6 @@
   align-items: center;
   min-height: 44px;
 
-  // Google injects an iframe; keep it content-width and centered.
   ::ng-deep iframe,
   ::ng-deep div[role='button'] {
     margin: 0 auto !important;

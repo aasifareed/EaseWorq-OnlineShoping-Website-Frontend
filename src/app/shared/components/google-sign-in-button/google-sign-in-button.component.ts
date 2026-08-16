@@ -52,7 +52,7 @@ export class GoogleSignInButtonComponent implements AfterViewInit, OnDestroy {
   }
 
   private renderIfReady(): boolean {
-    const clientId = environment.googleClientId?.trim();
+    const clientId = (environment as { googleClientId?: string }).googleClientId?.trim();
     const host = this.googleButton?.nativeElement;
     const googleId = (window as any).google?.accounts?.id;
     if (!clientId || !host || !googleId || this.initialized) {
@@ -69,8 +69,7 @@ export class GoogleSignInButtonComponent implements AfterViewInit, OnDestroy {
       }
     });
 
-    // Keep width content-sized. Stretching to the form width forces Google's
-    // GIS button to leave a large gap between the icon and label.
+    // Keep width content-sized so icon and label stay together.
     googleId.renderButton(host, {
       type: 'standard',
       theme: 'filled_black',
