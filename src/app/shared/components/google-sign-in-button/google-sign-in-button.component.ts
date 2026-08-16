@@ -1,10 +1,13 @@
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
   EventEmitter,
   Input,
+  NgZone,
   OnDestroy,
-  OnInit,
-  Output
+  Output,
+  ViewChild
 } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
@@ -19,30 +22,44 @@ const WEB_CLIENT_ID =
   templateUrl: './google-sign-in-button.component.html',
   styleUrls: ['./google-sign-in-button.component.scss']
 })
-export class GoogleSignInButtonComponent implements OnInit, OnDestroy {
+export class GoogleSignInButtonComponent implements AfterViewInit, OnDestroy {
   @Input() disabled = false;
   @Output() credential = new EventEmitter<string>();
   @Output() failed = new EventEmitter<string>();
+  @ViewChild('gisButtonHost') gisButtonHost?: ElementRef<HTMLDivElement>;
+
+  /** Native app keeps Capacitor Google Auth; website must use GIS (new clients block legacy gapi). */
+  readonly isNative = Capacitor.isNativePlatform();
 
   busy = false;
-  private initialized = false;
+  private nativeInitialized = false;
+  private destroyed = false;
 
-  ngOnInit(): void {
-    void this.ensureInitialized();
+  constructor(private ngZone: NgZone) {}
+
+  ngAfterViewInit(): void {
+    if (!this.isNative) {
+      void this.renderWebGisButton();
+    }
   }
 
   ngOnDestroy(): void {
-    // no timers
+    this.destroyed = true;
+    try {
+      window.google?.accounts?.id?.cancel();
+    } catch {
+      // ignore
+    }
   }
 
-  async onClick(): Promise<void> {
-    if (this.disabled || this.busy) {
+  async onNativeClick(): Promise<void> {
+    if (!this.isNative || this.disabled || this.busy) {
       return;
     }
 
     this.busy = true;
     try {
-      await this.ensureInitialized();
+      await this.ensureNativeInitialized();
       const user = await GoogleAuth.signIn();
       const idToken =
         user?.authentication?.idToken?.trim()
@@ -55,18 +72,83 @@ export class GoogleSignInButtonComponent implements OnInit, OnDestroy {
 
       this.credential.emit(idToken);
     } catch (err: any) {
-      const message = this.resolveErrorMessage(err);
-      // User cancelled — stay quiet.
       if (!this.isUserCancel(err)) {
-        this.failed.emit(message);
+        this.failed.emit(this.resolveErrorMessage(err));
       }
     } finally {
       this.busy = false;
     }
   }
 
-  private async ensureInitialized(): Promise<void> {
-    if (this.initialized) {
+  private async renderWebGisButton(): Promise<void> {
+    try {
+      const gis = await this.waitForGis();
+      if (this.destroyed || !this.gisButtonHost?.nativeElement) {
+        return;
+      }
+
+      gis.initialize({
+        client_id: WEB_CLIENT_ID,
+        callback: (response) => this.onGisCredential(response?.credential),
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        ux_mode: 'popup',
+        context: 'signin',
+        use_fedcm_for_prompt: true
+      });
+
+      const host = this.gisButtonHost.nativeElement;
+      host.innerHTML = '';
+      const width = Math.min(320, Math.max(240, host.clientWidth || host.parentElement?.clientWidth || 320));
+
+      gis.renderButton(host, {
+        type: 'standard',
+        theme: 'filled_black',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width
+      });
+    } catch (err: any) {
+      if (!this.destroyed) {
+        this.failed.emit(this.resolveErrorMessage(err));
+      }
+    }
+  }
+
+  private onGisCredential(credential: string | undefined): void {
+    this.ngZone.run(() => {
+      const idToken = credential?.trim() || '';
+      if (!idToken) {
+        this.failed.emit('Google did not return an ID token.');
+        return;
+      }
+      this.credential.emit(idToken);
+    });
+  }
+
+  private waitForGis(timeoutMs = 12000): Promise<typeof google.accounts.id> {
+    return new Promise((resolve, reject) => {
+      const started = Date.now();
+      const tick = () => {
+        const gis = window.google?.accounts?.id;
+        if (gis?.initialize && gis?.renderButton) {
+          resolve(gis);
+          return;
+        }
+        if (Date.now() - started >= timeoutMs) {
+          reject(new Error('Google Sign-In failed to load. Please refresh and try again.'));
+          return;
+        }
+        window.setTimeout(tick, 50);
+      };
+      tick();
+    });
+  }
+
+  private async ensureNativeInitialized(): Promise<void> {
+    if (this.nativeInitialized) {
       return;
     }
 
@@ -74,14 +156,13 @@ export class GoogleSignInButtonComponent implements OnInit, OnDestroy {
       await GoogleAuth.initialize({
         clientId: WEB_CLIENT_ID,
         scopes: ['profile', 'email'],
-        grantOfflineAccess: true
+        grantOfflineAccess: false
       });
-      this.initialized = true;
+      this.nativeInitialized = true;
     } catch {
-      // Native plugin may already be configured via capacitor.config / strings.xml.
       try {
         await GoogleAuth.initialize();
-        this.initialized = true;
+        this.nativeInitialized = true;
       } catch {
         // Leave uninitialized; sign-in will surface the error.
       }
@@ -98,11 +179,14 @@ export class GoogleSignInButtonComponent implements OnInit, OnDestroy {
   }
 
   private resolveErrorMessage(err: any): string {
-    const raw = String(err?.message || err?.error || err || '').trim();
+    const raw = String(err?.message || err?.error || err?.error_description || err || '').trim();
     if (!raw) {
       return 'Google sign-in failed. Please try again.';
     }
-    if (Capacitor.isNativePlatform() && /12501|developer_error|10\b/i.test(raw)) {
+    if (/deprecated|migration guide|new libraries/i.test(raw)) {
+      return 'Google Sign-In needs an update on this site. Please refresh and try again.';
+    }
+    if (this.isNative && /12501|developer_error|10\b/i.test(raw)) {
       return 'Google sign-in is not configured for this app build. Check SHA-1 and Android client ID.';
     }
     return raw;

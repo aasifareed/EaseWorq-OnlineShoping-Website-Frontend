@@ -130,15 +130,16 @@
                                 </div>
                             </div>
 
-                            <div class="row g-2 checkout-billing-tail">
-                                <div class="col-md-4 col-12" formGroupName="billing">
-                                    <div class="form-group checkout-field">
-                                        <div class="field-label">Postal Code <span class="required-mark">*</span></div>
-                                        <input type="text" name="postalcode" formControlName="postalcode"
-                                            (blur)="trimField('billing','postalcode')" placeholder="" autocomplete="off">
-                                        <div *ngIf="control('billing.postalcode').touched && control('billing.postalcode').errors?.required"
-                                            class="text text-danger">Postal code is required.</div>
-                                    </div>
+                            <div class="row g-2 checkout-billing-tail" formGroupName="billing">
+                                <div class="form-group col-12 col-md-6 checkout-field">
+                                    <div class="field-label">Country</div>
+                                    <input type="text" name="country" formControlName="country" readonly autocomplete="off">
+                                    <small class="field-hint">Deliveries are currently available in Pakistan only.</small>
+                                </div>
+                                <div class="form-group col-12 col-md-6 checkout-field">
+                                    <div class="field-label">Postal Code <span class="optional-mark">(optional)</span></div>
+                                    <input type="text" name="postalcode" formControlName="postalcode"
+                                        (blur)="trimField('billing','postalcode')" placeholder="Postal Code" autocomplete="off">
                                 </div>
                             </div>
                             </div>
@@ -266,11 +267,14 @@
                                             class="text text-danger">Please select a state from the suggestions.</div>
                                     </div>
                                     <div class="form-group col-12 col-md-6">
-                                        <div class="field-label">Postal Code <span class="required-mark">*</span></div>
+                                        <div class="field-label">Country</div>
+                                        <input type="text" formControlName="country" readonly autocomplete="off">
+                                        <small class="field-hint">Deliveries are currently available in Pakistan only.</small>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <div class="field-label">Postal Code <span class="optional-mark">(optional)</span></div>
                                         <input type="text" formControlName="postalcode"
-                                            (blur)="trimField('shipping','postalcode')" autocomplete="off">
-                                        <div *ngIf="control('shipping.postalcode').touched && control('shipping.postalcode').errors?.required"
-                                            class="text text-danger">Postal code is required.</div>
+                                            (blur)="trimField('shipping','postalcode')" placeholder="Postal Code" autocomplete="off">
                                     </div>
                                 </div>
                                 </div>
