@@ -39,6 +39,7 @@ import { ExcerptPipe } from './pipes/excerpt.pipe';
 import { RemoteSrcPipe } from './pipes/remote-src.pipe';
 import { TopCategoriesSliderComponent } from './components/top-categories-slider/top-categories-slider.component';
 import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner/delivery-deals-banner.component';
+import { GoogleSignInButtonComponent } from './components/google-sign-in-button/google-sign-in-button.component';
 
 @NgModule({
   declarations: [
@@ -68,6 +69,7 @@ import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner
     RemoteSrcPipe,
     TopCategoriesSliderComponent,
     DeliveryDealsBannerComponent,
+    GoogleSignInButtonComponent,
   ],
   imports: [
     CommonModule,
@@ -115,6 +117,7 @@ import { DeliveryDealsBannerComponent } from './components/delivery-deals-banner
     RemoteSrcPipe,
     TopCategoriesSliderComponent,
     DeliveryDealsBannerComponent,
+    GoogleSignInButtonComponent,
   ]
 })
 export class SharedModule { }

@@ -439,6 +439,53 @@ export class AuthService {
     );
   }
 
+  loginWithGoogle(idToken: string): Observable<ShopAuthSession> {
+    const token = String(idToken || '').trim();
+    if (!token) {
+      return throwError(() => ({ error: { message: 'Google sign-in did not return a token.' } }));
+    }
+
+    const claims = this.decodeJwtPayload(token);
+    const email = String(claims.email ?? claims.Email ?? '').trim();
+    if (!email) {
+      return throwError(() => ({ error: { message: 'Google did not return an email address.' } }));
+    }
+
+    const body = {
+      tenantId: this.tenantId,
+      storeId: this.storeId,
+      email,
+      idToken: token,
+      isMobileUser: true
+    };
+
+    return this.http.post<any>(`${this.apiRoot()}api/TokenAuth/AuthenticateWithGoogleForOnlineShop`, body).pipe(
+      map((resp) => {
+        const data = resp?.result ?? resp;
+        const accessToken = data?.accessToken ?? data?.AccessToken;
+        const session: ShopAuthSession = {
+          accessToken,
+          encryptedAccessToken: data?.encryptedAccessToken ?? data?.EncryptedAccessToken,
+          expireInSeconds: data?.expireInSeconds ?? data?.ExpireInSeconds,
+          userId: this.getUserIdFromAccessToken(accessToken),
+          onlineStoreId: data?.onlineStoreId ?? data?.OnlineStoreId
+        };
+        if (!session.accessToken) {
+          throw { error: { message: data?.message || 'Google sign-in failed. Please try again.' } };
+        }
+        return session;
+      }),
+      tap((session) => this.persistSession(session, email)),
+      switchMap((session) =>
+        this.refreshCustomerProfileForCheckout().pipe(
+          map(() => session),
+          catchError(() => of(session))
+        )
+      ),
+      catchError((err) => throwError(() => err))
+    );
+  }
+
   signup(payload: SignupPayload): Observable<string> {
     return this.http.post<any>(`${this.apiRoot()}api/services/app/${environment.urls.OnlinseShopUsers_SignupForOnlineShop}`, payload).pipe(
       map((resp) => {

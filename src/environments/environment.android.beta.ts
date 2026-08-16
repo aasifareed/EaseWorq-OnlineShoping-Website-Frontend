@@ -13,7 +13,7 @@ export const environment = {
   tenantId: null as number | null,
   storeId: null as string | null,
   googleMapsApiKey: 'AIzaSyDyeIndELQj_horM-429SavXuMHojQ62P0',
-  googleClientId: '463817211807-kd2tc0n3us50bc4qt5srp9jvr7qoa4oi.apps.googleusercontent.com',
+  googleClientId: '845543032039-b34k6kg6h54i25vdrjjb3vco49uln8a2.apps.googleusercontent.com',
   urls: {
     Account_IsTenantAvailable: 'Account/IsTenantAvailable',
     WebsiteTenantResolver_ResolveTenantByDomain: 'WebsiteTenantResolver/ResolveTenantByDomain',

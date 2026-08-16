@@ -775,11 +775,37 @@ body:not(.dark) {
   }
 }
 
-/* Toastr */
+/* Toastr — light theme (brand yellow accents, no default green/blue) */
 body:not(.dark) {
   .toast-container .ngx-toastr {
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-md, 12px);
+    box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.12));
+  }
+
+  .toast-success,
+  .toast-info {
+    background-color: #111111 !important;
+    color: #f5f5f5 !important;
+    border-color: rgba(255, 196, 0, 0.4) !important;
+    border-left: 4px solid var(--primary, #ffc400) !important;
+  }
+
+  .toast-warning {
+    background-color: #111111 !important;
+    color: #f5f5f5 !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    border-left: 4px solid #f59e0b !important;
+  }
+
+  .toast-error {
+    background-color: #111111 !important;
+    color: #f5f5f5 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    border-left: 4px solid #ef4444 !important;
+  }
+
+  .toast-progress {
+    background: var(--primary, #ffc400) !important;
   }
 }
 
