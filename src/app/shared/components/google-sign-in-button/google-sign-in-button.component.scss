@@ -2,6 +2,29 @@
   margin-top: 18px;
 }
 
+.google-signin__gis {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  &--disabled {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+}
+
+.google-signin__gis-host {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  min-height: 44px;
+
+  ::ng-deep iframe {
+    margin: 0 auto !important;
+  }
+}
+
 .google-signin__divider {
   display: flex;
   align-items: center;

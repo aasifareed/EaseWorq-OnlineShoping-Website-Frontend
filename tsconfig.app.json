@@ -5,6 +5,7 @@
   },
   "files": [
     "src/typings/google-maps-places.d.ts",
+    "src/typings/google-gsi.d.ts",
     "src/main.ts",
     "src/polyfills.ts"
   ],

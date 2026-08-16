@@ -1301,7 +1301,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       address: ['', [trimRequired(), trimMaxLength(100)]],
       town: ['', [trimRequired(), this.suggestionMatchValidator('billing', 'town')]],
       state: ['', [trimRequired(), this.suggestionMatchValidator('billing', 'state')]],
-      postalcode: ['', trimRequired()]
+      country: [{ value: 'Pakistan', disabled: true }],
+      postalcode: ['']
     });
   }
 
@@ -1322,6 +1323,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       address: [''],
       town: [''],
       state: [''],
+      country: [{ value: 'Pakistan', disabled: true }],
       postalcode: ['']
     });
   }
@@ -1334,7 +1336,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
           address: [trimRequired(), trimMaxLength(100)],
           town: [trimRequired(), this.suggestionMatchValidator('shipping', 'town')],
           state: [trimRequired(), this.suggestionMatchValidator('shipping', 'state')],
-          postalcode: [trimRequired()]
+          postalcode: []
         }
       : {
           customerName: [],

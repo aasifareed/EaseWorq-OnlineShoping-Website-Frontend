@@ -1867,6 +1867,27 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   margin-left: 2px;
 }
 
+.optional-mark {
+  color: var(--theme-muted, #9ca3af);
+  font-weight: 500;
+  font-size: 0.85em;
+  margin-left: 2px;
+}
+
+.field-hint {
+  display: block;
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--theme-muted, #9ca3af);
+}
+
+input[formcontrolname="country"][readonly],
+input[name="country"][readonly] {
+  opacity: 0.85;
+  cursor: default;
+}
+
 :host-context(body:not(.dark)) {
   .checkout-card {
     background: var(--surface, #ffffff);
