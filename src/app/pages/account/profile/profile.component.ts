@@ -30,7 +30,8 @@ export class ProfileComponent implements OnInit {
       address: ['', [trimRequired(), trimMaxLength(100)]],
       town: ['', trimRequired()],
       state: ['', trimRequired()],
-      postalcode: ['', trimRequired()]
+      country: [{ value: 'Pakistan', disabled: true }],
+      postalcode: ['']
     });
   }
 
@@ -78,7 +79,7 @@ export class ProfileComponent implements OnInit {
       address: v.address,
       townCity: v.town,
       stateCounty: v.state,
-      postalCode: v.postalcode
+      postalCode: v.postalcode?.trim() || ''
     }).subscribe({
       next: () => {
         this.saving = false;
