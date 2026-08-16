@@ -37,9 +37,22 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <label for="address">Address <span class="required-mark">*</span></label>
-                                <input type="text" class="form-control" id="address" formControlName="address"
-                                       placeholder="Street address"
-                                       [class.is-invalid]="touchedInvalid('address')">
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="address" formControlName="address"
+                                           placeholder="Street address" autocomplete="off"
+                                           [class.is-invalid]="touchedInvalid('address')"
+                                           (keydown)="handleKeyDown($event, 'address')"
+                                           (blur)="onAutocompleteBlur('address', $event)">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'address' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'address')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
                                 <small class="field-error" *ngIf="touchedInvalid('address') && hasError('address', 'required')">Address is required.</small>
                                 <small class="field-error" *ngIf="touchedInvalid('address') && hasError('address', 'maxlength')">Maximum 100 characters allowed.</small>
                             </div>
@@ -47,16 +60,42 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="town">Town/City <span class="required-mark">*</span></label>
-                                <input type="text" class="form-control" id="town" formControlName="town"
-                                       placeholder="Town/City"
-                                       [class.is-invalid]="touchedInvalid('town')">
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="town" formControlName="town"
+                                           placeholder="Town/City" autocomplete="off"
+                                           [class.is-invalid]="touchedInvalid('town')"
+                                           (keydown)="handleKeyDown($event, 'town')"
+                                           (blur)="onAutocompleteBlur('town', $event)">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'town' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'town')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
                                 <small class="field-error" *ngIf="touchedInvalid('town')">Town/City is required.</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="state">State / County <span class="required-mark">*</span></label>
-                                <input type="text" class="form-control" id="state" formControlName="state"
-                                       placeholder="State / County"
-                                       [class.is-invalid]="touchedInvalid('state')">
+                                <div class="address-autocomplete-wrap">
+                                    <input type="text" class="form-control" id="state" formControlName="state"
+                                           placeholder="State / County" autocomplete="off"
+                                           [class.is-invalid]="touchedInvalid('state')"
+                                           (keydown)="handleKeyDown($event, 'state')"
+                                           (blur)="onAutocompleteBlur('state', $event)">
+                                    <ul class="google-address-suggestions"
+                                        *ngIf="activeAutocompleteField === 'state' && (googleAddressService.suggestions$ | async)?.length">
+                                        <li *ngFor="let suggestion of googleAddressService.suggestions$ | async; let i = index"
+                                            (mousedown)="$event.preventDefault()"
+                                            (click)="onPlaceSelected(suggestion, 'state')"
+                                            [class.highlighted]="i === highlightedIndex">
+                                            {{ suggestion.description }}
+                                        </li>
+                                    </ul>
+                                </div>
                                 <small class="field-error" *ngIf="touchedInvalid('state')">State / County is required.</small>
                             </div>
                         </div>
