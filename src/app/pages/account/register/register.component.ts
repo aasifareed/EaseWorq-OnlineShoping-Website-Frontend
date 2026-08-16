@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../shared/services/auth.service';
+import { SignalRService } from '../../../shared/services/signal-r.service';
 import { ToastrService } from 'ngx-toastr';
 import { trimMaxLength, trimRequired } from '../../../shop/checkout/checkout-validators';
 import { GoogleAddressService } from '../../../shared/services/address-autocomplete/google-address.service';
@@ -44,6 +45,7 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private toastr: ToastrService,
+    private signalRService: SignalRService,
     public googleAddressService: GoogleAddressService,
     private elementRef: ElementRef
   ) {
@@ -274,6 +276,27 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => {
         this.loading = false;
+      }
+    });
+  }
+
+  onGoogleCredential(idToken: string): void {
+    if (this.loading) {
+      return;
+    }
+
+    this.loading = true;
+    this.auth.loginWithGoogle(idToken).subscribe({
+      next: () => {
+        this.loading = false;
+        this.signalRService.startConnection();
+        this.toastr.success('Welcome! You have logged in successfully.');
+        this.auth.navigateAfterLogin();
+      },
+      error: (err) => {
+        this.loading = false;
+        const msg = err?.error?.message || err?.error?.error?.message || err?.message;
+        this.toastr.error(msg || 'Google sign-in failed. Please try again.');
       }
     });
   }

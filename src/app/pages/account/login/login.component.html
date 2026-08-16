@@ -32,6 +32,7 @@
                                 {{ loading ? 'Signing in…' : 'Login' }}
                             </button>
                         </div>
+                        <app-google-sign-in-button [disabled]="loading" (credential)="onGoogleCredential($event)"></app-google-sign-in-button>
                     </form>
                 </div>
             </div>

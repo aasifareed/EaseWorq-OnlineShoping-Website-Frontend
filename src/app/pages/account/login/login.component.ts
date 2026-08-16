@@ -70,4 +70,25 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  onGoogleCredential(idToken: string): void {
+    if (this.loading) {
+      return;
+    }
+
+    this.loading = true;
+    this.auth.loginWithGoogle(idToken).subscribe({
+      next: () => {
+        this.loading = false;
+        this.signalRService.startConnection();
+        this.toastr.success('Welcome! You have logged in successfully.');
+        this.auth.navigateAfterLogin(this.returnUrl);
+      },
+      error: (err) => {
+        this.loading = false;
+        const msg = err?.error?.message || err?.error?.error?.message || err?.message;
+        this.toastr.error(msg || 'Google sign-in failed. Please try again.');
+      }
+    });
+  }
+
 }

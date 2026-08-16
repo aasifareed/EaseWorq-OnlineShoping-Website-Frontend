@@ -134,6 +134,7 @@
                             <i class="fa" [ngClass]="loading ? 'fa-spinner fa-spin me-2' : 'fa-user-plus me-2'" aria-hidden="true"></i>
                             {{ loading ? 'Creating…' : 'create Account' }}
                         </button>
+                        <app-google-sign-in-button [disabled]="loading" (credential)="onGoogleCredential($event)"></app-google-sign-in-button>
                     </form>
                 </div>
             </div>

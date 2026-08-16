@@ -11,6 +11,7 @@ const ACTION_MESSAGES: ReadonlyArray<[string, string]> = [
   ['OnlineShopPayment/CreateCheckout', 'Taking you to secure payment…'],
   ['OnlineShopPayment/RetryCheckout', 'Taking you to secure payment…'],
   ['AuthenticateForOnlineShop', 'Signing you in…'],
+  ['AuthenticateWithGoogleForOnlineShop', 'Signing you in with Google…'],
   ['SignupForOnlineShop', 'Creating your account…'],
   ['ResetPasswordRequestForOnlineShop', 'Sending your reset link…'],
 ];

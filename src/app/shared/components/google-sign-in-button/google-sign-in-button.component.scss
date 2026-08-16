@@ -1,0 +1,42 @@
+.google-signin {
+  margin-top: 18px;
+}
+
+.google-signin__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--theme-muted, #9ca3af);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.35;
+  }
+}
+
+.google-signin__button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+
+  // Google injects an iframe; keep it content-width and centered.
+  ::ng-deep iframe,
+  ::ng-deep div[role='button'] {
+    margin: 0 auto !important;
+  }
+
+  &.is-disabled {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+}

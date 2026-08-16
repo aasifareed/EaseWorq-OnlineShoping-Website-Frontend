@@ -18,6 +18,7 @@ import { extractAbpErrorMessage, isAbpFailure } from '../utils/abp-http.util';
 export class JwtInterceptor implements HttpInterceptor {
   private readonly skipAuthUrls = [
     '/api/TokenAuth/AuthenticateForOnlineShop',
+    '/api/TokenAuth/AuthenticateWithGoogleForOnlineShop',
     '/api/TokenAuth/Authenticate'
   ];
 
