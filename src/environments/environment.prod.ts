@@ -75,6 +75,7 @@ urls: {
   HeaderMenu_GetForStorefront: 'OnlineShopHeaderMenu/GetForStorefront',
   OnlineShopHomeBanner_GetForStorefront: 'OnlineShopHomeBanner/GetHomeBannersForStorefront',
   OnlineShopCoupon_GetActiveFreeShippingPromo: 'OnlineShopCoupon/GetActiveFreeShippingPromoForStorefront',
+  OnlineShopCoupon_GetProductCoupons: 'OnlineShopCoupon/GetProductCouponsForStorefront',
   OnlineShopShipping_GetShippingDeals: 'OnlineShopShipping/GetShippingDealsForStorefront',
   OnlineShopStoreLogo_GetForStorefront: 'OnlineShopStoreLogo/GetLogoForStorefront',
   OnlineShopProductGroup_GetHierarchyForOnline: 'OnlineShopProductGroup/GetProductGroupHierarchyForOnline',

@@ -204,10 +204,43 @@
     font-weight: 400;
     line-height: 1.55;
     color: #4b5563;
+    max-height: 10.5rem;
+    overflow: auto;
+
+    ::ng-deep p {
+      margin: 0 0 0.65rem;
+    }
+
+    ::ng-deep p:last-child {
+      margin-bottom: 0;
+    }
+
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4,
+    ::ng-deep strong,
+    ::ng-deep b {
+      font-weight: 700;
+      color: #111111;
+    }
+
+    ::ng-deep ul,
+    ::ng-deep ol {
+      margin: 0 0 0.65rem;
+      padding-left: 1.2rem;
+    }
+
+    ::ng-deep ul {
+      list-style-type: disc;
+    }
+
+    ::ng-deep ol {
+      list-style-type: decimal;
+    }
 
     &--fallback {
       color: #9ca3af;
-      font-size: 0.875rem; /* 14px */
+      font-size: 0.875rem;
       font-style: normal;
     }
   }
@@ -524,6 +557,14 @@
 
   .qv-description {
     color: #c5ccd8;
+
+    ::ng-deep h2,
+    ::ng-deep h3,
+    ::ng-deep h4,
+    ::ng-deep strong,
+    ::ng-deep b {
+      color: #f5f7fa;
+    }
 
     &--fallback {
       color: #8b93a1 !important;

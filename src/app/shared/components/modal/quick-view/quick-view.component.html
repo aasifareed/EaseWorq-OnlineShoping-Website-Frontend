@@ -64,7 +64,7 @@
 
                     <div class="qv-details" *ngIf="hasProductDescription">
                         <h6 class="qv-section-label">Product Details</h6>
-                        <p class="qv-description">{{ productDescriptionText }}</p>
+                        <div class="qv-description" [innerHTML]="productDescriptionHtml"></div>
                     </div>
                 </div>
 

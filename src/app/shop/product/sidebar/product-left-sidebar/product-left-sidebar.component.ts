@@ -1,8 +1,22 @@
 import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 import { Product } from '../../../../shared/classes/product';
 import { ProductService } from '../../../../shared/services/product.service';
+import { AuthService } from '../../../../shared/services/auth.service';
+import {
+  OnlineShopCheckoutService,
+  OnlineShopCouponStatus,
+  OnlineShopShippingMethod,
+} from '../../../../shared/services/online-shop-checkout.service';
 import { SizeModalComponent } from '../../../../shared/components/modal/size-modal/size-modal.component';
+import { isBlankHtml } from '../../../../shared/utils/html-text';
+import {
+  ProductCouponOffer,
+  ProductCouponOffersService,
+} from '../../../../shared/services/product-coupon-offers.service';
 
 @Component({
   selector: 'app-product-left-sidebar',
@@ -23,6 +37,10 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
   public lightboxOpen = false;
   /** Stable gallery list — rebuilt only when product images change */
   public galleryImages: { src: string; alt: string }[] = [];
+  public couponCodeInput = '';
+  public couponApplying = false;
+  public productCouponStatuses: OnlineShopCouponStatus[] = [];
+  public productCouponOffers: ProductCouponOffer[] = [];
 
   readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
@@ -30,6 +48,8 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
 
   private touchStartX = 0;
   private lightboxTouchStartX = 0;
+  private couponOffersRequestId = 0;
+  private readonly destroy$ = new Subject<void>();
 
   get displayImages(): { src: string; alt: string }[] {
     return this.galleryImages;
@@ -47,6 +67,10 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private toastr: ToastrService,
+    private auth: AuthService,
+    private checkout: OnlineShopCheckoutService,
+    private productCouponOffersService: ProductCouponOffersService,
     public productService: ProductService
   ) {}
 
@@ -63,9 +87,15 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
         this.loadProductDetail(inventoryId);
       }
     });
+
+    this.productService.appliedCouponCodes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshProductCouponStatuses());
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.closeLightbox();
   }
 
@@ -205,6 +235,8 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
           this.product = { ...this.product, ...mapped };
           this.syncImageGallery(true);
           this.resetCounter();
+          this.refreshProductCouponStatuses();
+          this.loadProductCouponOffers();
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
           const inventoryId = String(mapped.id || '');
@@ -270,13 +302,173 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
   increment() {
     if (this.productService.canIncrementSelectable(this.product, this.counter)) {
       this.counter++;
+      this.refreshProductCouponStatuses();
     }
   }
 
   decrement() {
     if (this.counter > 1) {
       this.counter--;
+      this.refreshProductCouponStatuses();
     }
+  }
+
+  trackByOfferId(_index: number, offer: ProductCouponOffer): string {
+    return offer.id || offer.code;
+  }
+
+  useProductCouponOffer(offer: ProductCouponOffer): void {
+    const code = String(offer?.code || '').trim().toUpperCase();
+    if (!code) {
+      return;
+    }
+
+    this.couponCodeInput = code;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(code).catch(() => undefined);
+    }
+    this.applyProductCoupon();
+  }
+
+  applyProductCoupon(): void {
+    if (this.couponApplying) {
+      return;
+    }
+
+    const code = this.couponCodeInput.trim().toUpperCase();
+    if (!code) {
+      this.toastr.warning('Enter a coupon code.');
+      return;
+    }
+
+    if (this.productService.getAppliedCouponCodes().includes(code)) {
+      this.toastr.info('That code is already applied.');
+      this.couponCodeInput = '';
+      return;
+    }
+
+    const codes = [...this.productService.getAppliedCouponCodes(), code];
+    this.couponApplying = true;
+    this.previewProductCoupons(codes, (statuses) => {
+      this.couponApplying = false;
+      const status = statuses.find((x) => (x.couponCode || '').toUpperCase() === code);
+      if (!status?.isAdmitted) {
+        this.toastr.error(status?.message || 'This coupon does not apply to this product.');
+        return;
+      }
+
+      if ((status.scope || '').toLowerCase() !== 'product') {
+        this.toastr.info('This coupon applies to the whole order. Apply it from cart or checkout.');
+        return;
+      }
+
+      if (!this.couponAppliesToThisProduct(status)) {
+        this.toastr.error(status.message || 'This coupon does not apply to this product.');
+        return;
+      }
+
+      this.productService.setAppliedCouponCodes(codes);
+      this.couponCodeInput = '';
+      if (status.isValid) {
+        this.toastr.success(status.message || 'Coupon applied.');
+      } else {
+        this.toastr.info(status.message || 'A better offer is already applied to this order.');
+      }
+    }, () => {
+      this.couponApplying = false;
+    });
+  }
+
+  removeProductCoupon(code: string | null | undefined): void {
+    if (!code) {
+      return;
+    }
+    this.productService.removeAppliedCouponCode(code);
+  }
+
+  private couponAppliesToThisProduct(status: OnlineShopCouponStatus): boolean {
+    const scope = (status.scope || '').toLowerCase();
+    if (scope === 'product') {
+      return status.isAdmitted && status.eligibleSubtotal > 0;
+    }
+    // Order / shipping codes are still usable here when the server admits them for this product line.
+    return !!status.isAdmitted;
+  }
+
+  private loadProductCouponOffers(): void {
+    this.productCouponOffers = [];
+    const productId = String(this.product?.productId ?? '').trim();
+    if (!productId) {
+      return;
+    }
+
+    const requestId = ++this.couponOffersRequestId;
+    this.productCouponOffersService.getForProduct(productId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((offers) => {
+        if (requestId !== this.couponOffersRequestId) {
+          return;
+        }
+        this.productCouponOffers = offers;
+        this.cdr.markForCheck();
+      });
+  }
+
+  private refreshProductCouponStatuses(): void {
+    const codes = this.productService.getAppliedCouponCodes();
+    if (!codes.length || !this.productPricingLine()) {
+      this.productCouponStatuses = [];
+      return;
+    }
+
+    this.previewProductCoupons(codes, (statuses) => {
+      this.productCouponStatuses = statuses.filter((status) =>
+        (status.scope || '').toLowerCase() === 'product'
+      );
+    });
+  }
+
+  private previewProductCoupons(
+    couponCodes: string[],
+    onSuccess: (statuses: OnlineShopCouponStatus[]) => void,
+    onError?: () => void,
+  ): void {
+    const line = this.productPricingLine();
+    if (!line) {
+      onSuccess([]);
+      return;
+    }
+
+    this.checkout.calculatePricing({
+      storeId: this.auth.storeId,
+      items: [line],
+      couponCodes,
+      shippingMethod: OnlineShopShippingMethod.Shipping,
+      includeShipping: false,
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result) => onSuccess(result?.coupons ?? []),
+      error: (err) => {
+        const msg =
+          err?.error?.error?.message ||
+          err?.error?.message ||
+          err?.message ||
+          'Could not check this coupon.';
+        this.toastr.error(msg);
+        onError?.();
+      },
+    });
+  }
+
+  private productPricingLine(): { productId: string; productInventoryId: string | null; quantity: number } | null {
+    const productId = String(this.product?.productId ?? '').trim();
+    if (!productId) {
+      return null;
+    }
+    return {
+      productId,
+      productInventoryId: String(this.product?.id ?? '') || null,
+      quantity: Math.max(1, Number(this.counter) || 1),
+    };
   }
 
   get selectableQuantity(): number {
@@ -328,12 +520,11 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
   }
 
   get hasProductDescription(): boolean {
-    const text = (this.product?.description ?? '').toString().trim();
-    if (!text) {
+    const html = (this.product?.description ?? '').toString();
+    if (isBlankHtml(html)) {
       return false;
     }
-    // Ignore placeholder-like fallbacks stored as description
-    const normalized = text.toLowerCase().replace(/\s+/g, ' ');
+    const normalized = html.toLowerCase().replace(/\s+/g, ' ');
     return normalized !== 'no description available.'
       && normalized !== 'no product description available.';
   }
