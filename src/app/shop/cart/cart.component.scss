@@ -408,11 +408,17 @@ $cart-accent: #f0b429;
   &--primary {
     border: 1px solid $cart-accent;
     background: $cart-accent;
-    color: #111;
+    color: #111 !important;
 
-    &:hover {
+    &:hover,
+    &:focus-visible {
       filter: brightness(0.95);
-      color: #111;
+      background: $cart-accent;
+      color: #111 !important;
+
+      i {
+        color: inherit !important;
+      }
     }
   }
 }

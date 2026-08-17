@@ -257,6 +257,15 @@ body.dark {
     color: var(--text-primary, #f5f7fa) !important;
   }
 
+  .checkout-page .checkout-form .form-group .field-label span.optional-mark,
+  .field-label .optional-mark,
+  .field-label > span.optional-mark,
+  label .optional-mark,
+  .optional-mark {
+    color: var(--text-muted, #b8c2d1) !important;
+    font-weight: 500 !important;
+  }
+
   .checkout-discount,
   .cart-summary-totals__row--discount strong,
   .order-success-discount span {
@@ -285,5 +294,14 @@ body:not(.dark) {
   .invalid-feedback,
   .form-text.text-danger {
     color: var(--error-text, #dc2626) !important;
+  }
+
+  .checkout-page .checkout-form .form-group .field-label span.optional-mark,
+  .field-label .optional-mark,
+  .field-label > span.optional-mark,
+  label .optional-mark,
+  .optional-mark {
+    color: var(--text-muted, #6b7280) !important;
+    font-weight: 500 !important;
   }
 }
