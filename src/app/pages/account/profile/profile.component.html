@@ -79,10 +79,10 @@
                                 <small class="field-error" *ngIf="touchedInvalid('town')">Town/City is required.</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="state">State / County <span class="required-mark">*</span></label>
+                                <label for="state">State <span class="required-mark">*</span></label>
                                 <div class="address-autocomplete-wrap">
                                     <input type="text" class="form-control" id="state" formControlName="state"
-                                           placeholder="State / County" autocomplete="off"
+                                           placeholder="State" autocomplete="off"
                                            [class.is-invalid]="touchedInvalid('state')"
                                            (keydown)="handleKeyDown($event, 'state')"
                                            (blur)="onAutocompleteBlur('state', $event)">
@@ -96,7 +96,7 @@
                                         </li>
                                     </ul>
                                 </div>
-                                <small class="field-error" *ngIf="touchedInvalid('state')">State / County is required.</small>
+                                <small class="field-error" *ngIf="touchedInvalid('state')">State is required.</small>
                             </div>
                         </div>
                         <div class="row">
