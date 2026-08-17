@@ -100,6 +100,8 @@ body {
     font-size: 14px;
     overflow-x: hidden;
     min-width: unset !important;
+    --storefront-header-height: 148px;
+    --storefront-header-height-mobile: 132px;
 }
 
 h1 {
@@ -14227,16 +14229,44 @@ footer {
 }
 
 #toast-container {
-    z-index: 1000000 !important;
+    position: fixed !important;
+    z-index: 1000001 !important;
+    pointer-events: none;
+}
+
+/* ngx-toastr: body > .overlay-container > #toast-container */
+.overlay-container {
+    position: fixed;
+    inset: 0;
+    z-index: 1000001;
+    pointer-events: none;
+}
+
+#toast-container.toast-bottom-right {
+    bottom: max(20px, env(safe-area-inset-bottom, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+#toast-container.toast-top-right {
+    top: calc(var(--storefront-header-height, 148px) + 12px);
+    right: 12px;
+}
+
+@media (max-width: 991px) {
+    #toast-container.toast-top-right {
+        top: calc(var(--storefront-header-height-mobile, 132px) + 12px);
+    }
 }
 
 #toast-container>div {
     opacity: 1;
+    pointer-events: auto;
 }
 
 .toast-container .ngx-toastr {
     border-radius: 12px;
-    width: 345px;
+    width: min(345px, calc(100vw - 32px));
+    max-width: 345px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
     border: 1px solid transparent;
     font-weight: 600;

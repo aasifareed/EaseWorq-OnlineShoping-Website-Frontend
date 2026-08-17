@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { asBackgroundRequest } from '../interceptors/background-request';
 import { ShopContextService } from './shop-context.service';
 import { TenantService } from './tenant.service';
 import { STOREFRONT_ROUTES } from '../constants/storefront-routes';
@@ -251,7 +252,10 @@ export class AuthService {
     }
 
     return this.http
-      .get<any>(`${this.apiRoot()}api/services/app/Session/GetCurrentLoginInformations`)
+      .get<any>(
+        `${this.apiRoot()}api/services/app/Session/GetCurrentLoginInformations`,
+        asBackgroundRequest()
+      )
       .pipe(
         map((resp) => {
           const user = resp?.result?.user ?? resp?.user;
@@ -310,7 +314,7 @@ export class AuthService {
       .set('TenantId', String(this.tenantId))
       .set('CustomerEmail', email);
 
-    return this.http.get<any>(url, { params }).pipe(
+    return this.http.get<any>(url, asBackgroundRequest({ params })).pipe(
       tap((resp) => {
         const data = resp?.result ?? resp;
         if (!data) {
@@ -364,7 +368,8 @@ export class AuthService {
 
     return this.http.post<any>(
       `${this.apiRoot()}api/services/app/${path}`,
-      body
+      body,
+      asBackgroundRequest()
     ).pipe(
       tap((resp) => {
         const data = resp?.result ?? resp;

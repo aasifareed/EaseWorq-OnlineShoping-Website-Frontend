@@ -40,9 +40,13 @@ export function HttpLoaderFactory(http: HttpClient) {
     HttpClientModule,
     NgbModule,
     ToastrModule.forRoot({
-      timeOut: 3000,
+      timeOut: 4000,
       progressBar: false,
       enableHtml: true,
+      positionClass: 'toast-bottom-right',
+      newestOnTop: true,
+      maxOpened: 3,
+      preventDuplicates: true,
     }),
     TranslateModule.forRoot({
         loader: {
