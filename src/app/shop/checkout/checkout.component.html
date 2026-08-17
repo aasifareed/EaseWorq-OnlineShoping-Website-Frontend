@@ -108,10 +108,10 @@
                                         class="text text-danger">Please select a town/city from the suggestions.</div>
                                 </div>
                                 <div class="form-group col-12 col-md-6">
-                                    <div class="field-label">State / County <span class="required-mark">*</span></div>
+                                    <div class="field-label">State <span class="required-mark">*</span></div>
                                     <div class="address-autocomplete-wrap">
                                         <input type="text" name="state" formControlName="state"
-                                            (blur)="onAutocompleteBlur('billing', 'state', $event); trimField('billing','state')" placeholder="State / County" autocomplete="off"
+                                            (blur)="onAutocompleteBlur('billing', 'state', $event); trimField('billing','state')" placeholder="State" autocomplete="off"
                                             (keydown)="handleKeyDown($event, 'billing', 'state')">
                                         <ul class="google-address-suggestions"
                                             *ngIf="isAutocompleteActive('billing', 'state') && (googleAddressService.suggestions$ | async)?.length">
@@ -246,10 +246,10 @@
                                             class="text text-danger">Please select a town/city from the suggestions.</div>
                                     </div>
                                     <div class="form-group col-12 col-md-6">
-                                        <div class="field-label">State / County <span class="required-mark">*</span></div>
+                                        <div class="field-label">State <span class="required-mark">*</span></div>
                                         <div class="address-autocomplete-wrap">
                                             <input type="text" formControlName="state"
-                                                (blur)="onAutocompleteBlur('shipping', 'state', $event); trimField('shipping','state')" placeholder="State / County" autocomplete="off"
+                                                (blur)="onAutocompleteBlur('shipping', 'state', $event); trimField('shipping','state')" placeholder="State" autocomplete="off"
                                                 (keydown)="handleKeyDown($event, 'shipping', 'state')">
                                             <ul class="google-address-suggestions"
                                                 *ngIf="isAutocompleteActive('shipping', 'state') && (googleAddressService.suggestions$ | async)?.length">
