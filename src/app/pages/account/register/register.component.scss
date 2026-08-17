@@ -5,8 +5,8 @@
 }
 
 .optional-mark {
-  color: var(--theme-muted, #9ca3af);
-  font-weight: 500;
+  color: var(--text-muted, #b8c2d1) !important;
+  font-weight: 500 !important;
   font-size: 0.85em;
   margin-left: 2px;
 }

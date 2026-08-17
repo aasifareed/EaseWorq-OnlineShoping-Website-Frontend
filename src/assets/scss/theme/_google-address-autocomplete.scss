@@ -71,6 +71,14 @@ body.dark {
   div.text.text-danger {
     color: var(--text-primary, #f5f7fa) !important;
   }
+
+  .checkout-page .checkout-form .form-group .field-label span.optional-mark,
+  .field-label .optional-mark,
+  label .optional-mark,
+  .optional-mark {
+    color: var(--text-muted, #b8c2d1) !important;
+    font-weight: 500 !important;
+  }
 }
 
 body:not(.dark) {
@@ -80,5 +88,13 @@ body:not(.dark) {
   .text.text-danger,
   div.text.text-danger {
     color: var(--error-text, #dc2626) !important;
+  }
+
+  .checkout-page .checkout-form .form-group .field-label span.optional-mark,
+  .field-label .optional-mark,
+  label .optional-mark,
+  .optional-mark {
+    color: var(--text-muted, #6b7280) !important;
+    font-weight: 500 !important;
   }
 }

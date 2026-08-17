@@ -27,7 +27,7 @@ body:not(.dark) {
     color: var(--text-muted) !important;
   }
 
-  a:not(.btn):not(.nav-link):not(.dropdown-item):not(.mc-card__name):not(.shop-list-card__title):not(.brand-logo-link):not(.header-action-link):not(.header-action-icon):not(.header-cart-link) {
+  a:not(.btn):not(.nav-link):not(.dropdown-item):not(.mc-card__name):not(.shop-list-card__title):not(.brand-logo-link):not(.header-action-link):not(.header-action-icon):not(.header-cart-link):not(.cart-btn) {
     color: var(--text-secondary);
     transition: color var(--transition-fast);
 

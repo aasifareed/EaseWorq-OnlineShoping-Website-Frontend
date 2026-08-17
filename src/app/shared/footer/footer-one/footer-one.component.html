@@ -16,6 +16,20 @@
             Welcome to {{ storeName }}. Browse our products, place your order online,
             and enjoy a simple checkout with the payment options we support.
           </p>
+
+          <div class="footer-accept-block" *ngIf="hasPaymentMethods">
+            <div class="footer-heading footer-heading--compact">We Accept</div>
+            <div class="footer-accept">
+              <span class="footer-accept__chip" *ngIf="showCashOnDelivery">
+                <i class="fa fa-money" aria-hidden="true"></i>
+                Cash on Delivery
+              </span>
+              <span class="footer-accept__chip" *ngIf="showGoPayFast">
+                <span class="footer-accept__g" aria-hidden="true">G</span>
+                GoPayFast
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="footer-block">
@@ -76,20 +90,6 @@
           <ng-template #noContact>
             <p class="footer-support__empty">Contact details are not configured yet.</p>
           </ng-template>
-        </div>
-      </div>
-
-      <div class="footer-block footer-block--accept" *ngIf="hasPaymentMethods">
-        <div class="footer-heading">We Accept</div>
-        <div class="footer-accept">
-          <span class="footer-accept__chip" *ngIf="showCashOnDelivery">
-            <i class="fa fa-money" aria-hidden="true"></i>
-            Cash on Delivery
-          </span>
-          <span class="footer-accept__chip" *ngIf="showGoPayFast">
-            <span class="footer-accept__g" aria-hidden="true">G</span>
-            GoPayFast
-          </span>
         </div>
       </div>
     </div>

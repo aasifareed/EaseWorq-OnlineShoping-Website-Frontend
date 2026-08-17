@@ -207,7 +207,7 @@ body.dark {
     color: var(--text-muted) !important;
   }
 
-  a:not(.btn):not(.nav-link):not(.dropdown-item) {
+  a:not(.btn):not(.nav-link):not(.dropdown-item):not(.cart-btn) {
     color: var(--text-secondary);
     transition: color var(--transition-fast);
 

@@ -5,7 +5,8 @@
          [routerLink]="slideLink(slider)"
          [queryParams]="slideQueryParams(slider)"
          [attr.href]="isExternalLink(slider) ? externalHref(slider) : null"
-         (click)="onSlideClick($event, slider)">
+         (click)="onSlideClick($event, slider)"
+         [attr.aria-label]="'View promotion — ' + (buttonText || 'Shop Now')">
         <div class="home home-hero-slide" [ngClass]="textClass">
           <img
             class="home-hero-slide__img"
@@ -14,19 +15,12 @@
             [attr.fetchpriority]="i === 0 ? 'high' : 'low'"
             [attr.decoding]="i === 0 ? 'sync' : 'async'"
             alt="Promotional banner" />
-          <div class="container">
-            <div class="row">
-              <div class="col">
-                <div class="slider-contain">
-                  <div class="slider-contain__inner">
-                    <span class="btn btn-solid home-hero-cta" [ngClass]="buttonClass">
-                      {{ buttonText || 'Shop Now' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <span class="home-hero-cta" [ngClass]="buttonClass">
+            <span class="home-hero-cta__label">{{ buttonText || 'Shop Now' }}</span>
+            <span class="home-hero-cta__icon" aria-hidden="true">
+              <i class="fa fa-arrow-right"></i>
+            </span>
+          </span>
         </div>
       </a>
     </ng-template>
