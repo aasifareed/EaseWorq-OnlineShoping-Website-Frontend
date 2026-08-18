@@ -30,6 +30,7 @@ import { SizeModalComponent } from './components/modal/size-modal/size-modal.com
 import { SkeletonProductBoxComponent } from './components/skeleton/skeleton-product-box/skeleton-product-box.component';
 import { TapToTopComponent } from './components/tap-to-top/tap-to-top.component';
 import { BusyOverlayComponent } from './components/busy-overlay/busy-overlay.component';
+import { ChatWidgetComponent } from './components/chat-widget/chat-widget.component';
 
 import { DiscountPipe } from './pipes/discount.pipe';
 import { ShopCurrencyPipe } from './pipes/shop-currency.pipe';
@@ -61,6 +62,7 @@ import { GoogleSignInButtonComponent } from './components/google-sign-in-button/
     SkeletonProductBoxComponent,
     TapToTopComponent,
     BusyOverlayComponent,
+    ChatWidgetComponent,
     DiscountPipe,
     ShopCurrencyPipe,
     ContrastTextPipe,
@@ -109,6 +111,7 @@ import { GoogleSignInButtonComponent } from './components/google-sign-in-button/
     SkeletonProductBoxComponent,
     TapToTopComponent,
     BusyOverlayComponent,
+    ChatWidgetComponent,
     DiscountPipe,
     ShopCurrencyPipe,
     ContrastTextPipe,

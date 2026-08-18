@@ -1,0 +1,97 @@
+<div class="shop-chat" *ngIf="visible">
+  <button
+    type="button"
+    class="shop-chat__launcher"
+    *ngIf="!open"
+    (click)="toggle()"
+    aria-label="Chat with us"
+  >
+    <i class="fa fa-comments"></i>
+    <span class="shop-chat__online-dot" *ngIf="supportOnline" title="Support is online"></span>
+    <span class="shop-chat__badge" *ngIf="unread">{{ unread }}</span>
+  </button>
+
+  <div class="shop-chat__panel" *ngIf="open" role="dialog" aria-label="Live chat">
+    <div class="shop-chat__header">
+      <div class="shop-chat__header-text">
+        <strong>Customer Support</strong>
+        <span class="shop-chat__presence" [class.shop-chat__presence--online]="supportOnline">
+          <span class="shop-chat__presence-dot"></span>
+          {{ supportOnline ? 'Online now' : 'Offline — we will reply soon' }}
+        </span>
+      </div>
+      <button type="button" class="shop-chat__close" (click)="toggle()" aria-label="Close chat">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <div
+      class="shop-chat__status"
+      [class.shop-chat__status--error]="connectionState === 'error'"
+      *ngIf="connectionState !== 'connected'"
+    >
+      <ng-container [ngSwitch]="connectionState">
+        <span *ngSwitchCase="'connecting'">Connecting to support…</span>
+        <span *ngSwitchCase="'error'">Could not connect. Please refresh and try again.</span>
+        <span *ngSwitchDefault>Starting chat…</span>
+      </ng-container>
+    </div>
+
+    <div class="shop-chat__messages" #messagesContainer>
+      <div class="shop-chat__welcome" *ngIf="messages.length === 0">
+        Hi! Send us a message and our team will reply here.
+      </div>
+      <ng-container *ngFor="let message of messages; let i = index">
+        <div class="shop-chat__day" *ngIf="!isSameDay(message, messages[i - 1])">
+          {{ dayLabel(message.timestamp) }}
+        </div>
+        <div class="shop-chat__row" [class.out]="!message.fromAdmin">
+          <div class="shop-chat__bubble" [class.shop-chat__bubble--image]="isImage(message.message)">
+            <a
+              *ngIf="isImage(message.message)"
+              [href]="imageSrc(message.message)"
+              target="_blank"
+              rel="noopener"
+            >
+              <img [src]="imageSrc(message.message)" alt="Photo" />
+            </a>
+            <ng-container *ngIf="!isImage(message.message)">{{ message.message }}</ng-container>
+          </div>
+          <div class="shop-chat__time">{{ formatTime(message.timestamp) }}</div>
+        </div>
+      </ng-container>
+    </div>
+
+    <form class="shop-chat__composer" (submit)="$event.preventDefault(); send()" (paste)="onPaste($event)">
+      <input
+        #imageInput
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        hidden
+        (change)="onPickImage($event)"
+      />
+      <button
+        type="button"
+        class="shop-chat__attach"
+        (click)="imageInput.click()"
+        [disabled]="sending || connectionState === 'connecting'"
+        aria-label="Send image"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M16.5 6.5v9.2a4.5 4.5 0 1 1-9 0V7.8a3.2 3.2 0 1 1 6.4 0v7.6a1.9 1.9 0 1 1-3.8 0V8.2h1.5v7.2a.4.4 0 1 0 .8 0V7.8a1.7 1.7 0 1 0-3.4 0v7.9a3 3 0 0 0 6 0V6.5z"></path>
+        </svg>
+      </button>
+      <input
+        type="text"
+        [(ngModel)]="draft"
+        name="shopChatDraft"
+        placeholder="Write a message..."
+        [disabled]="sending || connectionState === 'connecting'"
+        (keydown.enter)="onEnter($event)"
+      />
+      <button type="submit" [disabled]="sending || !draft.trim()">
+        <i class="fa" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+      </button>
+    </form>
+  </div>
+</div>
