@@ -87,6 +87,9 @@ urls: {
   OnlineShopProductGroup_GetProductGroupsListForOnline: 'OnlineShopProductGroup/GetProductGroupsListForOnline',
   OnlineShopSearch_GetSuggestions: 'OnlineShopSearch/GetSearchSuggestions',
   OnlineShopTenant_GetTenantDetailsForWebsite: 'OnlineShopTenant/GetTenantDetailsForWebsite',
+  Chat_GetChatHistory: 'Chat/GetChatHistory',
+  Chat_GetSupportStatus: 'Chat/GetSupportStatus',
+  ChatImage_Upload: 'ChatImageUpload/Upload',
   
      },
    shop: {

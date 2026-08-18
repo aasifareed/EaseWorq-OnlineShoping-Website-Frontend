@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
+import { AlertSoundService } from './alert-sound.service';
 import { NotificationApiDto, ShopNotificationItem } from '../models/notification.model';
 
 @Injectable({
@@ -23,7 +24,8 @@ export class SignalRService {
     private authService: AuthService,
     private notificationService: NotificationService,
     private ngZone: NgZone,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private alertSound: AlertSoundService,
   ) {}
 
   get unreadCount(): number {
@@ -211,6 +213,7 @@ export class SignalRService {
     const mapped = this.notificationService.mapFromApi(payload);
     if (mapped.id && !this.signalrNotifications.some((n) => n.id === mapped.id)) {
       this.signalrNotifications = [mapped, ...this.signalrNotifications];
+      this.alertSound.play();
     }
 
     const description = mapped.text || message || 'Your order status was updated.';
