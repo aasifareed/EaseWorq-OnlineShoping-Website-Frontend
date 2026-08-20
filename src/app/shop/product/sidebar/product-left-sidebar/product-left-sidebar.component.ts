@@ -262,7 +262,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     }
     this.metaTracking.trackViewContent({
       productId,
-      contentName: String(this.product?.title || this.product?.name || '').trim(),
+      contentName: String(this.product?.title || '').trim(),
       value: this.productService.getFinalUnitPrice(this.product),
       category: String(this.product?.category || '').trim() || undefined,
     });

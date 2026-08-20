@@ -356,7 +356,7 @@ export class MetaTrackingService {
       const path = environment.urls?.MetaTracking_TrackBrowserEvent || 'MetaTracking/TrackBrowserEvent';
       const url = `${this.apiRoot()}api/services/app/${path}`;
       this.http
-        .post(url, body, { context: asBackgroundRequest() })
+        .post(url, body, asBackgroundRequest())
         .subscribe({ error: () => undefined });
     } catch {
       // ignore
