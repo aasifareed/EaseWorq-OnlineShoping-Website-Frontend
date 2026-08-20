@@ -24,6 +24,8 @@ import { ThemeService } from './shared/services/theme.service';
 
 import { TenantService } from './shared/services/tenant.service';
 
+import { MetaTrackingService } from './shared/services/meta-tracking.service';
+
 import { initNativeApp } from './shared/services/native-app';
 
 
@@ -77,6 +79,8 @@ export class AppComponent implements OnInit {
 
     private auth: AuthService,
 
+    private metaTracking: MetaTrackingService,
+
     private ngZone: NgZone
 
   ) {
@@ -120,6 +124,8 @@ export class AppComponent implements OnInit {
           if (ctx?.storefront) {
 
             this.productService.applyStoreCurrency(ctx.storefront);
+
+            this.metaTracking.initFromStorefront();
 
           }
 

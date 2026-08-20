@@ -41,6 +41,7 @@ import {
   parseGooglePlaceAddress
 } from '../../shared/services/address-autocomplete/google-address.util';
 import { OnlineShopWorkingAreaService } from '../../shared/services/online-shop-working-area.service';
+import { MetaTrackingService } from '../../shared/services/meta-tracking.service';
 
 type CheckoutAddressGroup = 'billing' | 'shipping';
 type CheckoutAutocompleteKey = `${CheckoutAddressGroup}.${GoogleAddressFieldMode}`;
@@ -145,6 +146,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     public googleAddressService: GoogleAddressService,
     private workingArea: OnlineShopWorkingAreaService,
     private elementRef: ElementRef,
+    private metaTracking: MetaTrackingService,
   ) {
     this.checkoutForm = this.fb.group({
       billing: this.createBillingAddressGroup(),
@@ -1589,7 +1591,32 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
         }
 
         this.applyPaymentMethodDefaults();
+        this.trackInitiateCheckout(result);
       });
+  }
+
+  private trackInitiateCheckout(result: OnlineShopPricingResult): void {
+    if (!this.products?.length) {
+      return;
+    }
+    const lines = this.products
+      .filter((p) => p && Number(p.quantity) > 0)
+      .map((p) => ({
+        id: String(p.productId ?? ''),
+        quantity: Number(p.quantity) || 1,
+        itemPrice: this.productService.getFinalUnitPrice(p),
+      }))
+      .filter((l) => !!l.id);
+
+    if (!lines.length) {
+      return;
+    }
+
+    this.metaTracking.trackInitiateCheckout({
+      lines,
+      value: Number(result?.finalTotal) || 0,
+      numItems: lines.reduce((sum, l) => sum + l.quantity, 0),
+    });
   }
 
   /**

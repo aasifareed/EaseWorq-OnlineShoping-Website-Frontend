@@ -39,6 +39,9 @@ export interface OnlineShopStorefront {
   metaTitle?: string;
   metaDescription?: string;
   metaImageUrl?: string;
+  /** Public Meta Pixel ID when tracking is enabled (never includes CAPI token). */
+  metaPixelId?: string;
+  metaTrackingEnabled?: boolean;
 }
 
 export interface AbpResponse<T> {

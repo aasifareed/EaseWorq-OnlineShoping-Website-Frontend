@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 
 import { asBackgroundRequest } from '../interceptors/background-request';
 import { rewriteMediaUrl } from './media-url';
+import { MetaTrackingService } from './meta-tracking.service';
 
 
 
@@ -152,6 +153,10 @@ export interface CreateOnlineShopSaleOrderRequest {
    */
   clientExpectedTotal?: number | null;
 
+  /** Meta browser cookies for CAPI Event Match Quality (optional). */
+  metaFbp?: string | null;
+  metaFbc?: string | null;
+  metaEventSourceUrl?: string | null;
 }
 
 /** The courier the customer picked, plus the total they were shown when they picked it. */
@@ -164,6 +169,8 @@ export interface CheckoutOrderSelection {
 
 
 export interface OnlineShopOrderSuccessProduct {
+  /** POS ProductId — Meta Catalog Content ID. */
+  externalProductId?: string;
   productName: string;
   productImageUrl?: string;
   quantity: number;
@@ -408,7 +415,11 @@ export class OnlineShopOrderService {
 
 
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    private metaTracking: MetaTrackingService,
+  ) {}
 
   /**
    * How many orders the customer has placed with us, or null while unknown (signed out, or nothing
@@ -720,10 +731,25 @@ export class OnlineShopOrderService {
 
       selectedCourierServiceType: selection?.selectedCourierServiceType ?? null,
 
-      clientExpectedTotal: selection?.clientExpectedTotal ?? null
+      clientExpectedTotal: selection?.clientExpectedTotal ?? null,
+
+      ...this.buildMetaTrackingFields()
 
     };
 
+  }
+
+  private buildMetaTrackingFields(): Pick<
+    CreateOnlineShopSaleOrderRequest,
+    'metaFbp' | 'metaFbc' | 'metaEventSourceUrl'
+  > {
+    const cookies = this.metaTracking.getMetaBrowserCookies();
+    return {
+      metaFbp: cookies.fbp ?? null,
+      metaFbc: cookies.fbc ?? null,
+      metaEventSourceUrl:
+        typeof window !== 'undefined' ? window.location.href : null,
+    };
   }
 
 
@@ -986,6 +1012,7 @@ export class OnlineShopOrderService {
 
   private normalizeSuccessDetail(raw: any): OnlineShopOrderSuccessDetail {
     const products = (raw?.products ?? raw?.Products ?? []).map((p: any) => ({
+      externalProductId: String(p?.externalProductId ?? p?.ExternalProductId ?? '').trim() || undefined,
       productName: String(p?.productName ?? p?.ProductName ?? ''),
       productImageUrl: rewriteMediaUrl(p?.productImageUrl ?? p?.ProductImageUrl),
       quantity: Number(p?.quantity ?? p?.Quantity ?? 0),

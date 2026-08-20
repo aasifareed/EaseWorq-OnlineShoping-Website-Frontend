@@ -187,6 +187,8 @@ export class OnlineShopSettingsService {
       metaTitle: (raw.metaTitle ?? raw.MetaTitle) as string | undefined,
       metaDescription: (raw.metaDescription ?? raw.MetaDescription) as string | undefined,
       metaImageUrl: rewriteMediaUrl((raw.metaImageUrl ?? raw.MetaImageUrl) as string | undefined) || undefined,
+      metaPixelId: String(raw.metaPixelId ?? raw.MetaPixelId ?? '').trim() || undefined,
+      metaTrackingEnabled: !!(raw.metaTrackingEnabled ?? raw.MetaTrackingEnabled),
     };
   }
 }
