@@ -17,6 +17,7 @@ import { asBackgroundRequest } from '../interceptors/background-request';
 import { OnlineShopCartLineInput } from './online-shop-checkout.service';
 import { SearchProductSuggestion } from './online-shop-search.service';
 import { rewriteMediaUrl, rewriteProductMedia } from './media-url';
+import { MetaTrackingService } from './meta-tracking.service';
 
 // Bumped with the pricing engine conversion so carts holding cached money are discarded.
 const ONLINE_SHOP_CART_VERSION = 3;
@@ -289,6 +290,7 @@ export class ProductService {
     private toastrService: ToastrService,
     private auth: AuthService,
     private tenantService: TenantService,
+    private metaTracking: MetaTrackingService,
   ) { }
 
   private shopIds(): { tenantId: number; storeId: string } {
@@ -742,7 +744,28 @@ private apiRoot(): string {
       this.OpenCart = true;
     }
     this.syncCartState();
+
+    const productId = String(cartProduct.productId ?? '').trim();
+    if (productId) {
+      this.metaTracking.trackAddToCart({
+        productId,
+        contentName: productName,
+        quantity: qtyToAdd,
+        itemPrice: this.getFinalUnitPrice(cartProduct),
+      });
+    }
+
     return true;
+  }
+
+  /** Final customer-facing unit price (catalogue markdown applied), matching PDP display. */
+  getFinalUnitPrice(product: any): number {
+    const list = Number(product?.price) || 0;
+    const discount = Number(product?.discount) || 0;
+    if (discount > 0) {
+      return Math.round((list - (list * discount / 100)) * 100) / 100;
+    }
+    return Math.round(list * 100) / 100;
   }
 
   /** Global search add-to-cart: same IDs as product detail when possible; otherwise resolve detail by inventory id. */

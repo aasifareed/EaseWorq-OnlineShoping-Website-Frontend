@@ -17,6 +17,7 @@ import {
   FreeShippingPromoService,
   ProductCouponOffer,
 } from '../../../../shared/services/free-shipping-promo.service';
+import { MetaTrackingService } from '../../../../shared/services/meta-tracking.service';
 
 @Component({
   selector: 'app-product-left-sidebar',
@@ -71,6 +72,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private checkout: OnlineShopCheckoutService,
     private productCouponOffersService: FreeShippingPromoService,
+    private metaTracking: MetaTrackingService,
     public productService: ProductService
   ) {}
 
@@ -239,6 +241,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
           this.loadProductCouponOffers();
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
+          this.trackViewContent();
           const inventoryId = String(mapped.id || '');
           if (inventoryId) {
             this.loadRelatedProducts(inventoryId);
@@ -249,6 +252,19 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
       error: () => {
         this.detailLoading = false;
       }
+    });
+  }
+
+  private trackViewContent(): void {
+    const productId = String(this.product?.productId ?? '').trim();
+    if (!productId) {
+      return;
+    }
+    this.metaTracking.trackViewContent({
+      productId,
+      contentName: String(this.product?.title || this.product?.name || '').trim(),
+      value: this.productService.getFinalUnitPrice(this.product),
+      category: String(this.product?.category || '').trim() || undefined,
     });
   }
 

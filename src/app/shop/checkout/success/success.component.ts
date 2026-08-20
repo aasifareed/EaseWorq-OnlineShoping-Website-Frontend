@@ -12,6 +12,7 @@ import {
   orderSubtotalBeforeDiscounts
 } from '../../../shared/services/online-shop-order-summary.util';
 import { ProductService } from '../../../shared/services/product.service';
+import { MetaTrackingService } from '../../../shared/services/meta-tracking.service';
 
 @Component({
   selector: 'app-success',
@@ -27,7 +28,8 @@ export class SuccessComponent implements OnInit {
   constructor(
     public productService: ProductService,
     private route: ActivatedRoute,
-    private onlineShopOrder: OnlineShopOrderService
+    private onlineShopOrder: OnlineShopOrderService,
+    private metaTracking: MetaTrackingService,
   ) { }
 
   ngOnInit(): void {
@@ -47,11 +49,31 @@ export class SuccessComponent implements OnInit {
         this.order = detail;
         this.loading = false;
         this.loadError = false;
+        this.trackPurchase(detail);
       },
       error: () => {
         this.loading = false;
         this.loadError = true;
       }
+    });
+  }
+
+  private trackPurchase(detail: OnlineShopOrderSuccessDetail): void {
+    if (!detail?.onlineShopSaleOrderId) {
+      return;
+    }
+    this.metaTracking.trackPurchasePixel({
+      orderId: detail.onlineShopSaleOrderId,
+      orderNumber: detail.onlineOrderNumber,
+      value: Number(detail.totalAmount) || 0,
+      lines: (detail.products || [])
+        .map((p) => ({
+          id: String(p.externalProductId || ''),
+          quantity: Number(p.quantity) || 1,
+          itemPrice: Number(p.unitPrice) || 0,
+          name: p.productName,
+        }))
+        .filter((l) => !!l.id),
     });
   }
 
