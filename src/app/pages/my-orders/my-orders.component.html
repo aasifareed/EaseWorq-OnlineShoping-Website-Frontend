@@ -39,6 +39,7 @@
               <th scope="col">Order #</th>
               <th scope="col">Date</th>
               <th scope="col">Status</th>
+              <th scope="col" class="order-message-col">Store note</th>
               <th scope="col" class="order-amount-col">Total</th>
               <th scope="col" class="order-amount-col">Paid</th>
               <th scope="col" class="text-end order-actions-col">Actions</th>
@@ -54,6 +55,18 @@
                   [ngStyle]="statusChipStyles(order.orderStatusColorCode)">
                   {{ statusLabel(order) }}
                 </span>
+              </td>
+              <td class="order-message-col">
+                <div
+                  *ngIf="hasCustomerStatusMessage(order); else emptyStoreNote"
+                  class="order-status-message order-status-message--table"
+                  [attr.title]="order.customerStatusMessage">
+                  <span class="order-status-message__label">{{ statusMessageLabel(order) }}</span>
+                  <p class="order-status-message__text mb-0">{{ order.customerStatusMessage }}</p>
+                </div>
+                <ng-template #emptyStoreNote>
+                  <span class="orders-muted">—</span>
+                </ng-template>
               </td>
               <td class="order-amount-col">{{ order.totalAmount | number:'1.2-2' }}</td>
               <td class="order-amount-col">{{ order.paidAmount | number:'1.2-2' }}</td>
@@ -80,6 +93,12 @@
               </span>
               <ng-container [ngTemplateOutlet]="orderActionsTpl" [ngTemplateOutletContext]="{ $implicit: order }"></ng-container>
             </div>
+          </div>
+          <div
+            *ngIf="hasCustomerStatusMessage(order)"
+            class="order-card__message">
+            <span class="order-status-message__label">{{ statusMessageLabel(order) }}</span>
+            <p class="order-status-message__text mb-0">{{ order.customerStatusMessage }}</p>
           </div>
           <div class="order-card__meta">
             <div class="order-card__stat">
@@ -226,6 +245,14 @@
           [ngStyle]="statusChipStyles(orderDetail.orderStatusColorCode)">
           {{ orderDetail.orderStatusDisplayName || '—' }}
         </span>
+      </div>
+
+      <div
+        *ngIf="hasCustomerStatusMessage(orderDetail)"
+        class="order-status-message-banner"
+        role="status">
+        <div class="order-status-message-banner__title">{{ statusMessageLabel(orderDetail) }}</div>
+        <p class="order-status-message-banner__text mb-0">{{ orderDetail.customerStatusMessage }}</p>
       </div>
 
       <div class="order-detail-info-grid">
@@ -401,7 +428,7 @@
       <div *ngIf="chronologicalTimelineItems.length" class="tracking-timeline-horizontal">
         <ng-container *ngFor="let event of chronologicalTimelineItems; let last = last">
           <div class="tracking-timeline-step">
-            <div class="tracking-timeline-step-card tracking-timeline-step-card--compact">
+            <div class="tracking-timeline-step-card" [class.tracking-timeline-step-card--compact]="!event.remarks">
               <span
                 *ngIf="event.orderStatusColorCode"
                 class="order-status-badge"
@@ -409,6 +436,7 @@
                 {{ timelineStatusLabel(event) }}
               </span>
               <span *ngIf="!event.orderStatusColorCode" class="tracking-timeline-status">{{ timelineStatusLabel(event) }}</span>
+              <div *ngIf="event.remarks" class="tracking-timeline-remarks">{{ event.remarks }}</div>
             </div>
           </div>
           <div *ngIf="!last" class="tracking-timeline-arrow" aria-hidden="true">→</div>
