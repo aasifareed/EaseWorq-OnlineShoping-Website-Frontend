@@ -207,6 +207,7 @@ export interface OnlineShopOrderListItem {
   orderStatusName?: string;
   orderStatusDisplayName?: string;
   orderStatusColorCode?: string;
+  customerStatusMessage?: string;
 }
 
 export interface OnlineShopSaleOrderShipmentSummary {
@@ -305,6 +306,7 @@ export interface OnlineShopOrderSuccessDetail {
   paymentStatus?: OnlineShopPaymentStatus;
   paymentStatusName?: string;
   deliveryStatus?: string;
+  customerStatusMessage?: string;
   paidAmount?: number;
   remainingAmount?: number;
   shipment?: OnlineShopSaleOrderShipmentSummary;
@@ -858,6 +860,7 @@ export class OnlineShopOrderService {
       orderStatusName: o?.orderStatusName ?? o?.OrderStatusName,
       orderStatusDisplayName: o?.orderStatusDisplayName ?? o?.OrderStatusDisplayName,
       orderStatusColorCode: o?.orderStatusColorCode ?? o?.OrderStatusColorCode,
+      customerStatusMessage: o?.customerStatusMessage ?? o?.CustomerStatusMessage,
       shippingMethod: Number(o?.shippingMethod ?? o?.ShippingMethod ?? 0) as OnlineShopShippingMethod,
       hasShipment: !!(o?.hasShipment ?? o?.HasShipment),
       trackingNumber: o?.trackingNumber ?? o?.TrackingNumber,
@@ -1063,6 +1066,7 @@ export class OnlineShopOrderService {
       paymentStatus: Number(raw?.paymentStatus ?? raw?.PaymentStatus ?? 0) as OnlineShopPaymentStatus,
       paymentStatusName: String(raw?.paymentStatusName ?? raw?.PaymentStatusName ?? ''),
       deliveryStatus: this.normalizeDeliveryStatus(raw?.deliveryStatus ?? raw?.DeliveryStatus) ?? undefined,
+      customerStatusMessage: raw?.customerStatusMessage ?? raw?.CustomerStatusMessage,
       paidAmount: Number(raw?.paidAmount ?? raw?.PaidAmount ?? 0),
       remainingAmount: Number(raw?.remainingAmount ?? raw?.RemainingAmount ?? 0),
       shipment: this.normalizeShipmentSummary(raw?.shipment ?? raw?.Shipment),

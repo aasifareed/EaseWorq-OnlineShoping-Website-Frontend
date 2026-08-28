@@ -200,6 +200,12 @@ section.my-orders-page {
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
+
+    .order-message-col {
+      min-width: 12rem;
+      max-width: 22rem;
+      width: 28%;
+    }
   }
 
   .order-status-badge {
@@ -209,6 +215,43 @@ section.my-orders-page {
     font-size: 0.8rem;
     font-weight: 600;
     white-space: nowrap;
+  }
+
+  .order-status-message {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--ml-surface-text-muted, #777777);
+    white-space: normal;
+  }
+
+  .order-status-message--table {
+    margin-top: 0;
+    max-width: none;
+  }
+
+  .order-status-message__label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ml-page-title, #222222);
+    margin-bottom: 0.2rem;
+  }
+
+  .order-status-message__text {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--ml-surface-text, #333333);
+    white-space: pre-wrap;
+  }
+
+  .order-card__message {
+    margin-top: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--ml-page-heading-border, #e5e5ea);
+    background: var(--ml-toolbar-bg, #f8f8f9);
   }
 
   .login-prompt h3 {
@@ -378,6 +421,29 @@ section.my-orders-page {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem 1rem;
+  }
+
+  .order-status-message-banner {
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 204, 0, 0.35);
+    background: rgba(255, 204, 0, 0.12);
+    color: var(--ml-surface-text, #333333);
+  }
+
+  .order-status-message-banner__title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35rem;
+    color: var(--ml-page-title, #222222);
+  }
+
+  .order-status-message-banner__text {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
   }
 
   .orders-muted {
@@ -609,8 +675,12 @@ section.my-orders-page {
   }
 
   .tracking-timeline-remarks {
-    margin-top: 0.25rem;
-    font-size: 0.9rem;
+    margin-top: 0.45rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--ml-surface-text-muted, #777777);
+    text-align: left;
+    white-space: pre-wrap;
   }
 }
 
@@ -898,6 +968,19 @@ body.dark {
 
   .order-card__meta {
     border-top-color: var(--border-subtle) !important;
+  }
+
+  .order-card__message {
+    background: var(--surface-elevated) !important;
+    border-color: var(--border-subtle) !important;
+  }
+
+  .order-status-message__label {
+    color: var(--text-primary) !important;
+  }
+
+  .order-status-message__text {
+    color: var(--text-secondary) !important;
   }
 
   .order-card__stat strong {

@@ -908,6 +908,25 @@ export class MyOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return order.orderStatusDisplayName || order.orderStatusName || '—';
   }
 
+  hasCustomerStatusMessage(
+    order: Pick<OnlineShopOrderListItem, 'customerStatusMessage'> | null | undefined
+  ): boolean {
+    return !!order?.customerStatusMessage?.trim();
+  }
+
+  statusMessageLabel(
+    order: Pick<OnlineShopOrderListItem, 'orderStatusDisplayName' | 'orderStatusName'>
+  ): string {
+    const name = (order.orderStatusDisplayName || order.orderStatusName || '').toLowerCase();
+    if (name.includes('return')) {
+      return 'Return reason';
+    }
+    if (name.includes('cancel')) {
+      return 'Cancellation reason';
+    }
+    return 'Message from store';
+  }
+
   statusChipStyles(colorCode?: string | null): { backgroundColor: string; color: string } {
     return statusChipStyle(colorCode);
   }
