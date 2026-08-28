@@ -60,6 +60,26 @@ export interface OnlineShopAppliedDiscount {
   sortOrder: number;
 }
 
+export interface ValidateOnlineShopCartStockRequest {
+  storeId: string;
+  tenantId?: number | null;
+  items: OnlineShopCartLineInput[];
+}
+
+export interface OnlineShopCartStockIssue {
+  productId?: string;
+  productInventoryId?: string | null;
+  productName?: string | null;
+  requestedQuantity: number;
+  availableQuantity: number;
+  message: string;
+}
+
+export interface ValidateOnlineShopCartStockResult {
+  isAvailable: boolean;
+  issues: OnlineShopCartStockIssue[];
+}
+
 export interface OnlineShopCouponStatus {
   hasCoupon: boolean;
   /** The code is usable here and earned a discount. */
@@ -137,6 +157,20 @@ export class OnlineShopCheckoutService {
     return this.http
       .post<any>(url, body, asBackgroundRequest(this.tenantRequestOptions(tenantId)))
       .pipe(map((response) => this.normalizePricing(response?.result ?? response)));
+  }
+
+  validateCartStock(
+    request: ValidateOnlineShopCartStockRequest
+  ): Observable<ValidateOnlineShopCartStockResult> {
+    const path =
+      environment.urls?.OnlineShopCheckout_ValidateCartStock ||
+      'OnlineShopCheckout/ValidateCartStock';
+    const url = `${this.apiRoot()}api/services/app/${path}`;
+    const tenantId = request.tenantId ?? this.resolveTenantId();
+    const body = { ...request, tenantId };
+    return this.http
+      .post<any>(url, body, this.tenantRequestOptions(tenantId))
+      .pipe(map((response) => this.normalizeStockValidation(response?.result ?? response)));
   }
 
   private resolveTenantId(): number {
@@ -248,6 +282,22 @@ export class OnlineShopCheckoutService {
       pickupLocationId: item?.pickupLocationId ?? item?.PickupLocationId ?? null,
       isRecommended: !!(item?.isRecommended ?? item?.IsRecommended)
     }));
+  }
+
+  private normalizeStockValidation(raw: any): ValidateOnlineShopCartStockResult {
+    const issues = (raw?.issues ?? raw?.Issues ?? []).map((item: any) => ({
+      productId: item?.productId ?? item?.ProductId ?? undefined,
+      productInventoryId: item?.productInventoryId ?? item?.ProductInventoryId ?? null,
+      productName: item?.productName ?? item?.ProductName ?? null,
+      requestedQuantity: this.num(item?.requestedQuantity ?? item?.RequestedQuantity),
+      availableQuantity: this.num(item?.availableQuantity ?? item?.AvailableQuantity),
+      message: String(item?.message ?? item?.Message ?? '').trim()
+    }));
+
+    return {
+      isAvailable: !!(raw?.isAvailable ?? raw?.IsAvailable),
+      issues
+    };
   }
 
   private num(value: any): number {

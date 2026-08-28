@@ -27,6 +27,7 @@ import {
 import {
   CourierShippingOptionResult,
   OnlineShopAppliedDiscount,
+  OnlineShopCartStockIssue,
   OnlineShopCheckoutService,
   OnlineShopCouponStatus,
   OnlineShopPricingResult
@@ -1213,6 +1214,25 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.placeOrderError = '';
     this.loading = true;
+
+    const cartItems = this.productService.buildPricingCartLines(this.products);
+    this.onlineShopCheckout.validateCartStock({
+      storeId: this.auth.storeId,
+      items: cartItems
+    }).subscribe({
+      next: (stockResult) => {
+        if (!stockResult.isAvailable) {
+          this.loading = false;
+          this.showStockUnavailableError(stockResult.issues);
+          return;
+        }
+        this.submitCreateOrder();
+      },
+      error: (err) => this.handleCheckoutError(err)
+    });
+  }
+
+  private submitCreateOrder(): void {
     const formValue = this.buildCheckoutPayload();
     const selectedCourier = this.selectedCourierOption;
     const skipCourier = this.isCourierSelectionSkipped;
@@ -1398,9 +1418,10 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     this.placeOrderError = message;
 
     const needsSignIn = /sign in/i.test(message);
+    const isStockIssue = /stock|available|reserved|unavailable/i.test(message);
     void Swal.fire({
-      icon: 'error',
-      title: 'Could not place order',
+      icon: isStockIssue ? 'warning' : 'error',
+      title: isStockIssue ? 'Items unavailable' : 'Could not place order',
       text: message,
       confirmButtonText: needsSignIn ? 'Sign in' : 'OK',
       confirmButtonColor: '#f0b429'
@@ -1408,6 +1429,29 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       if (result.isConfirmed && needsSignIn) {
         this.auth.navigateToLogin('/shop/checkout');
       }
+    });
+  }
+
+  private showStockUnavailableError(issues: OnlineShopCartStockIssue[]): void {
+    const lines = (issues ?? [])
+      .map((issue) => issue.message?.trim())
+      .filter((message): message is string => !!message);
+
+    if (!lines.length) {
+      this.showPlaceOrderError('Some items in your cart are no longer available. Please review your cart.');
+      return;
+    }
+
+    const summary = lines.join('\n\n');
+    this.placeOrderError = lines[0];
+    this.toastr.warning('Some items in your cart are no longer available.', 'Update your cart');
+
+    void Swal.fire({
+      icon: 'warning',
+      title: 'Items unavailable',
+      text: summary,
+      confirmButtonText: 'Review cart',
+      confirmButtonColor: '#f0b429'
     });
   }
 

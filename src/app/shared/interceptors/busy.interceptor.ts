@@ -8,6 +8,7 @@ import { BACKGROUND_REQUEST } from './background-request';
 /** Wording for the actions worth naming; anything else falls back to a generic wait message. */
 const ACTION_MESSAGES: ReadonlyArray<[string, string]> = [
   ['CreateOnlineShopSaleOrder', 'Placing your order…'],
+  ['ValidateCartStock', 'Checking product availability…'],
   ['OnlineShopPayment/CreateCheckout', 'Taking you to secure payment…'],
   ['OnlineShopPayment/RetryCheckout', 'Taking you to secure payment…'],
   ['AuthenticateForOnlineShop', 'Signing you in…'],

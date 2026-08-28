@@ -11,6 +11,9 @@ export function storefrontBootstrapFactory(
     const ok = await tenantService.initialize(router);
     if (ok) {
       homeBannerService.warmup();
+      if (router.url.includes('site-not-available')) {
+        await router.navigateByUrl('/home');
+      }
     }
     return ok;
   };

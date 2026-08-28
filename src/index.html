@@ -52,9 +52,7 @@
     <div id="storefront-bootstrap-loader" class="sk-boot" aria-live="polite" aria-busy="true">
       <div class="sk-boot__glow" aria-hidden="true"></div>
       <div class="sk-boot__content">
-        <div class="sk-boot__mark" aria-hidden="true">
-          <span class="sk-boot__mark-cart"></span>
-        </div>
+        <img class="sk-boot__logo" alt="Sasta Khareedo" hidden />
         <p class="sk-boot__brand">Sasta <span>Khareedo</span></p>
         <p class="sk-boot__tagline">Smart Shopping. Honest Prices.</p>
         <div class="sk-boot__track" role="progressbar" aria-label="Loading store">
@@ -107,50 +105,16 @@
         max-width: 22rem;
       }
 
-      .sk-boot__mark {
-        width: 64px;
-        height: 64px;
+      .sk-boot__logo {
+        display: block;
+        width: auto;
+        max-width: min(240px, 72vw);
+        height: auto;
+        max-height: 72px;
         margin-bottom: 1.15rem;
-        border-radius: 16px;
-        background: linear-gradient(145deg, #1a1a1a, #111);
-        border: 1px solid rgba(255, 196, 0, 0.45);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-        display: grid;
-        place-items: center;
+        object-fit: contain;
+        filter: brightness(0) invert(1);
         animation: sk-boot-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-      }
-
-      .sk-boot__mark-cart {
-        width: 28px;
-        height: 22px;
-        border: 2.5px solid var(--sk-yellow);
-        border-radius: 3px 3px 6px 6px;
-        position: relative;
-        box-sizing: border-box;
-      }
-
-      .sk-boot__mark-cart::before {
-        content: '';
-        position: absolute;
-        left: 4px;
-        right: 4px;
-        top: -7px;
-        height: 7px;
-        border: 2.5px solid var(--sk-yellow);
-        border-bottom: 0;
-        border-radius: 4px 4px 0 0;
-      }
-
-      .sk-boot__mark-cart::after {
-        content: '';
-        position: absolute;
-        left: 3px;
-        bottom: -7px;
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background: var(--sk-yellow);
-        box-shadow: 12px 0 0 var(--sk-yellow);
       }
 
       .sk-boot__brand {
@@ -234,7 +198,7 @@
       @media (prefers-reduced-motion: reduce) {
         .sk-boot,
         .sk-boot__glow,
-        .sk-boot__mark,
+        .sk-boot__logo,
         .sk-boot__brand,
         .sk-boot__tagline,
         .sk-boot__track,
@@ -251,6 +215,59 @@
     </style>
 
     <app-root></app-root>
+    <script>
+      (function () {
+        function readCachedStoreLogoUrl() {
+          try {
+            for (var index = 0; index < localStorage.length; index += 1) {
+              var key = localStorage.key(index);
+              if (!key || key.indexOf('ew_online_shop_logo_') !== 0) {
+                continue;
+              }
+              var parsed = JSON.parse(localStorage.getItem(key) || 'null');
+              var logoUrl = parsed && parsed.logoUrl ? String(parsed.logoUrl).trim() : '';
+              if (logoUrl) {
+                return logoUrl;
+              }
+            }
+          } catch (e) {}
+          return '';
+        }
+
+        function applyBootLogo() {
+          var root = document.getElementById('storefront-bootstrap-loader');
+          if (!root) {
+            return;
+          }
+
+          var logoUrl = readCachedStoreLogoUrl();
+          var img = root.querySelector('.sk-boot__logo');
+          var brand = root.querySelector('.sk-boot__brand');
+          if (!img || !logoUrl) {
+            return;
+          }
+
+          img.addEventListener('error', function () {
+            img.hidden = true;
+            if (brand) {
+              brand.style.display = '';
+            }
+          });
+
+          img.src = logoUrl;
+          img.hidden = false;
+          if (brand) {
+            brand.style.display = 'none';
+          }
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', applyBootLogo, { once: true });
+        } else {
+          applyBootLogo();
+        }
+      })();
+    </script>
     <script>
       (function () {
         function loadBootstrapJs() {

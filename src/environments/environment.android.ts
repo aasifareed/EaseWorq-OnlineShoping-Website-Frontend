@@ -42,6 +42,7 @@ export const environment = {
     OnlineShopWishlist_AddToWishlistForOnlineShop: 'OnlineShopWishlist/AddToWishlistForOnlineShop',
     OnlineShopWishlist_RemoveFromWishlistForOnlineShop: 'OnlineShopWishlist/RemoveFromWishlistForOnlineShop',
     OnlineShopCheckout_CalculatePricing: 'OnlineShopCheckout/CalculatePricing',
+    OnlineShopCheckout_ValidateCartStock: 'OnlineShopCheckout/ValidateCartStock',
     WorkingArea_IsPointInside: 'OnlineShopStoreWorkingLocation/IsPointInsideWorkingArea',
     OnlineShopSaleOrder_CreateOnlineShopSaleOrder: 'OnlineShopSaleOrder/CreateOnlineShopSaleOrder',
     OnlineShopSaleOrder_GetForSuccessPage: 'OnlineShopSaleOrder/GetOnlineShopSaleOrderForSuccessPage',
