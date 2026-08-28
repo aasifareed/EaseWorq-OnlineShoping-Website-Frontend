@@ -17,6 +17,39 @@ interface StoreLogoCacheEntry {
   logoUrl: string | null;
 }
 
+const LOGO_CACHE_PREFIX = 'ew_online_shop_logo_';
+
+/** Read any cached storefront logo (used by index.html splash before Angular boots). */
+export function readCachedStoreLogoUrl(): string | null {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key?.startsWith(LOGO_CACHE_PREFIX)) {
+        continue;
+      }
+
+      const raw = localStorage.getItem(key);
+      if (!raw) {
+        continue;
+      }
+
+      const parsed = JSON.parse(raw) as StoreLogoCacheEntry;
+      const logoUrl = rewriteMediaUrl(String(parsed?.logoUrl ?? '').trim());
+      if (logoUrl) {
+        return logoUrl;
+      }
+    }
+  } catch {
+    // ignore quota / privacy mode errors
+  }
+
+  return null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -152,7 +185,7 @@ export class StoreLogoService {
   }
 
   private cacheKey(tenantId: number, storeId: string): string {
-    return `ew_online_shop_logo_${tenantId}_${storeId}`;
+    return `${LOGO_CACHE_PREFIX}${tenantId}_${storeId}`;
   }
 
   private apiRoot(): string {

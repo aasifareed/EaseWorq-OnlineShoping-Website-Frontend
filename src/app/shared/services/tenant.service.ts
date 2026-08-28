@@ -93,9 +93,24 @@ export class TenantService {
 
   initialize(router: Router): Promise<boolean> {
     if (!this.initializePromise) {
-      this.initializePromise = this.runInitialize(router);
+      this.initializePromise = this.bootstrapStore(router, { redirectOnFailure: true });
     }
     return this.initializePromise;
+  }
+
+  isStoreAvailable(): boolean {
+    const context = this.snapshot;
+    return !!context?.resolved && !!context.storefront?.isOnlineShopEnabled;
+  }
+
+  /** Re-run tenant/store resolution without sending the user back to the error page. */
+  recheckStoreAvailability(router: Router): Promise<boolean> {
+    if (this.isStoreAvailable()) {
+      return Promise.resolve(true);
+    }
+
+    this.initializePromise = null;
+    return this.bootstrapStore(router, { redirectOnFailure: false });
   }
 
   resolveHostName(): string | null {
@@ -185,7 +200,10 @@ export class TenantService {
     );
   }
 
-  private async runInitialize(router: Router): Promise<boolean> {
+  private async bootstrapStore(
+    router: Router,
+    options: { redirectOnFailure: boolean },
+  ): Promise<boolean> {
     if (typeof window === 'undefined') {
       this.loadingSubject.next(false);
       return true;
@@ -196,7 +214,9 @@ export class TenantService {
     try {
       const hostName = this.resolveHostName();
       if (!hostName) {
-        void router.navigateByUrl('/site-not-available');
+        if (options.redirectOnFailure) {
+          void router.navigateByUrl('/site-not-available');
+        }
         return false;
       }
 
@@ -204,7 +224,9 @@ export class TenantService {
       // truth (host -> TenantDomains -> AbpTenants -> store). Caching is layered on after this.
       const resolution = await firstValueFrom(this.resolveTenantByDomain(hostName));
       if (!resolution) {
-        void router.navigateByUrl('/site-not-available');
+        if (options.redirectOnFailure) {
+          void router.navigateByUrl('/site-not-available');
+        }
         return false;
       }
 
@@ -223,7 +245,9 @@ export class TenantService {
       }
 
       if (!resolvedStoreId) {
-        void router.navigateByUrl('/site-not-available');
+        if (options.redirectOnFailure) {
+          void router.navigateByUrl('/site-not-available');
+        }
         return false;
       }
 
@@ -231,9 +255,12 @@ export class TenantService {
       this.shopContext.setTenantId(tenantId);
       this.shopContext.setStoreId(resolvedStoreId);
 
+      const logoPromise = firstValueFrom(this.storeLogoService.initialize(tenantId, resolvedStoreId));
       const storefront = await firstValueFrom(this.storefrontSettings.loadStorefront(true));
       if (!storefront?.isOnlineShopEnabled) {
-        void router.navigateByUrl('/site-not-available');
+        if (options.redirectOnFailure) {
+          void router.navigateByUrl('/site-not-available');
+        }
         return false;
       }
 
@@ -253,10 +280,12 @@ export class TenantService {
       };
 
       this.contextSubject.next(context);
-      await firstValueFrom(this.storeLogoService.initialize(tenantId, storeId));
+      await logoPromise;
       return true;
     } catch {
-      void router.navigateByUrl('/site-not-available');
+      if (options.redirectOnFailure) {
+        void router.navigateByUrl('/site-not-available');
+      }
       return false;
     } finally {
       this.loadingSubject.next(false);

@@ -5,19 +5,137 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
   background: #fff;
-  overflow: auto;
 }
 
-.site-not-available__image {
-  display: block;
+.site-not-available__layout {
   box-sizing: border-box;
-  width: auto;
+  width: min(100%, 68rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+
+.site-not-available__visual {
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+.site-not-available__illustration {
+  display: block;
+  width: 100%;
   height: auto;
   max-width: 100%;
-  max-height: calc(100vh - 3rem);
-  object-fit: contain;
-  object-position: center;
-  flex-shrink: 1;
+}
+
+.site-not-available__content {
+  width: 100%;
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+.site-not-available__icon {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 50%;
+  background: #f3f4f8;
+  color: #6b7280;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+}
+
+.site-not-available__icon-badge {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.1rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #4b5563;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.15rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.site-not-available__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.75rem, 4vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #111827;
+}
+
+.site-not-available__message {
+  margin: 0 0 1.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.site-not-available__help {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.site-not-available__help-icon {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #e8f1ff;
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+}
+
+.site-not-available__help-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.site-not-available__help-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+@media (max-width: 991.98px) {
+  .site-not-available__layout {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .site-not-available__visual {
+    max-width: 20rem;
+  }
+
+  .site-not-available__content {
+    max-width: none;
+    text-align: center;
+  }
+
+  .site-not-available__icon {
+    margin-inline: auto;
+  }
+
+  .site-not-available__help {
+    text-align: left;
+  }
 }

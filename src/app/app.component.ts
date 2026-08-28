@@ -24,6 +24,8 @@ import { ThemeService } from './shared/services/theme.service';
 
 import { TenantService } from './shared/services/tenant.service';
 
+import { StoreLogoService } from './shared/services/store-logo.service';
+
 import { MetaTrackingService } from './shared/services/meta-tracking.service';
 
 import { initNativeApp } from './shared/services/native-app';
@@ -55,6 +57,8 @@ export class AppComponent implements OnInit {
 
   ]).pipe(map(([tenantLoading, settingsLoading]) => tenantLoading || settingsLoading));
 
+  readonly bootLogoUrl$ = this.storeLogoService.logoUrl$;
+
   
 
   constructor(
@@ -68,6 +72,8 @@ export class AppComponent implements OnInit {
     translate: TranslateService,
 
     private tenantService: TenantService,
+
+    private storeLogoService: StoreLogoService,
 
     private storefrontSettings: OnlineShopSettingsService,
 
@@ -94,6 +100,8 @@ export class AppComponent implements OnInit {
       this.themeService.init();
 
       initNativeApp(this.router, this.ngZone);
+
+      this.storeLogoService.getCachedLogo();
 
       document.getElementById('storefront-bootstrap-loader')?.remove();
 
