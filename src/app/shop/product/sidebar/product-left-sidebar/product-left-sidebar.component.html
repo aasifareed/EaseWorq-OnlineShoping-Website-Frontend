@@ -172,6 +172,29 @@
                     </div>
                   </div>
 
+                  <div class="pdp-price-challenge" *ngIf="canStartPriceChallenge">
+                    <div class="pdp-price-challenge__inner">
+                      <div class="pdp-price-challenge__badge" aria-hidden="true">
+                        <i class="fa fa-comments"></i>
+                      </div>
+                      <div class="pdp-price-challenge__body">
+                        <span class="pdp-price-challenge__eyebrow">Beat the market</span>
+                        <h3 class="pdp-price-challenge__title">Sasta Price Challenge</h3>
+                        <p class="pdp-price-challenge__desc">
+                          Found a lower price elsewhere? Share a screenshot or link in chat and we will try to beat it.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="pdp-price-challenge__cta"
+                      (click)="startPriceChallenge()"
+                      [disabled]="priceChallengeStarting">
+                      <i class="fa" [ngClass]="priceChallengeStarting ? 'fa-spinner fa-spin' : 'fa-bolt'" aria-hidden="true"></i>
+                      <span>{{ priceChallengeStarting ? 'Starting chat…' : 'Challenge this price' }}</span>
+                    </button>
+                  </div>
+
                   <div class="product-buttons product-detail-actions pdp-actions">
                     <a href="javascript:void(0)"
                        class="btn pdp-btn pdp-btn--primary"

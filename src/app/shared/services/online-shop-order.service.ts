@@ -157,6 +157,9 @@ export interface CreateOnlineShopSaleOrderRequest {
   metaFbp?: string | null;
   metaFbc?: string | null;
   metaEventSourceUrl?: string | null;
+
+  priceChallengeId?: string | null;
+  offerToken?: string | null;
 }
 
 /** The courier the customer picked, plus the total they were shown when they picked it. */
@@ -164,6 +167,8 @@ export interface CheckoutOrderSelection {
   selectedCourierCompany?: string | null;
   selectedCourierServiceType?: string | null;
   clientExpectedTotal?: number | null;
+  priceChallengeId?: string | null;
+  offerToken?: string | null;
 }
 
 
@@ -734,6 +739,9 @@ export class OnlineShopOrderService {
       selectedCourierServiceType: selection?.selectedCourierServiceType ?? null,
 
       clientExpectedTotal: selection?.clientExpectedTotal ?? null,
+
+      priceChallengeId: selection?.priceChallengeId ?? null,
+      offerToken: selection?.offerToken ?? null,
 
       ...this.buildMetaTrackingFields()
 

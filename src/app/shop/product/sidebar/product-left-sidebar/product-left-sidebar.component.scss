@@ -335,6 +335,105 @@
     box-shadow: none !important;
   }
 
+  .pdp-price-challenge {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0 0 16px;
+    padding: 16px 18px;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #FFC400;
+    border-radius: 12px;
+    background: #fafafa;
+    box-shadow: 0 1px 2px rgba(17, 17, 17, 0.04);
+  }
+
+  .pdp-price-challenge__inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .pdp-price-challenge__badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #ffd54d 0%, #FFC400 100%);
+    color: #111111;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 12px rgba(255, 196, 0, 0.28);
+  }
+
+  .pdp-price-challenge__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .pdp-price-challenge__eyebrow {
+    display: block;
+    margin: 0 0 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #b45309;
+  }
+
+  .pdp-price-challenge__title {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: #111111;
+  }
+
+  .pdp-price-challenge__desc {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: #6b7280;
+  }
+
+  .pdp-price-challenge__cta {
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 16px;
+    border: 1px solid #111111;
+    border-radius: 8px;
+    background: #111111;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: #2a2a2a;
+      border-color: #2a2a2a;
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
   .pdp-actions.product-detail-actions {
     display: flex;
     flex-wrap: wrap;
@@ -606,6 +705,42 @@
 
   .pdp-coupon__message {
     color: #c5ccd8;
+  }
+
+  .pdp-price-challenge {
+    border-color: rgba(255, 196, 0, 0.22);
+    border-left-color: #FFC400;
+    background: linear-gradient(145deg, rgba(31, 36, 48, 0.96) 0%, rgba(22, 26, 34, 0.98) 100%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  }
+
+  .pdp-price-challenge__badge {
+    background: linear-gradient(145deg, #ffd54d 0%, #FFC400 100%);
+    color: #111111;
+    box-shadow: 0 4px 14px rgba(255, 196, 0, 0.24);
+  }
+
+  .pdp-price-challenge__eyebrow {
+    color: #FFC400;
+  }
+
+  .pdp-price-challenge__title {
+    color: #f5f7fa;
+  }
+
+  .pdp-price-challenge__desc {
+    color: #b8c0cc;
+  }
+
+  .pdp-price-challenge__cta {
+    border-color: rgba(255, 196, 0, 0.55);
+    background: transparent;
+    color: #FFC400;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 196, 0, 0.12);
+      border-color: #FFC400;
+    }
   }
 
   .pdp-actions {

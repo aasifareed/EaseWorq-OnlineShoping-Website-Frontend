@@ -18,6 +18,11 @@ import {
   ProductCouponOffer,
 } from '../../../../shared/services/free-shipping-promo.service';
 import { MetaTrackingService } from '../../../../shared/services/meta-tracking.service';
+import { OnlineShopSettingsService } from '../../../../shared/services/online-shop-settings.service';
+import { PriceChallengeFlowService } from '../../../../shared/services/price-challenge-flow.service';
+import { PriceChallengeCheckoutService } from '../../../../shared/services/price-challenge-checkout.service';
+import { ChatWidgetService } from '../../../../shared/services/chat-widget.service';
+import { extractAbpErrorMessage } from '../../../../shared/utils/abp-http.util';
 
 @Component({
   selector: 'app-product-left-sidebar',
@@ -42,6 +47,8 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
   public couponApplying = false;
   public productCouponStatuses: OnlineShopCouponStatus[] = [];
   public productCouponOffers: ProductCouponOffer[] = [];
+  public isPriceChallengeEnabled = false;
+  public priceChallengeStarting = false;
 
   readonly placeholderImage = 'assets/images/product/placeholder.svg';
 
@@ -50,6 +57,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
   private touchStartX = 0;
   private lightboxTouchStartX = 0;
   private couponOffersRequestId = 0;
+  private priceChallengeAutoHandled = false;
   private readonly destroy$ = new Subject<void>();
 
   get displayImages(): { src: string; alt: string }[] {
@@ -73,6 +81,10 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     private checkout: OnlineShopCheckoutService,
     private productCouponOffersService: FreeShippingPromoService,
     private metaTracking: MetaTrackingService,
+    private storefrontSettings: OnlineShopSettingsService,
+    private priceChallengeFlow: PriceChallengeFlowService,
+    private priceChallengeCheckout: PriceChallengeCheckoutService,
+    private chatWidget: ChatWidgetService,
     public productService: ProductService
   ) {}
 
@@ -93,6 +105,15 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     this.productService.appliedCouponCodes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.refreshProductCouponStatuses());
+
+    this.storefrontSettings.storefront$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((storefront) => {
+        this.isPriceChallengeEnabled = !!storefront?.isPriceChallengeEnabled;
+        if (this.product?.productId) {
+          this.maybeHandlePriceChallengeQuery();
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -242,6 +263,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
           this.trackViewContent();
+          this.maybeHandlePriceChallengeQuery();
           const inventoryId = String(mapped.id || '');
           if (inventoryId) {
             this.loadRelatedProducts(inventoryId);
@@ -354,6 +376,11 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     const code = this.couponCodeInput.trim().toUpperCase();
     if (!code) {
       this.toastr.warning('Enter a coupon code.');
+      return;
+    }
+
+    if (code.startsWith('PC-')) {
+      this.toastr.error('This price challenge offer is personal to you. Use Buy Now from your challenge result.');
       return;
     }
 
@@ -609,6 +636,105 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     if (status) {
       this.router.navigate(['/shop/checkout']);
     }
+  }
+
+  get canStartPriceChallenge(): boolean {
+    return this.isPriceChallengeEnabled && this.priceChallengeFlow.canStartForProduct(this.product);
+  }
+
+  startPriceChallenge(): void {
+    if (!this.canStartPriceChallenge || this.priceChallengeStarting) {
+      return;
+    }
+
+    this.priceChallengeStarting = true;
+    this.priceChallengeFlow.startFromProduct(this.product, {
+      requestedQuantity: this.counter || 1,
+    }).subscribe({
+      next: () => {
+        this.priceChallengeStarting = false;
+      },
+      error: (err) => {
+        this.priceChallengeStarting = false;
+        const message = err?.error?.error?.message || 'Could not start the price challenge. Please try again.';
+        this.toastr.error(message);
+      },
+    });
+  }
+
+  private priceChallengeReturnUrl(): string {
+    const path = this.router.url.split('?')[0];
+    return `${path}?challenge=1`;
+  }
+
+  private maybeHandlePriceChallengeQuery(): void {
+    if (this.priceChallengeAutoHandled || !this.isPriceChallengeEnabled) {
+      return;
+    }
+
+    const params = this.route.snapshot.queryParamMap;
+    const challengeFlag = (params.get('challenge') || '').trim().toLowerCase();
+    const priceChallengeId = (params.get('priceChallenge') || '').trim();
+    const shouldStart = challengeFlag === '1' || challengeFlag === 'true';
+    const shouldOpenChat = shouldStart || !!priceChallengeId || (params.get('openChat') || '').trim() === '1';
+
+    if (!shouldStart && !shouldOpenChat) {
+      return;
+    }
+
+    if (shouldStart && this.canStartPriceChallenge) {
+      if (!this.auth.isLoggedIn()) {
+        this.auth.navigateToLogin(this.router.url);
+        return;
+      }
+      this.priceChallengeAutoHandled = true;
+      this.clearPriceChallengeQueryParams();
+      this.startPriceChallenge();
+      return;
+    }
+
+    this.priceChallengeAutoHandled = true;
+    this.clearPriceChallengeQueryParams();
+
+    if (priceChallengeId) {
+      this.startPriceChallengeCheckout(priceChallengeId);
+      return;
+    }
+
+    if (shouldOpenChat) {
+      this.chatWidget.open({ loadHistory: true });
+    }
+  }
+
+  private startPriceChallengeCheckout(challengeId: string): void {
+    this.priceChallengeCheckout.resolveCheckoutOffer(challengeId).subscribe({
+      next: (offer) => {
+        void this.priceChallengeCheckout.prepareBuyNowCheckout(offer).then((ready) => {
+          if (!ready) {
+            this.toastr.error('Could not prepare checkout for this offer.');
+            return;
+          }
+          void this.router.navigate(['/shop/checkout']);
+        });
+      },
+      error: (err) => {
+        this.toastr.error(extractAbpErrorMessage(err, 'This offer is no longer available.'));
+        this.chatWidget.open({ loadHistory: true });
+      },
+    });
+  }
+
+  private clearPriceChallengeQueryParams(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        challenge: null,
+        openChat: null,
+        priceChallenge: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   toggleWishlist(product: any): void {

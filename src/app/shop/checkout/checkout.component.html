@@ -389,6 +389,17 @@
                             </div>
 
                             <div class="order-box">
+                                <div class="checkout-price-challenge" *ngIf="pendingPriceChallengeOffer">
+                                    <div class="checkout-price-challenge__copy">
+                                        <strong>Private price challenge offer applied</strong>
+                                        <p *ngIf="pendingPriceChallengeOffer.approvedOfferPrice as offerPrice">
+                                            Locked offer price: {{ offerPrice | shopCurrency:productService?.Currency.currency }}
+                                        </p>
+                                    </div>
+                                    <button type="button" class="checkout-price-challenge__remove" (click)="removePriceChallengeOffer()">
+                                        Remove
+                                    </button>
+                                </div>
                                 <ul class="sub-total checkout-totals checkout-totals--summary">
                                     <li class="checkout-total-row">
                                         <span class="checkout-total-row__label">Subtotal</span>
@@ -397,8 +408,8 @@
                                     </li>
                                     <li class="checkout-total-row" *ngFor="let discount of merchandiseDiscountRows">
                                         <span class="checkout-total-row__label">
-                                            {{ discount.description || 'Discount' }}
-                                            <span class="checkout-coupon-tag" *ngIf="discount.couponCode">{{ discount.couponCode }}</span>
+                                            {{ discountRowLabel(discount) }}
+                                            <span class="checkout-coupon-tag" *ngIf="discount.couponCode && !isInternalPriceChallengeCode(discount.couponCode)">{{ discount.couponCode }}</span>
                                         </span>
                                         <span class="count checkout-total-row__value checkout-discount">−{{
                                             discount.discountAmount |
@@ -447,7 +458,8 @@
                                         *ngFor="let coupon of couponStatuses">
                                         <span class="checkout-total-row__label checkout-coupon-line"
                                             [class.checkout-coupon-line--rejected]="!coupon.isValid">
-                                            <span class="checkout-coupon-tag">{{ coupon.couponCode }}</span>
+                                            <span class="checkout-coupon-tag" *ngIf="coupon.couponCode && !isInternalPriceChallengeCode(coupon.couponCode)">{{ coupon.couponCode }}</span>
+                                            <span *ngIf="isInternalPriceChallengeCode(coupon.couponCode)">Price challenge offer</span>
                                             <span class="checkout-coupon-line__message">{{ coupon.message }}</span>
                                             <a href="javascript:void(0)"
                                                 class="checkout-coupon-line__remove"

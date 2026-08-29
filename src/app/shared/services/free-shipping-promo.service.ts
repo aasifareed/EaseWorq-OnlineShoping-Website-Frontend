@@ -26,6 +26,8 @@ export interface ProductCouponOffer {
   benefitLabel: string;
 }
 
+const PRICE_CHALLENGE_INTERNAL_COUPON_PREFIX = 'PC-';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -99,7 +101,8 @@ export class FreeShippingPromoService {
             const rows = Array.isArray(resp?.result) ? resp.result : [];
             return rows
               .map((row) => this.mapProductCouponOffer(row))
-              .filter((offer): offer is ProductCouponOffer => !!offer);
+              .filter((offer): offer is ProductCouponOffer => !!offer)
+              .filter((offer) => !this.isInternalPriceChallengeCoupon(offer.code));
           }),
           catchError(() => of([]))
         );
@@ -137,6 +140,10 @@ export class FreeShippingPromoService {
       return `Rs. ${amount} off`;
     }
     return 'Discount';
+  }
+
+  private isInternalPriceChallengeCoupon(code: string): boolean {
+    return (code || '').trim().toUpperCase().startsWith(PRICE_CHALLENGE_INTERNAL_COUPON_PREFIX);
   }
 
   private apiRoot(): string {
