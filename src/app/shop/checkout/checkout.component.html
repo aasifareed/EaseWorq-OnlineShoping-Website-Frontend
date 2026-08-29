@@ -364,7 +364,7 @@
                                             </td>
                                             <td class="text-center">{{ product.quantity }}</td>
                                             <td class="text-end checkout-item-price">
-                                                {{ (product.price | discount:product) * productService?.Currency.price |
+                                                {{ getCheckoutLineTotal(product) |
                                                     shopCurrency:productService?.Currency.currency }}
                                             </td>
                                         </tr>
