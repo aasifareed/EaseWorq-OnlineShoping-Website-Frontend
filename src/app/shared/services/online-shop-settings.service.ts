@@ -189,6 +189,7 @@ export class OnlineShopSettingsService {
       metaImageUrl: rewriteMediaUrl((raw.metaImageUrl ?? raw.MetaImageUrl) as string | undefined) || undefined,
       metaPixelId: String(raw.metaPixelId ?? raw.MetaPixelId ?? '').trim() || undefined,
       metaTrackingEnabled: !!(raw.metaTrackingEnabled ?? raw.MetaTrackingEnabled),
+      isPriceChallengeEnabled: !!(raw.isPriceChallengeEnabled ?? raw.IsPriceChallengeEnabled),
     };
   }
 }

@@ -93,6 +93,10 @@ urls: {
   Chat_GetChatHistory: 'Chat/GetChatHistory',
   Chat_GetSupportStatus: 'Chat/GetSupportStatus',
   ChatImage_Upload: 'ChatImageUpload/Upload',
+  PriceChallenge_SubmitManualCompetitorPrice: 'PriceChallenge/SubmitManualCompetitorPrice',
+  PriceChallenge_StartContext: 'PriceChallenge/StartContext',
+  PriceChallenge_GetCheckoutOffer: 'PriceChallenge/GetCheckoutOffer',
+  PriceChallenge_ValidateOffer: 'PriceChallenge/ValidateOffer',
   
      },
    shop: {

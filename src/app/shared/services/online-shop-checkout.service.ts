@@ -33,6 +33,8 @@ export interface CalculateOnlineShopPricingRequest {
   postalCode?: string | null;
   selectedCourierCompany?: string | null;
   selectedCourierServiceType?: string | null;
+  priceChallengeId?: string | null;
+  offerToken?: string | null;
 }
 
 export interface CourierShippingOptionResult {

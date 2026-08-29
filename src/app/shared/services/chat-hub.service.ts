@@ -3,14 +3,11 @@ import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
-import { newChatGuid } from '../models/chat.model';
+import { StorefrontTenantService } from './storefront-tenant.service';
+import { ChatPrivateMessage, newChatGuid, normalizeChatPrivateMessage } from '../models/chat.model';
 import { AlertSoundService } from './alert-sound.service';
 
-export interface ChatPrivateMessage {
-  message: string;
-  fromAdmin: boolean;
-  userId?: string;
-}
+export { ChatPrivateMessage } from '../models/chat.model';
 
 export type ChatConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -35,6 +32,7 @@ export class ChatHubService {
 
   constructor(
     private auth: AuthService,
+    private storefrontTenant: StorefrontTenantService,
     private ngZone: NgZone,
     private alertSound: AlertSoundService,
   ) {}
@@ -56,7 +54,7 @@ export class ChatHubService {
   }
 
   startConnection(): void {
-    const tenantId = this.auth.tenantId;
+    const tenantId = this.storefrontTenant.resolveTenantId();
     if (!tenantId) {
       return;
     }
@@ -111,6 +109,16 @@ export class ChatHubService {
       },
     );
 
+    this.hubConnection.on('ReceiveChatMessage', (payload: ChatPrivateMessage) => {
+      this.ngZone.run(() => {
+        const normalized = normalizeChatPrivateMessage(payload);
+        this.privateMessage.next(normalized);
+        if (normalized.fromAdmin) {
+          this.alertSound.play();
+        }
+      });
+    });
+
     this.hubConnection.on('SupportStatusUpdated', (isOnline: boolean) => {
       this.ngZone.run(() => this.supportOnlineSubject.next(!!isOnline));
     });
@@ -145,7 +153,7 @@ export class ChatHubService {
   }
 
   async ensureReady(): Promise<void> {
-    if (!this.auth.tenantId) {
+    if (!this.storefrontTenant.resolveTenantId()) {
       throw new Error('Store is still loading. Please try again in a moment.');
     }
 
@@ -218,6 +226,7 @@ export class ChatHubService {
       throw new Error('Chat is not connected.');
     }
 
+    // Pass the same chatUserId used by StartContext so price-challenge context matches.
     await this.hubConnection.invoke('SendPrivateMessageToUser', message, false, this.chatUserId);
   }
 
@@ -225,10 +234,11 @@ export class ChatHubService {
     const base = (environment.baseUrl || '').endsWith('/') ? environment.baseUrl : `${environment.baseUrl || ''}/`;
     const params = new URLSearchParams();
     params.set('platform', 'online-shop');
-    const tenantId = this.auth.tenantId;
+    const tenantId = this.storefrontTenant.resolveTenantId();
     if (tenantId) {
       params.set('Abp.TenantId', String(tenantId));
       params.set('tenantId', String(tenantId));
+      params.set('TenantId', String(tenantId));
     }
     return `${base}signalr/chatHub?${params.toString()}`;
   }

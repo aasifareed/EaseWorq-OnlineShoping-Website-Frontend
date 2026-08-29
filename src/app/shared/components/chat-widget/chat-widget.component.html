@@ -1,4 +1,4 @@
-<div class="shop-chat" *ngIf="visible">
+<div class="shop-chat" *ngIf="visible" [class.shop-chat--maximized]="open && maximized">
   <button
     type="button"
     class="shop-chat__launcher"
@@ -11,18 +11,45 @@
     <span class="shop-chat__badge" *ngIf="unread">{{ unread }}</span>
   </button>
 
-  <div class="shop-chat__panel" *ngIf="open" role="dialog" aria-label="Live chat">
+  <div
+    class="shop-chat__panel"
+    *ngIf="open"
+    role="dialog"
+    [class.shop-chat__panel--maximized]="maximized"
+    [attr.aria-label]="chatHeaderTitle"
+  >
     <div class="shop-chat__header">
       <div class="shop-chat__header-text">
-        <strong>Customer Support</strong>
+        <strong>{{ chatHeaderTitle }}</strong>
         <span class="shop-chat__presence" [class.shop-chat__presence--online]="supportOnline">
           <span class="shop-chat__presence-dot"></span>
           {{ supportOnline ? 'Online now' : 'Offline — we will reply soon' }}
         </span>
       </div>
-      <button type="button" class="shop-chat__close" (click)="toggle()" aria-label="Close chat">
-        <i class="fa fa-times"></i>
-      </button>
+      <div class="shop-chat__header-actions">
+        <button
+          type="button"
+          class="shop-chat__header-btn"
+          (click)="toggleMaximize()"
+          [attr.aria-label]="maximized ? 'Restore chat size' : 'Maximize chat'"
+        >
+          <i class="fa" [ngClass]="maximized ? 'fa-compress' : 'fa-expand'"></i>
+        </button>
+        <button type="button" class="shop-chat__header-btn" (click)="toggle()" aria-label="Close chat">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="shop-chat__product" *ngIf="priceChallengeContext as product">
+      <div class="shop-chat__product-image" *ngIf="product.productImageUrl">
+        <img [src]="product.productImageUrl" [alt]="product.productTitle" />
+      </div>
+      <div class="shop-chat__product-copy">
+        <span class="shop-chat__product-label">Challenging price for</span>
+        <strong class="shop-chat__product-title">{{ product.productTitle }}</strong>
+        <span class="shop-chat__product-price" *ngIf="formatProductPrice() as listedPrice">{{ listedPrice }}</span>
+      </div>
     </div>
 
     <div
@@ -38,7 +65,7 @@
     </div>
 
     <div class="shop-chat__messages" #messagesContainer>
-      <div class="shop-chat__welcome" *ngIf="messages.length === 0">
+      <div class="shop-chat__welcome" *ngIf="messages.length === 0 && !isPriceChallengeMode">
         Hi! Send us a message and our team will reply here.
       </div>
       <ng-container *ngFor="let message of messages; let i = index">
@@ -46,20 +73,82 @@
           {{ dayLabel(message.timestamp) }}
         </div>
         <div class="shop-chat__row" [class.out]="!message.fromAdmin">
-          <div class="shop-chat__bubble" [class.shop-chat__bubble--image]="isImage(message.message)">
-            <a
-              *ngIf="isImage(message.message)"
-              [href]="imageSrc(message.message)"
-              target="_blank"
-              rel="noopener"
-            >
-              <img [src]="imageSrc(message.message)" alt="Photo" />
-            </a>
-            <ng-container *ngIf="!isImage(message.message)">{{ message.message }}</ng-container>
+          <div
+            class="shop-chat__bubble"
+            [class.shop-chat__bubble--image]="isImage(message.message)"
+            [class.shop-chat__bubble--structured]="isStructuredMessage(message)"
+          >
+            <ng-container *ngIf="isProcessingMessage(message); else resultOrPlain">
+              <div class="shop-chat__processing">
+                <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                <span>{{ message.message }}</span>
+              </div>
+            </ng-container>
+
+            <ng-template #resultOrPlain>
+              <ng-container *ngIf="isResultMessage(message); else plainBubble">
+                <div class="shop-chat__result-text">{{ message.message }}</div>
+                <div class="shop-chat__offer" *ngIf="resultMetadata(message)?.offerPrice as offerPrice">
+                  <span class="shop-chat__offer-label">Your price</span>
+                  <strong>{{ formatOfferPrice(offerPrice) }}</strong>
+                </div>
+                <div class="shop-chat__actions" *ngIf="resultActions(message).length">
+                  <button
+                    type="button"
+                    class="shop-chat__action"
+                    *ngFor="let action of resultActions(message)"
+                    (click)="runChallengeAction(action)"
+                    [disabled]="isBuyNowLoading(action)"
+                  >
+                    <i class="fa fa-spinner fa-spin" *ngIf="isBuyNowLoading(action)" aria-hidden="true"></i>
+                    <span>{{ isBuyNowLoading(action) ? 'Preparing checkout…' : (action.label || action.type) }}</span>
+                  </button>
+                </div>
+              </ng-container>
+            </ng-template>
+
+            <ng-template #plainBubble>
+              <div class="shop-chat__system" *ngIf="message.messageType === 'System'; else regularPlain">
+                {{ message.message }}
+              </div>
+              <ng-template #regularPlain>
+                <a
+                  *ngIf="isImage(message.message)"
+                  [href]="imageSrc(message.message)"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <img [src]="imageSrc(message.message)" alt="Photo" />
+                </a>
+                <ng-container *ngIf="!isImage(message.message)">{{ message.message }}</ng-container>
+              </ng-template>
+            </ng-template>
           </div>
           <div class="shop-chat__time">{{ formatTime(message.timestamp) }}</div>
         </div>
       </ng-container>
+    </div>
+
+    <div class="shop-chat__manual-price" *ngIf="manualPriceChallengeId">
+      <label for="manualPriceInput">Competitor price</label>
+      <div class="shop-chat__manual-price-row">
+        <input
+          id="manualPriceInput"
+          type="number"
+          min="0"
+          step="0.01"
+          [(ngModel)]="manualPriceDraft"
+          placeholder="Enter price"
+          [disabled]="sending"
+          (keydown.enter)="$event.preventDefault(); submitManualPrice()"
+        />
+        <button type="button" (click)="submitManualPrice()" [disabled]="sending || !hasManualPriceDraft">
+          Submit
+        </button>
+        <button type="button" class="shop-chat__manual-cancel" (click)="cancelManualPriceEntry()" [disabled]="sending">
+          Cancel
+        </button>
+      </div>
     </div>
 
     <form class="shop-chat__composer" (submit)="$event.preventDefault(); send()" (paste)="onPaste($event)">
@@ -85,7 +174,7 @@
         type="text"
         [(ngModel)]="draft"
         name="shopChatDraft"
-        placeholder="Write a message..."
+        placeholder="{{ composerPlaceholder }}"
         [disabled]="sending || connectionState === 'connecting'"
         (keydown.enter)="onEnter($event)"
       />

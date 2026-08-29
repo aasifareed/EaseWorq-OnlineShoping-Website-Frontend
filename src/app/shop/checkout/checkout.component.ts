@@ -43,6 +43,8 @@ import {
 } from '../../shared/services/address-autocomplete/google-address.util';
 import { OnlineShopWorkingAreaService } from '../../shared/services/online-shop-working-area.service';
 import { MetaTrackingService } from '../../shared/services/meta-tracking.service';
+import { PendingPriceChallengeCheckout } from '../../shared/models/price-challenge-checkout.model';
+import { PriceChallengeCheckoutService } from '../../shared/services/price-challenge-checkout.service';
 
 type CheckoutAddressGroup = 'billing' | 'shipping';
 type CheckoutAutocompleteKey = `${CheckoutAddressGroup}.${GoogleAddressFieldMode}`;
@@ -104,6 +106,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   public couponApplying = false;
   /** The code the customer just entered, awaiting the server's verdict in the next quote. */
   private pendingCouponCode: string | null = null;
+  public pendingPriceChallengeOffer: PendingPriceChallengeCheckout | null = null;
   public storefront: OnlineShopStorefront | null = null;
 
   public paymentMethod: OnlineShopPaymentMethod = OnlineShopPaymentMethod.GoPayFast;
@@ -148,6 +151,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     private workingArea: OnlineShopWorkingAreaService,
     private elementRef: ElementRef,
     private metaTracking: MetaTrackingService,
+    private priceChallengeCheckout: PriceChallengeCheckoutService,
   ) {
     this.checkoutForm = this.fb.group({
       billing: this.createBillingAddressGroup(),
@@ -159,6 +163,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.pendingPriceChallengeOffer = this.priceChallengeCheckout.pendingOffer;
+
     // Fresh settings (not header menu) — includes collectShippingChargesOnCod.
     this.onlineShopSettings.loadStorefront(true).subscribe((s) => {
       this.storefront = s;
@@ -814,6 +820,12 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    if (/^PC-/i.test(code)) {
+      this.toastr.error('Price challenge offers are applied through Buy Now, not by entering a code.');
+      this.couponCodeInput = '';
+      return;
+    }
+
     if (this.appliedCouponCodes.includes(code)) {
       this.toastr.info('That code is already applied.');
       this.couponCodeInput = '';
@@ -873,6 +885,17 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     return (this.pricing?.appliedDiscounts ?? [])
       .filter((d) => d.scope !== 'shipping' && d.discountAmount > 0)
       .sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  isInternalPriceChallengeCode(code: string | null | undefined): boolean {
+    return !!code && /^PC-/i.test(String(code).trim());
+  }
+
+  discountRowLabel(discount: OnlineShopAppliedDiscount): string {
+    if (this.isInternalPriceChallengeCode(discount.couponCode)) {
+      return 'Price challenge offer';
+    }
+    return discount.description || 'Discount';
   }
 
   get showShippingBreakdown(): boolean {
@@ -1245,7 +1268,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       selectedCourierServiceType: skipCourier
         ? null
         : selectedCourier?.courierServiceType ?? this.pricing?.courierServiceType ?? null,
-      clientExpectedTotal: this.pricing?.finalTotal ?? null
+      clientExpectedTotal: this.pricing?.finalTotal ?? null,
+      priceChallengeId: this.pendingPriceChallengeOffer?.priceChallengeId ?? null,
+      offerToken: this.pendingPriceChallengeOffer?.offerToken ?? null,
     };
     const orderRequest = this.onlineShopOrder.buildCreateOrderRequest(
       formValue,
@@ -1397,9 +1422,17 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     };
   }
 
+  removePriceChallengeOffer(): void {
+    this.priceChallengeCheckout.clearPendingOffer();
+    this.pendingPriceChallengeOffer = null;
+    this.pricingRequested$.next();
+  }
+
   private clearCartAfterOrder(): void {
     this.clearShippingLocalStorage();
     this.isShippingCardView = false;
+    this.priceChallengeCheckout.clearPendingOffer();
+    this.pendingPriceChallengeOffer = null;
     this.productService.clearCheckoutAfterOrder();
     this.products = [];
     this.appliedCouponCodes = [];
@@ -1606,7 +1639,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
         state: address?.state?.trim() ?? null,
         postalCode: address?.postalcode?.trim() ?? null,
         selectedCourierCompany: this.selectedCourierOption?.courierCompany ?? null,
-        selectedCourierServiceType: this.selectedCourierOption?.courierServiceType ?? null
+        selectedCourierServiceType: this.selectedCourierOption?.courierServiceType ?? null,
+        priceChallengeId: this.pendingPriceChallengeOffer?.priceChallengeId ?? null,
+        offerToken: this.pendingPriceChallengeOffer?.offerToken ?? null,
       })
       .pipe(catchError(() => of(null)), takeUntil(this.destroy$))
       .subscribe((result) => {
