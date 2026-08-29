@@ -842,7 +842,49 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!code) {
       return;
     }
+    if (this.isInternalPriceChallengeCode(code)) {
+      this.removePriceChallengeOffer();
+      return;
+    }
     this.productService.removeAppliedCouponCode(code);
+  }
+
+  isPriceChallengeProduct(product: Product): boolean {
+    const offer = this.pendingPriceChallengeOffer;
+    if (!offer || !product) {
+      return false;
+    }
+
+    const productId = String(product.productId ?? '').trim();
+    if (productId && productId === String(offer.productId ?? '').trim()) {
+      return true;
+    }
+
+    const inventoryId = String(product.id ?? '').trim();
+    return !!inventoryId && inventoryId === String(offer.productInventoryId ?? '').trim();
+  }
+
+  isPriceChallengeOfferApplied(): boolean {
+    return this.couponStatuses.some(
+      (coupon) => this.isInternalPriceChallengeCode(coupon.couponCode) && coupon.isValid,
+    );
+  }
+
+  getCheckoutLineTotal(product: Product): number {
+    const quantity = Math.max(1, Number(product.quantity) || 1);
+
+    if (this.isPriceChallengeProduct(product) && this.isPriceChallengeOfferApplied() && this.pricing) {
+      return this.pricing.netMerchandiseAmount;
+    }
+
+    if (
+      this.isPriceChallengeProduct(product)
+      && this.pendingPriceChallengeOffer?.approvedOfferPrice != null
+    ) {
+      return this.pendingPriceChallengeOffer.approvedOfferPrice * quantity;
+    }
+
+    return this.productService.getFinalUnitPrice(product) * quantity;
   }
 
   /**
