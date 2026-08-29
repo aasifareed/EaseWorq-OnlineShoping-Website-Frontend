@@ -19,6 +19,8 @@ import {
 } from '../../../../shared/services/free-shipping-promo.service';
 import { MetaTrackingService } from '../../../../shared/services/meta-tracking.service';
 import { OnlineShopSettingsService } from '../../../../shared/services/online-shop-settings.service';
+import { OnlineShopStorefront } from '../../../../shared/models/online-shop-storefront.model';
+import { TenantService } from '../../../../shared/services/tenant.service';
 import { PriceChallengeFlowService } from '../../../../shared/services/price-challenge-flow.service';
 import { PriceChallengeCheckoutService } from '../../../../shared/services/price-challenge-checkout.service';
 import { ChatWidgetService } from '../../../../shared/services/chat-widget.service';
@@ -82,6 +84,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
     private productCouponOffersService: FreeShippingPromoService,
     private metaTracking: MetaTrackingService,
     private storefrontSettings: OnlineShopSettingsService,
+    private tenantService: TenantService,
     private priceChallengeFlow: PriceChallengeFlowService,
     private priceChallengeCheckout: PriceChallengeCheckoutService,
     private chatWidget: ChatWidgetService,
@@ -106,14 +109,37 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.refreshProductCouponStatuses());
 
+    this.syncPriceChallengeEnabled();
+
     this.storefrontSettings.storefront$
       .pipe(takeUntil(this.destroy$))
       .subscribe((storefront) => {
-        this.isPriceChallengeEnabled = !!storefront?.isPriceChallengeEnabled;
+        this.syncPriceChallengeEnabled(storefront);
         if (this.product?.productId) {
           this.maybeHandlePriceChallengeQuery();
         }
       });
+
+    this.tenantService.shopContext$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((context) => {
+        this.syncPriceChallengeEnabled(context?.storefront ?? null);
+      });
+  }
+
+  private syncPriceChallengeEnabled(storefront?: OnlineShopStorefront | null): void {
+    const enabled = !!(
+      storefront?.isPriceChallengeEnabled
+      ?? this.storefrontSettings.snapshot?.isPriceChallengeEnabled
+      ?? this.tenantService.snapshot?.storefront?.isPriceChallengeEnabled
+    );
+
+    if (this.isPriceChallengeEnabled === enabled) {
+      return;
+    }
+
+    this.isPriceChallengeEnabled = enabled;
+    this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {
@@ -263,6 +289,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
           this.productService.persistShopProduct(this.product);
           this.productService.cacheShopProducts([this.product]);
           this.trackViewContent();
+          this.syncPriceChallengeEnabled();
           this.maybeHandlePriceChallengeQuery();
           const inventoryId = String(mapped.id || '');
           if (inventoryId) {
@@ -270,6 +297,7 @@ export class ProductLeftSidebarComponent implements OnInit, OnDestroy {
           }
         }
         this.detailLoading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.detailLoading = false;
