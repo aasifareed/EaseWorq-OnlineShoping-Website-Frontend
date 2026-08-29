@@ -69,6 +69,7 @@ export const PRICE_CHALLENGE_STATUSES = {
   rejected: 'Rejected',
   manualReview: 'ManualReview',
   completed: 'Completed',
+  needsMoreInformation: 'NeedsMoreInformation',
 } as const;
 
 export function encodeChatImage(url: string): string {

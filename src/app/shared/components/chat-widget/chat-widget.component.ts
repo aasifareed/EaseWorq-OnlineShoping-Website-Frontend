@@ -53,6 +53,7 @@ const PRICE_CHALLENGE_WELCOME =
   templateUrl: './chat-widget.component.html',
   styleUrls: ['./chat-widget.component.scss'],
   host: {
+    '[class.shop-chat-host--open]': 'open',
     '[class.shop-chat-host--maximized]': 'open && maximized',
   },
 })
@@ -1008,7 +1009,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
     }
 
     const status = (metadata.challengeStatus || '').trim();
-    if (status === PRICE_CHALLENGE_STATUSES.completed || status === PRICE_CHALLENGE_STATUSES.manualReview) {
+    if (
+      status === PRICE_CHALLENGE_STATUSES.completed
+      || status === PRICE_CHALLENGE_STATUSES.manualReview
+      || status === PRICE_CHALLENGE_STATUSES.needsMoreInformation
+    ) {
       return false;
     }
 
