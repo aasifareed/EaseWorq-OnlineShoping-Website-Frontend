@@ -157,23 +157,42 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
   }
 
   toggle(): void {
-    this.open = !this.open;
     if (this.open) {
-      this.unread = 0;
-      this.queueScroll(true);
-      this.connect();
-      if (this.isPriceChallengeMode) {
-        this.queueScroll(true);
-        this.startPriceChallengePoll();
-        this.refreshPriceChallengeMessages();
-      } else {
-        this.loadHistory();
-      }
-      void this.chatHub.requestSupportStatus();
+      this.hideChatPanel();
       return;
     }
 
+    this.open = true;
+    this.unread = 0;
+    this.queueScroll(true);
+    this.connect();
+    if (this.isPriceChallengeMode) {
+      this.queueScroll(true);
+      this.startPriceChallengePoll();
+      this.refreshPriceChallengeMessages();
+    } else {
+      this.loadHistory();
+    }
+    void this.chatHub.requestSupportStatus();
+  }
+
+  hideChatPanel(): void {
+    this.open = false;
     this.maximized = false;
+  }
+
+  closeChatPanel(): void {
+    if (this.isPriceChallengeMode) {
+      this.endPriceChallengePermanently();
+      return;
+    }
+
+    this.hideChatPanel();
+  }
+
+  endPriceChallengePermanently(): void {
+    this.exitPriceChallengeMode(false);
+    this.hideChatPanel();
   }
 
   toggleMaximize(): void {
@@ -1060,7 +1079,12 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
       return;
     }
 
-    this.endActivePriceChallengeContext();
+    const savedSession = this.chatWidgetService.readSavedPriceChallengeSession();
+    const contextId = (savedSession?.contextId || '').trim();
+    if (contextId) {
+      this.priceChallengeApi.endContext(contextId).subscribe({ error: () => undefined });
+    }
+
     this.chatWidgetService.clearPriceChallengeSession();
     this.priceChallengeContext = null;
     this.priceChallengeSessionStartedAt = null;
