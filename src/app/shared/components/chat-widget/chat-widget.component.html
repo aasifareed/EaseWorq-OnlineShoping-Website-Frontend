@@ -69,10 +69,28 @@
         </button>
         <button
           type="button"
+          class="shop-chat__header-btn shop-chat__header-btn--minimize"
+          *ngIf="isPriceChallengeMode"
+          (click)="hideChatPanel()"
+          aria-label="Minimize chat"
+          title="Minimize"
+        >
+          <svg class="shop-chat__header-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M6 12h12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
           class="shop-chat__header-btn shop-chat__header-btn--close"
-          (click)="toggle()"
-          aria-label="Close chat"
-          title="Close chat"
+          (click)="closeChatPanel()"
+          [attr.aria-label]="isPriceChallengeMode ? 'End price challenge' : 'Close chat'"
+          [attr.title]="isPriceChallengeMode ? 'End price challenge' : 'Close chat'"
         >
           <svg class="shop-chat__header-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path
