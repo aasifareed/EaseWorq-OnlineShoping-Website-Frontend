@@ -873,10 +873,6 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   getCheckoutLineTotal(product: Product): number {
     const quantity = Math.max(1, Number(product.quantity) || 1);
 
-    if (this.isPriceChallengeProduct(product) && this.isPriceChallengeOfferApplied() && this.pricing) {
-      return this.pricing.netMerchandiseAmount;
-    }
-
     if (
       this.isPriceChallengeProduct(product)
       && this.pendingPriceChallengeOffer?.approvedOfferPrice != null
