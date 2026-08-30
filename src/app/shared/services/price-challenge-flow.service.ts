@@ -53,12 +53,13 @@ export class PriceChallengeFlowService {
 
     return this.tenantService.whenReady().pipe(
       switchMap(() => this.priceChallengeApi.startContext(this.buildStartInput(product))),
-      tap(() => {
+      tap((result) => {
         if (openChat) {
           writePriceChallengeChatSession({
             product: priceChallenge,
             startedAt: new Date().toISOString(),
             requestedQuantity,
+            contextId: result.contextId || undefined,
           });
           this.chatWidget.open({
             welcomeMessage,

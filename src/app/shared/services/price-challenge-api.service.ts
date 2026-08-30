@@ -97,6 +97,15 @@ export class PriceChallengeApiService {
     );
   }
 
+  endContext(contextId: string): Observable<void> {
+    const path = environment.urls?.PriceChallenge_EndContext || 'PriceChallenge/EndContext';
+    const url = this.storefrontTenant.buildAppServiceUrl(this.apiRoot(), path);
+    const params = new HttpParams().set('contextId', contextId);
+    return this.http.post<any>(url, null, { ...this.requestOptions(), params }).pipe(
+      map(() => undefined),
+    );
+  }
+
   getCheckoutOffer(input: GetPriceChallengeCheckoutOfferInput): Observable<PriceChallengeCheckoutOffer> {
     const path = environment.urls?.PriceChallenge_GetCheckoutOffer || 'PriceChallenge/GetCheckoutOffer';
     const url = this.storefrontTenant.buildAppServiceUrl(this.apiRoot(), path);

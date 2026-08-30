@@ -97,6 +97,7 @@ Chat_GetChatHistory: 'Chat/GetChatHistory',
     ChatImage_Upload: 'ChatImageUpload/Upload',
     PriceChallenge_SubmitManualCompetitorPrice: 'PriceChallenge/SubmitManualCompetitorPrice',
     PriceChallenge_StartContext: 'PriceChallenge/StartContext',
+    PriceChallenge_EndContext: 'PriceChallenge/EndContext',
     PriceChallenge_GetCheckoutOffer: 'PriceChallenge/GetCheckoutOffer',
     PriceChallenge_ValidateOffer: 'PriceChallenge/ValidateOffer',
 

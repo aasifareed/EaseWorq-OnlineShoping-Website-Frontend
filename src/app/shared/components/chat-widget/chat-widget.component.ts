@@ -112,6 +112,8 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
         .subscribe((event) => {
           this.visible = !event.urlAfterRedirects.includes('site-not-available');
           if (!this.isProductPageUrl(event.urlAfterRedirects)) {
+            this.endActivePriceChallengeContext();
+            this.chatWidgetService.clearPriceChallengeSession();
             this.priceChallengeContext = null;
             this.priceChallengeSessionStartedAt = null;
             this.stopPriceChallengePoll();
@@ -614,7 +616,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
 
     this.sending = true;
     this.chatHub
-      .sendMessage(text)
+      .sendMessage(text, { isPriceChallengeEvidence: isEvidence })
       .then(() => {
         if (!isEvidence) {
           this.appendMessage(optimisticMessage);
@@ -1058,6 +1060,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
       return;
     }
 
+    this.endActivePriceChallengeContext();
     this.chatWidgetService.clearPriceChallengeSession();
     this.priceChallengeContext = null;
     this.priceChallengeSessionStartedAt = null;
@@ -1068,6 +1071,16 @@ export class ChatWidgetComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (!preserveMessages) {
       this.messages = [];
     }
+  }
+
+  private endActivePriceChallengeContext(): void {
+    const savedSession = this.chatWidgetService.readSavedPriceChallengeSession();
+    const contextId = (savedSession?.contextId || '').trim();
+    if (!contextId) {
+      return;
+    }
+
+    this.priceChallengeApi.endContext(contextId).subscribe({ error: () => undefined });
   }
 
   private pruneResolvedProcessingMessages(): void {

@@ -12,6 +12,8 @@ const SESSION_KEY = 'shop_price_challenge_chat_session';
 export interface PriceChallengeChatSession {
   product: PriceChallengeChatProductContext;
   startedAt: string;
+  /** Backend price-challenge chat context id — used to end the session when leaving challenge mode. */
+  contextId?: string;
   /** Quantity the customer chose on the product page before starting the challenge. */
   requestedQuantity?: number;
 }
