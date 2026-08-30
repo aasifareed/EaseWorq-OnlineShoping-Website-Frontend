@@ -219,7 +219,7 @@ export class ChatHubService {
     }
   }
 
-  async sendMessage(message: string): Promise<void> {
+  async sendMessage(message: string, options?: { isPriceChallengeEvidence?: boolean }): Promise<void> {
     await this.ensureReady();
 
     if (!this.hubConnection || this.hubConnection.state !== signalR.HubConnectionState.Connected) {
@@ -227,7 +227,13 @@ export class ChatHubService {
     }
 
     // Pass the same chatUserId used by StartContext so price-challenge context matches.
-    await this.hubConnection.invoke('SendPrivateMessageToUser', message, false, this.chatUserId);
+    await this.hubConnection.invoke(
+      'SendPrivateMessageToUser',
+      message,
+      false,
+      this.chatUserId,
+      !!options?.isPriceChallengeEvidence,
+    );
   }
 
   private buildHubUrl(): string {
