@@ -731,10 +731,10 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * What the cart weighs, as the server computed it, shown alongside the rates so a customer can see
-   * why a parcel is priced the way it is. Grams under a kilogram, because an accessory order is a
-   * couple of hundred grams. Null when nothing in the cart carries a catalogue weight, since the
-   * courier's minimum billable weight would then describe the courier's pricing, not this parcel.
+   * Parcel weight used for the courier quote (goods + packaging). Grams under a kilogram, because
+   * an accessory order is a couple of hundred grams. Null when nothing in the cart carries a
+   * catalogue weight, since the courier's minimum billable weight would then describe the
+   * courier's pricing, not this parcel.
    */
   get quotedWeight(): string | null {
     const pricing = this.pricing;
@@ -742,15 +742,13 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       return null;
     }
 
-    const goods = describeWeight(pricing.totalWeightKg);
-
-    // Light parcels are charged at the courier's minimum. Saying so is what makes the shipping price
-    // make sense to someone who just read that their order weighs 180 g.
-    if (pricing.billableWeightKg > pricing.totalWeightKg) {
-      return `${goods} (billed ${describeWeight(pricing.billableWeightKg)})`;
+    // Show the parcel total only (goods + packaging). Couriers quote on that figure.
+    const parcelKg = pricing.totalWeightKg;
+    if (pricing.billableWeightKg > parcelKg + 0.00005) {
+      return `${describeWeight(parcelKg)} (billed ${describeWeight(pricing.billableWeightKg)})`;
     }
 
-    return goods;
+    return describeWeight(parcelKg);
   }
 
   get shippingDestinationCity(): string {

@@ -207,6 +207,8 @@ export class CartComponent implements OnDestroy {
       totalDiscount: 0,
       finalTotal: 0,
       totalWeightKg: 0,
+      goodsWeightKg: 0,
+      packageWeightKg: 0,
       billableWeightKg: 0,
       isMarginCapped: false,
       appliedDiscounts: [],

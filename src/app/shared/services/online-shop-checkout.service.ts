@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
+import { StorefrontTenantService } from './storefront-tenant.service';
 import { asBackgroundRequest } from '../interceptors/background-request';
 import { OnlineShopShippingMethod } from './online-shop-order.service';
 
@@ -117,10 +118,16 @@ export interface OnlineShopPricingResult {
   totalDiscount: number;
   finalTotal: number;
 
-  /** What the cart's goods weigh. 0 when no product in the cart carries a recorded weight. */
+  /** Parcel weight (goods + packaging) used for shipping. */
   totalWeightKg: number;
 
-  /** The weight the courier quote was computed on: the above, floored at the minimum billable weight. */
+  /** Catalogue goods weight only. */
+  goodsWeightKg: number;
+
+  /** Packaging / parcel tare weight included in the courier quote. */
+  packageWeightKg: number;
+
+  /** The weight the courier quote was computed on. */
   billableWeightKg: number;
 
   isMarginCapped: boolean;
@@ -144,7 +151,8 @@ export interface OnlineShopPricingResult {
 export class OnlineShopCheckoutService {
   constructor(
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
+    private storefrontTenant: StorefrontTenantService
   ) {}
 
   calculatePricing(request: CalculateOnlineShopPricingRequest): Observable<OnlineShopPricingResult> {
@@ -152,7 +160,7 @@ export class OnlineShopCheckoutService {
       environment.urls?.OnlineShopCheckout_CalculatePricing ||
       'OnlineShopCheckout/CalculatePricing';
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    const tenantId = request.tenantId ?? this.resolveTenantId();
+    const tenantId = this.resolveTenantId(request.tenantId);
     const body = { ...request, tenantId };
     // Quotes run on every cart, address and courier change; the pages showing them have their own
     // inline spinners, so this must not take the screen away from the customer.
@@ -168,15 +176,25 @@ export class OnlineShopCheckoutService {
       environment.urls?.OnlineShopCheckout_ValidateCartStock ||
       'OnlineShopCheckout/ValidateCartStock';
     const url = `${this.apiRoot()}api/services/app/${path}`;
-    const tenantId = request.tenantId ?? this.resolveTenantId();
+    const tenantId = this.resolveTenantId(request.tenantId);
     const body = { ...request, tenantId };
     return this.http
       .post<any>(url, body, this.tenantRequestOptions(tenantId))
       .pipe(map((response) => this.normalizeStockValidation(response?.result ?? response)));
   }
 
-  private resolveTenantId(): number {
-    return this.auth.tenantId;
+  private resolveTenantId(explicit?: number | null): number {
+    const fromRequest = Number(explicit ?? 0);
+    if (fromRequest > 0) {
+      return fromRequest;
+    }
+
+    const fromStorefront = Number(this.storefrontTenant.resolveTenantId() ?? 0);
+    if (fromStorefront > 0) {
+      return fromStorefront;
+    }
+
+    return Number(this.auth.tenantId ?? 0) || 1;
   }
 
   private tenantRequestOptions(tenantId: number): { headers: HttpHeaders } {
@@ -212,6 +230,8 @@ export class OnlineShopCheckoutService {
       totalDiscount: this.num(raw?.totalDiscount ?? raw?.TotalDiscount),
       finalTotal: this.num(raw?.finalTotal ?? raw?.FinalTotal),
       totalWeightKg: this.num(raw?.totalWeightKg ?? raw?.TotalWeightKg),
+      goodsWeightKg: this.num(raw?.goodsWeightKg ?? raw?.GoodsWeightKg),
+      packageWeightKg: this.num(raw?.packageWeightKg ?? raw?.PackageWeightKg),
       billableWeightKg: this.num(raw?.billableWeightKg ?? raw?.BillableWeightKg),
       isMarginCapped: !!(raw?.isMarginCapped ?? raw?.IsMarginCapped),
       appliedDiscounts: this.normalizeAppliedDiscounts(raw?.appliedDiscounts ?? raw?.AppliedDiscounts),
