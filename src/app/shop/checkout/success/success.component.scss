@@ -5,6 +5,22 @@ li {
     white-space: normal;
 }
 
+.order-number-link {
+    // Override dark-theme `body.dark a:not(.btn)...` which forces secondary/white text.
+    color: #f0b429 !important;
+    font-weight: 700;
+    text-decoration: underline !important;
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+        color: #ffd54d !important;
+        outline: none;
+    }
+}
+
 .total-sec .order-success-discount span {
     color: var(--discount-text, var(--success));
     font-weight: 700;

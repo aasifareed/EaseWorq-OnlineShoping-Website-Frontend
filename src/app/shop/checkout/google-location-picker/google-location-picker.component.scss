@@ -1,0 +1,117 @@
+.google-location-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5vh 5vw;
+  background: rgba(8, 10, 16, 0.72);
+}
+
+.google-location-modal__dialog {
+  width: 90vw;
+  height: 90vh;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #151922;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.google-location-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.google-location-modal__title {
+  font-weight: 700;
+  color: #fff;
+
+  i {
+    margin-right: 0.4rem;
+    color: #f0b429;
+  }
+}
+
+.google-location-modal__close {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 1.6rem;
+  line-height: 1;
+  opacity: 0.75;
+  padding: 0 0.25rem;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.google-location-modal__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  align-items: center;
+}
+
+.google-location-modal__body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.google-location-modal__map {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #1b1f2a;
+}
+
+.google-location-modal__overlay,
+.google-location-modal__hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.65rem 0.9rem;
+  background: rgba(15, 18, 28, 0.9);
+  color: #d7dbe7;
+  font-size: 0.84rem;
+  pointer-events: none;
+}
+
+.google-location-modal__overlay--error {
+  color: #ffb4b4;
+  pointer-events: auto;
+}
+
+@media (max-width: 575.98px) {
+  .google-location-modal {
+    padding: 2vh 2vw;
+  }
+
+  .google-location-modal__dialog {
+    width: 96vw;
+    height: 96vh;
+    max-width: 96vw;
+    max-height: 96vh;
+  }
+
+  .google-location-modal__toolbar .btn {
+    flex: 1 1 auto;
+  }
+}

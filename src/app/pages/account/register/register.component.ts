@@ -9,7 +9,7 @@ import {
 import { AbstractControl, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { debounceTime, takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../shared/services/auth.service';
 import { SignalRService } from '../../../shared/services/signal-r.service';
 import { ToastrService } from 'ngx-toastr';
@@ -17,7 +17,8 @@ import { trimMaxLength, trimRequired } from '../../../shop/checkout/checkout-val
 import { GoogleAddressService } from '../../../shared/services/address-autocomplete/google-address.service';
 import {
   GoogleAddressFieldMode,
-  parseGooglePlaceAddress
+  parseGooglePlaceAddress,
+  looksLikeVillageOrChakLabel
 } from '../../../shared/services/address-autocomplete/google-address.util';
 
 @Component({
@@ -127,8 +128,26 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (looksLikeVillageOrChakLabel(town)) {
+      this.googleAddressService.isAddressSelect = true;
+      const currentAddress = (this.registerForm.get('address')?.value ?? '').toString().trim();
+      if (town && !currentAddress.toLowerCase().includes(town.toLowerCase())) {
+        this.registerForm.patchValue({
+          address: currentAddress ? `${currentAddress}, ${town}` : town,
+          town: '',
+          postalcode: '',
+        });
+      } else {
+        this.registerForm.patchValue({ town: '', postalcode: '' });
+      }
+      townCtrl?.markAsTouched();
+      this.lastSelectedValues.town = '';
+      this.googleAddressService.clearSuggestions();
+      return;
+    }
+
     const confirmed = (this.lastSelectedValues.town ?? '').trim();
-    if (town.toLowerCase() === confirmed.toLowerCase()) {
+    if (town.toLowerCase() === confirmed.toLowerCase() && !looksLikeVillageOrChakLabel(confirmed)) {
       return;
     }
 
@@ -195,12 +214,12 @@ export class RegisterComponent implements OnInit, AfterViewInit, OnDestroy {
       this.activeAutocompleteField = null;
       this.highlightedIndex = -1;
       this.placeSelectionInFlight = false;
-    });
+    }, field);
   }
 
   private setupFieldAutocomplete(field: GoogleAddressFieldMode): void {
     this.registerForm.get(field)?.valueChanges
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .pipe(debounceTime(450), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((value: string) => {
         if (!this.googleAddressService.isAddressSelect && value !== this.lastSelectedValues[field]) {
           this.activeAutocompleteField = field;

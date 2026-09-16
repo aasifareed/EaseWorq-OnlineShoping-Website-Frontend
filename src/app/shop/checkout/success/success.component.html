@@ -30,7 +30,14 @@
                     <i class="fa fa-check-circle" aria-hidden="true"></i>
                     <h2>thank you</h2>
                     <p>Your order has been placed successfully.</p>
-                    <p>Order #: {{ order.onlineOrderNumber }}</p>
+                    <p>
+                      Order #:
+                      <a
+                        class="order-number-link"
+                        [routerLink]="['/pages/my-orders']"
+                        [queryParams]="{ orderId: order.onlineShopSaleOrderId }"
+                      >{{ order.onlineOrderNumber }}</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -93,7 +100,14 @@
                     <div class="col-sm-6">
                         <h4>summary</h4>
                         <ul class="order-detail">
-                            <li>order ID: {{ order.onlineOrderNumber }}</li>
+                            <li>
+                              order ID:
+                              <a
+                                class="order-number-link"
+                                [routerLink]="['/pages/my-orders']"
+                                [queryParams]="{ orderId: order.onlineShopSaleOrderId }"
+                              >{{ order.onlineOrderNumber }}</a>
+                            </li>
                             <li>Order Date: {{ formatDate(order.orderDate) }}</li>
                             <li>Order Total: {{ order.totalAmount | shopCurrency:productService?.Currency.currency }}</li>
                             <li>Shipping: {{ order.shippingMethodName }}</li>

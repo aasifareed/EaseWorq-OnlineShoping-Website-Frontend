@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { trimRequired, trimPersonName, trimPhoneNumber, trimMaxLength, mustMatchSelectedValue } from './checkout-validators';
 import { Router } from '@angular/router';
@@ -39,7 +39,8 @@ import { describeWeight } from '../../shared/utils/weight-format.util';
 import { GoogleAddressService } from '../../shared/services/address-autocomplete/google-address.service';
 import {
   GoogleAddressFieldMode,
-  parseGooglePlaceAddress
+  parseGooglePlaceAddress,
+  looksLikeVillageOrChakLabel
 } from '../../shared/services/address-autocomplete/google-address.util';
 import { OnlineShopWorkingAreaService } from '../../shared/services/online-shop-working-area.service';
 import { MetaTrackingService } from '../../shared/services/meta-tracking.service';
@@ -125,14 +126,24 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     OnlineShopShippingMethod.Shipping,
     OnlineShopShippingMethod.LocalPickup
   ];
-  /** Turn on to offer local pickup again; the working-area gating below then applies. */
-  private readonly localPickupEnabled = false;
-  /** Local pickup is offered only when the billing address falls inside the store working area. */
-  public localPickupAvailable = true;
-  private billingCoordinates: { latitude: number; longitude: number } | null = null;
+  /** Zone-based local delivery (separate from nationwide flagship courier shipping). */
+  private readonly localPickupEnabled = true;
+  /** True when the delivery pin falls inside a configured delivery zone. */
+  public localPickupAvailable = false;
+  /** Matched delivery zone + weekdays for the customer's address (shown on checkout). */
+  matchedDeliveryZoneName: string | null = null;
+  matchedDeliveryDayNames: string[] = [];
+  deliveryZoneHint: string | null = null;
+  billingCoordinates: { latitude: number; longitude: number } | null = null;
   /** Billing address the cached coordinates belong to, so edits force a fresh lookup. */
   private billingCoordinatesKey = '';
+  shippingCoordinates: { latitude: number; longitude: number } | null = null;
   private workingAreaRequestId = 0;
+  private deliveryZoneRequestId = 0;
+
+  mapPickerOpen = false;
+  mapPickerGroup: CheckoutAddressGroup = 'billing';
+
   readonly paymentMethodLabels = ONLINE_SHOP_PAYMENT_METHOD_LABELS;
   readonly shippingMethodLabels = ONLINE_SHOP_SHIPPING_METHOD_LABELS;
 
@@ -282,8 +293,29 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    // Chak / mauza labels are not cities — keep them out of Town / City.
+    if (looksLikeVillageOrChakLabel(town)) {
+      this.googleAddressService.isAddressSelect = true;
+      const addressCtrl = formGroup.get('address');
+      const currentAddress = (addressCtrl?.value ?? '').toString().trim();
+      if (town && !currentAddress.toLowerCase().includes(town.toLowerCase())) {
+        formGroup.patchValue({
+          address: currentAddress ? `${currentAddress}, ${town}` : town,
+          town: '',
+          postalcode: '',
+        });
+      } else {
+        formGroup.patchValue({ town: '', postalcode: '' });
+      }
+      townCtrl?.markAsTouched();
+      townCtrl?.updateValueAndValidity();
+      this.lastSelectedValues[group].town = '';
+      this.googleAddressService.clearSuggestions();
+      return;
+    }
+
     const confirmed = (this.lastSelectedValues[group].town ?? '').trim();
-    if (town.toLowerCase() === confirmed.toLowerCase()) {
+    if (town.toLowerCase() === confirmed.toLowerCase() && !looksLikeVillageOrChakLabel(confirmed)) {
       return;
     }
 
@@ -401,46 +433,243 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.activeAutocompleteKey = null;
       this.highlightedIndex = -1;
       this.placeSelectionInFlight = false;
-    });
+    }, field);
+  }
+
+  openMapPicker(group: CheckoutAddressGroup): void {
+    this.mapPickerGroup = group;
+    this.mapPickerOpen = true;
+  }
+
+  closeMapPicker(): void {
+    this.mapPickerOpen = false;
+  }
+
+  /** Reject province/city-only labels so we don't wipe a real street line. */
+  private isUsableStreetAddress(address: string, town: string, state: string): boolean {
+    const value = (address || '').trim();
+    if (!value) {
+      return false;
+    }
+    const lower = value.toLowerCase();
+    const townLower = (town || '').trim().toLowerCase();
+    const stateLower = (state || '').trim().toLowerCase();
+    if (townLower && lower === townLower) {
+      return false;
+    }
+    if (stateLower && lower === stateLower) {
+      return false;
+    }
+    if (['pakistan', 'pak', 'punjab', 'sindh', 'balochistan', 'khyber pakhtunkhwa', 'islamabad'].includes(lower)) {
+      return false;
+    }
+    if (/^unnamed(\s+road|\s+street)?$/i.test(lower)) {
+      return false;
+    }
+    return true;
+  }
+
+  get mapPickerInitialPoint(): { latitude: number; longitude: number } | null {
+    if (this.mapPickerGroup === 'shipping') {
+      return this.shippingCoordinates || this.billingCoordinates;
+    }
+    return this.billingCoordinates;
+  }
+
+  get mapPickerAddressQuery(): string {
+    const group = this.mapPickerGroup === 'shipping' ? this.shippingGroup : this.billingGroup;
+    const value = group?.value || {};
+    return [
+      value.address,
+      value.town,
+      value.state,
+      value.postalcode,
+      'Pakistan',
+    ]
+      .map((part) => String(part || '').trim())
+      .filter((part) => !!part)
+      .join(', ');
+  }
+
+  onMapLocationPicked(
+    group: CheckoutAddressGroup,
+    result: { latitude: number; longitude: number; address: { address: string; town: string; state: string; postalcode: string; formattedAddress: string } | null },
+  ): void {
+    const formGroup = group === 'billing' ? this.billingGroup : this.shippingGroup;
+    const coords = { latitude: result.latitude, longitude: result.longitude };
+
+    if (group === 'billing') {
+      this.billingCoordinates = coords;
+    } else {
+      this.shippingCoordinates = coords;
+    }
+
+    const resolved = result.address;
+    let addressUpdated = false;
+    if (resolved) {
+      const street = (resolved.address || '').trim();
+      const town = (resolved.town || '').trim();
+      const state = (resolved.state || '').trim();
+      const postalcode = (resolved.postalcode || '').trim();
+      // Avoid replacing a real street with a province/city-only label.
+      const address = this.isUsableStreetAddress(street, town, state)
+        ? street
+        : '';
+
+      if (address) {
+        this.lastSelectedValues[group].address = address;
+      }
+      if (town) {
+        this.lastSelectedValues[group].town = town;
+      }
+      if (state) {
+        this.lastSelectedValues[group].state = state;
+      }
+
+      const patch: Record<string, string> = {
+        ...(address ? { address } : {}),
+        ...(town ? { town } : {}),
+        ...(state ? { state } : {}),
+        ...(postalcode ? { postalcode } : {}),
+      };
+
+      if (Object.keys(patch).length) {
+        formGroup.patchValue(patch);
+        addressUpdated = !!(town || state || address);
+      }
+
+      formGroup.get('town')?.updateValueAndValidity();
+      formGroup.get('state')?.updateValueAndValidity();
+      formGroup.get('address')?.markAsDirty();
+      formGroup.get('town')?.markAsDirty();
+      formGroup.get('state')?.markAsDirty();
+    }
+
+    if (group === 'billing') {
+      this.billingCoordinatesKey = this.billingAddressText();
+      this.refreshLocalPickupAvailability();
+    } else {
+      this.refreshLocalPickupAvailability();
+    }
+
+    this.closeMapPicker();
+    this.toastr.success(
+      addressUpdated
+        ? this.translate.instant('Location saved and address updated from the map.')
+        : this.translate.instant('Location coordinates saved from the map.'),
+    );
   }
 
   /**
-   * Local pickup depends on the customer's full billing address (street + city + state + postal
-   * code) sitting inside the store working area polygon.
+   * Local delivery is offered only when the customer's map coordinates fall inside a
+   * store delivery zone. Flagship courier shipping stays available for the whole country.
    */
   private refreshLocalPickupAvailability(): void {
     if (!this.localPickupEnabled) {
+      this.applyLocalPickupAvailability(false);
+      this.refreshDeliveryZoneHint();
       return;
     }
 
     const requestId = ++this.workingAreaRequestId;
+    const zoneRequestId = ++this.deliveryZoneRequestId;
 
-    void this.resolveBillingCoordinates().then((coordinates) => {
-      if (requestId !== this.workingAreaRequestId) {
+    void this.resolveDeliveryCoordinates().then((coordinates) => {
+      if (requestId !== this.workingAreaRequestId || zoneRequestId !== this.deliveryZoneRequestId) {
         return;
       }
 
       if (!coordinates) {
-        this.applyLocalPickupAvailability(true);
+        this.applyLocalPickupAvailability(false);
+        this.clearDeliveryZoneHint();
         return;
       }
 
       this.workingArea
         .isPointInsideWorkingArea(coordinates.latitude, coordinates.longitude)
         .subscribe((result) => {
-          if (requestId !== this.workingAreaRequestId) {
+          if (requestId !== this.workingAreaRequestId || zoneRequestId !== this.deliveryZoneRequestId) {
             return;
           }
-          // No polygon drawn yet means the store has not restricted pickup at all.
-          this.applyLocalPickupAvailability(!result.hasWorkingArea || result.isInside);
+
+          const insideZone = !!(result.hasWorkingArea && result.isInside);
+          this.applyLocalPickupAvailability(insideZone);
+          this.applyDeliveryZoneHint(result);
         });
     });
   }
 
+  /** Resolve the customer's address to a delivery zone and show its delivery days. */
+  private refreshDeliveryZoneHint(): void {
+    const requestId = ++this.deliveryZoneRequestId;
+
+    void this.resolveDeliveryCoordinates().then((coordinates) => {
+      if (requestId !== this.deliveryZoneRequestId) {
+        return;
+      }
+
+      if (!coordinates) {
+        this.clearDeliveryZoneHint();
+        return;
+      }
+
+      this.workingArea
+        .isPointInsideWorkingArea(coordinates.latitude, coordinates.longitude)
+        .subscribe((result) => {
+          if (requestId !== this.deliveryZoneRequestId) {
+            return;
+          }
+          this.applyDeliveryZoneHint(result);
+        });
+    });
+  }
+
+  private applyDeliveryZoneHint(result: {
+    hasWorkingArea: boolean;
+    isInside: boolean;
+    zoneName?: string | null;
+    mainZoneName?: string | null;
+    deliveryDayNames?: string[];
+  }): void {
+    if (!result.hasWorkingArea || !result.isInside) {
+      this.clearDeliveryZoneHint();
+      if (result.hasWorkingArea && !result.isInside) {
+        this.deliveryZoneHint = 'This address is outside our local delivery zones. Nationwide shipping is still available.';
+      }
+      return;
+    }
+
+    this.matchedDeliveryZoneName = result.zoneName || result.mainZoneName || null;
+    this.matchedDeliveryDayNames = result.deliveryDayNames || [];
+    // Zone/days are shown in the Local Delivery panel — no duplicate banner when inside.
+    this.deliveryZoneHint = null;
+  }
+
+  private clearDeliveryZoneHint(): void {
+    this.matchedDeliveryZoneName = null;
+    this.matchedDeliveryDayNames = [];
+    this.deliveryZoneHint = null;
+  }
+
+  private async resolveDeliveryCoordinates(): Promise<{ latitude: number; longitude: number } | null> {
+    if (this.shipToDifferentAddress) {
+      return this.shippingCoordinates || this.billingCoordinates || this.resolveBillingCoordinates();
+    }
+    return this.resolveBillingCoordinates();
+  }
+
   private applyLocalPickupAvailability(available: boolean): void {
+    const wasAvailable = this.localPickupAvailable;
     this.localPickupAvailable = available;
+
     if (!available && this.shippingMethod === OnlineShopShippingMethod.LocalPickup) {
       this.onShippingMethodChange(OnlineShopShippingMethod.Shipping);
+      return;
+    }
+
+    // When the pin first enters a zone, default to Local Delivery (not flagship shipping).
+    if (available && !wasAvailable) {
+      this.onShippingMethodChange(OnlineShopShippingMethod.LocalPickup);
     }
   }
 
@@ -1454,7 +1683,9 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       shippingMethod: this.shippingMethod,
       paymentMethod: this.paymentMethod,
       billingLatitude: this.billingCoordinates?.latitude ?? null,
-      billingLongitude: this.billingCoordinates?.longitude ?? null
+      billingLongitude: this.billingCoordinates?.longitude ?? null,
+      shippingLatitude: this.shippingCoordinates?.latitude ?? null,
+      shippingLongitude: this.shippingCoordinates?.longitude ?? null,
     };
   }
 
@@ -1909,7 +2140,7 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   ): void {
     (['address', 'town', 'state'] as GoogleAddressFieldMode[]).forEach((field) => {
       group.get(field)?.valueChanges
-        .pipe(debounceTime(300), takeUntil(this.destroy$))
+        .pipe(debounceTime(450), distinctUntilChanged(), takeUntil(this.destroy$))
         .subscribe((value: string) => {
           if (!this.googleAddressService.isAddressSelect && value !== this.lastSelectedValues[groupName][field]) {
             this.activeAutocompleteKey = `${groupName}.${field}`;

@@ -39,6 +39,7 @@ import { CartComponent } from './cart/cart.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
 import { CompareComponent } from './compare/compare.component';
 import { CheckoutComponent } from './checkout/checkout.component';
+import { GoogleLocationPickerComponent } from './checkout/google-location-picker/google-location-picker.component';
 import { SuccessComponent } from './checkout/success/success.component';
 import { FailureComponent } from './checkout/failure/failure.component';
 import { PayFastReturnComponent } from './checkout/payfast-return/payfast-return.component';
@@ -73,6 +74,7 @@ import {RouterModule} from '@angular/router';
     WishlistComponent,
     CompareComponent,
     CheckoutComponent,
+    GoogleLocationPickerComponent,
     SuccessComponent,
     FailureComponent,
     PayFastReturnComponent,
