@@ -27,7 +27,9 @@ export interface OnlineShopStorefront {
   showOutOfStockProducts: boolean;
   allowGuestCheckout: boolean;
   isDeliveryEnabled: boolean;
+  /** Local Delivery fee when order is below freeDeliveryMinimumOrderAmount. */
   defaultDeliveryCharges?: number;
+  /** Net merchandise total at or above which Local Delivery is free. */
   freeDeliveryMinimumOrderAmount?: number;
   estimatedDeliveryDays?: number;
   isSameDayDeliveryEnabled: boolean;

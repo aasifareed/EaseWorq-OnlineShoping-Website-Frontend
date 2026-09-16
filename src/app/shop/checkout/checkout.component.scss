@@ -850,6 +850,14 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
     font-weight: 600;
     color: $checkout-accent;
   }
+
+  &__rule {
+    margin: 0.25rem 0 0;
+    font-size: 0.66rem;
+    line-height: 1.4;
+    font-weight: 500;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.72));
+  }
 }
 
 .checkout-delivery-zone-hint {

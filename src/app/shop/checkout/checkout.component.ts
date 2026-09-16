@@ -1164,19 +1164,88 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   get showShippingBreakdown(): boolean {
-    return (
-      this.shippingMethod === OnlineShopShippingMethod.Shipping &&
-      !!this.pricing &&
-      !this.shippingLoading
-    );
+    if (!this.pricing || this.shippingLoading) {
+      return false;
+    }
+    if (this.shippingMethod === OnlineShopShippingMethod.LocalPickup) {
+      // Show a shipping row when a fee is charged or waived against a configured list fee.
+      return this.effectiveShippingAmount > 0 || this.shippingListPrice > 0;
+    }
+    return this.shippingMethod === OnlineShopShippingMethod.Shipping;
   }
 
-  /** True when shipping is waived (coupon/rule) and a courier is still chosen. */
+  /** True when shipping is waived (coupon/rule) and a courier is still chosen — or free local delivery. */
   get isShippingFree(): boolean {
+    if (this.shippingMethod === OnlineShopShippingMethod.LocalPickup) {
+      return !!this.pricing && this.effectiveShippingAmount === 0 && this.shippingListPrice > 0;
+    }
     if (this.isCourierSelectionSkipped || !this.showShippingBreakdown || !this.selectedCourierOption) {
       return false;
     }
     return this.effectiveShippingAmount === 0;
+  }
+
+  /** Primary status line for Local Delivery fee on this order. */
+  get localDeliveryFeeNote(): string {
+    const fee = this.localDeliveryConfiguredFee;
+    const minFree = this.localDeliveryFreeFromAmount;
+    const money = (n: number) => this.formatLocalDeliveryMoney(n);
+
+    if (this.pricing) {
+      if (this.effectiveShippingAmount > 0) {
+        return minFree > 0
+          ? `${money(this.effectiveShippingAmount)} delivery fee added — your order is under ${money(minFree)}.`
+          : `${money(this.effectiveShippingAmount)} local delivery fee added to this order.`;
+      }
+      if (this.shippingListPrice > 0 || (fee > 0 && minFree > 0)) {
+        return `Local delivery is free on this order.`;
+      }
+    }
+
+    if (fee > 0 && minFree > 0) {
+      return `Orders under ${money(minFree)} pay a ${money(fee)} local delivery fee.`;
+    }
+    if (fee > 0) {
+      return `Local delivery fee: ${money(fee)}.`;
+    }
+    return `No delivery fee for local delivery.`;
+  }
+
+  /** Secondary rule line (how free local delivery works). */
+  get localDeliveryFeeRule(): string | null {
+    const fee = this.localDeliveryConfiguredFee;
+    const minFree = this.localDeliveryFreeFromAmount;
+    if (!(fee > 0 && minFree > 0)) {
+      return null;
+    }
+
+    const money = (n: number) => this.formatLocalDeliveryMoney(n);
+    if (this.pricing && this.effectiveShippingAmount > 0) {
+      return `Add items to reach ${money(minFree)} and local delivery becomes free.`;
+    }
+    if (this.pricing && this.effectiveShippingAmount === 0 && this.shippingListPrice > 0) {
+      return `Orders under ${money(minFree)} normally pay ${money(fee)}.`;
+    }
+    return `Orders of ${money(minFree)} or more get free local delivery.`;
+  }
+
+  private get localDeliveryConfiguredFee(): number {
+    const fee = Number(this.storefront?.defaultDeliveryCharges);
+    return Number.isFinite(fee) && fee > 0 ? fee : 0;
+  }
+
+  private get localDeliveryFreeFromAmount(): number {
+    const minFree = Number(this.storefront?.freeDeliveryMinimumOrderAmount);
+    return Number.isFinite(minFree) && minFree > 0 ? minFree : 0;
+  }
+
+  private formatLocalDeliveryMoney(amount: number): string {
+    const symbol = (this.productService?.Currency?.currency || 'Rs').trim() || 'Rs';
+    const value = Number(amount);
+    const formatted = Number.isFinite(value)
+      ? value.toLocaleString(undefined, { maximumFractionDigits: 0 })
+      : String(amount);
+    return `${symbol} ${formatted}`;
   }
 
   get isFreeShippingCouponApplied(): boolean {

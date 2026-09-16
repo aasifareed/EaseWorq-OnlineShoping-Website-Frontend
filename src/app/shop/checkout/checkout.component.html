@@ -460,13 +460,15 @@
                                             shopCurrency:productService?.Currency.currency }}</span>
                                     </li>
                                     <li class="checkout-total-row" *ngIf="showShippingBreakdown">
-                                        <span class="checkout-total-row__label">Shipping</span>
+                                        <span class="checkout-total-row__label">{{
+                                          shippingMethod === OnlineShopShippingMethod.LocalPickup ? 'Local delivery' : 'Shipping'
+                                        }}</span>
                                         <span class="count checkout-total-row__value checkout-total-row__value--pending"
-                                            *ngIf="isCourierSelectionSkipped">To be confirmed</span>
+                                            *ngIf="shippingMethod === OnlineShopShippingMethod.Shipping && isCourierSelectionSkipped">To be confirmed</span>
                                         <span class="count checkout-total-row__value checkout-total-row__value--free"
-                                            *ngIf="!isCourierSelectionSkipped && isShippingFree">FREE</span>
+                                            *ngIf="!(shippingMethod === OnlineShopShippingMethod.Shipping && isCourierSelectionSkipped) && isShippingFree">FREE</span>
                                         <span class="count checkout-total-row__value"
-                                            *ngIf="!isCourierSelectionSkipped && !isShippingFree">{{
+                                            *ngIf="!(shippingMethod === OnlineShopShippingMethod.Shipping && isCourierSelectionSkipped) && !isShippingFree">{{
                                             shippingSummaryAmount |
                                             shopCurrency:productService?.Currency.currency }}</span>
                                     </li>
@@ -575,7 +577,10 @@
                                         <p class="checkout-pickup-panel__line">
                                             Delivery will be done within 2–3 days.
                                         </p>
-                                        <p class="checkout-pickup-panel__note">No courier shipping fee for local delivery.</p>
+                                        <p class="checkout-pickup-panel__note">{{ localDeliveryFeeNote }}</p>
+                                        <p class="checkout-pickup-panel__rule" *ngIf="localDeliveryFeeRule">
+                                            {{ localDeliveryFeeRule }}
+                                        </p>
                                     </div>
 
                                     <div class="checkout-courier-panel checkout-delivery-picker"
