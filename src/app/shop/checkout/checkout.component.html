@@ -85,6 +85,18 @@
                                         class="text text-danger">Address is required.</div>
                                     <div *ngIf="control('billing.address').touched && control('billing.address').errors?.maxlength"
                                         class="text text-danger">Maximum 100 characters allowed.</div>
+                                    <div class="checkout-map-pick-row">
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-secondary checkout-map-pick-btn"
+                                            (click)="openMapPicker('billing')">
+                                            <i class="fa fa-map-marker me-1" aria-hidden="true"></i>
+                                            Pick location on map
+                                        </button>
+                                        <small class="checkout-map-pick-hint" *ngIf="billingCoordinates">
+                                            Location saved ({{ billingCoordinates.latitude | number:'1.5-5' }}, {{ billingCoordinates.longitude | number:'1.5-5' }})
+                                        </small>
+                                    </div>
                                 </div>
                                 <div class="form-group col-12 col-md-6">
                                     <div class="field-label">Town / City <span class="required-mark">*</span></div>
@@ -165,8 +177,18 @@
                                         {{ billingPreview.town }}<span *ngIf="billingPreview.state">, {{ billingPreview.state }}</span>
                                         <span *ngIf="billingPreview.postalcode"> {{ billingPreview.postalcode }}</span>
                                     </div>
+                                    <div class="checkout-address-card__line checkout-address-card__line--coords" *ngIf="billingCoordinates">
+                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                        Map location saved
+                                        ({{ billingCoordinates.latitude | number:'1.5-5' }}, {{ billingCoordinates.longitude | number:'1.5-5' }})
+                                    </div>
                                 </div>
                                 <div class="checkout-address-card__footer">
+                                    <button type="button" class="checkout-address-card__action checkout-address-card__action--map"
+                                        (click)="openMapPicker('billing')">
+                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                        Pick location on map
+                                    </button>
                                     <button type="button" class="checkout-address-card__action" (click)="toggleBillingEdit()">
                                         <i class="fa fa-pencil" aria-hidden="true"></i>
                                         Edit
@@ -223,6 +245,18 @@
                                         </div>
                                         <div *ngIf="control('shipping.address').touched && control('shipping.address').errors?.required"
                                             class="text text-danger">Address is required.</div>
+                                        <div class="checkout-map-pick-row">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-secondary checkout-map-pick-btn"
+                                                (click)="openMapPicker('shipping')">
+                                                <i class="fa fa-map-marker me-1" aria-hidden="true"></i>
+                                                Pick location on map
+                                            </button>
+                                            <small class="checkout-map-pick-hint" *ngIf="shippingCoordinates">
+                                                Location saved ({{ shippingCoordinates.latitude | number:'1.5-5' }}, {{ shippingCoordinates.longitude | number:'1.5-5' }})
+                                            </small>
+                                        </div>
                                     </div>
                                     <div class="form-group col-12 col-md-6">
                                         <div class="field-label">Town/City <span class="required-mark">*</span></div>
@@ -299,8 +333,18 @@
                                         {{ shippingPreview.town }}<span *ngIf="shippingPreview.state">, {{ shippingPreview.state }}</span>
                                         <span *ngIf="shippingPreview.postalcode"> {{ shippingPreview.postalcode }}</span>
                                     </div>
+                                    <div class="checkout-address-card__line checkout-address-card__line--coords" *ngIf="shippingCoordinates">
+                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                        Map location saved
+                                        ({{ shippingCoordinates.latitude | number:'1.5-5' }}, {{ shippingCoordinates.longitude | number:'1.5-5' }})
+                                    </div>
                                 </div>
                                 <div class="checkout-address-card__footer">
+                                    <button type="button" class="checkout-address-card__action checkout-address-card__action--map"
+                                        (click)="openMapPicker('shipping')">
+                                        <i class="fa fa-map-marker" aria-hidden="true"></i>
+                                        Pick location on map
+                                    </button>
                                     <button type="button" class="checkout-address-card__action" (click)="toggleShippingEdit()">
                                         <i class="fa fa-pencil" aria-hidden="true"></i>
                                         Edit
@@ -499,20 +543,20 @@
 
                                 <div class="checkout-delivery-section" *ngIf="products.length">
                                     <div class="checkout-chip-section checkout-shipping-row"
-                                        *ngIf="shippingMethod === OnlineShopShippingMethod.LocalPickup && availableShippingMethods.length">
+                                        *ngIf="availableShippingMethods.length > 1">
                                         <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles"
                                             role="radiogroup" aria-label="Delivery method">
                                             <label *ngFor="let method of availableShippingMethods"
                                                 class="checkout-chip checkout-chip--tile checkout-chip--choice"
                                                 [class.checkout-chip--selected]="shippingMethod === method"
-                                                [for]="'shipping-pickup-' + method">
-                                                <input type="radio" class="checkout-chip__input" name="shippingMethodPickup"
-                                                    [id]="'shipping-pickup-' + method" [value]="method"
+                                                [for]="'shipping-method-' + method">
+                                                <input type="radio" class="checkout-chip__input" name="shippingMethodMain"
+                                                    [id]="'shipping-method-' + method" [value]="method"
                                                     [ngModel]="shippingMethod"
                                                     (ngModelChange)="onShippingMethodChange($event)"
                                                     [ngModelOptions]="{standalone: true}">
                                                 <span class="checkout-chip__text">
-                                                    <i class="fa" [ngClass]="method === OnlineShopShippingMethod.Shipping ? 'fa-truck' : 'fa-map-marker'" aria-hidden="true"></i>
+                                                    <i class="fa" [ngClass]="method === OnlineShopShippingMethod.Shipping ? 'fa-truck' : 'fa-motorcycle'" aria-hidden="true"></i>
                                                     <span class="checkout-chip__label">{{ shippingMethodLabels[method] }}</span>
                                                     <i class="fa fa-check checkout-chip__check" aria-hidden="true"></i>
                                                 </span>
@@ -520,19 +564,18 @@
                                         </div>
                                     </div>
 
+                                    <div class="checkout-delivery-zone-hint" *ngIf="deliveryZoneHint">
+                                        <i class="fa fa-info-circle" aria-hidden="true"></i>
+                                        <span>{{ deliveryZoneHint }}</span>
+                                    </div>
+
                                     <div class="checkout-pickup-panel"
                                         *ngIf="shippingMethod === OnlineShopShippingMethod.LocalPickup">
-                                        <h4 class="checkout-pickup-panel__title">Pickup location</h4>
-                                        <ng-container *ngIf="localPickupLines.length; else pickupFallback">
-                                            <p class="checkout-pickup-panel__line"
-                                                *ngFor="let line of localPickupLines">{{ line }}</p>
-                                        </ng-container>
-                                        <ng-template #pickupFallback>
-                                            <p class="checkout-pickup-panel__line">
-                                                Collect your order from the store. Shipping charges do not apply.
-                                            </p>
-                                        </ng-template>
-                                        <p class="checkout-pickup-panel__note">No shipping fee for local pickup.</p>
+                                        <h4 class="checkout-pickup-panel__title">Local Delivery</h4>
+                                        <p class="checkout-pickup-panel__line">
+                                            Delivery will be done within 2–3 days.
+                                        </p>
+                                        <p class="checkout-pickup-panel__note">No courier shipping fee for local delivery.</p>
                                     </div>
 
                                     <div class="checkout-courier-panel checkout-delivery-picker"
@@ -555,27 +598,6 @@
                                                         {{ shippingCourierOptions.length }} delivery options
                                                     </span>
                                                 </p>
-                                            </div>
-                                            <div class="checkout-delivery-picker__method"
-                                                *ngIf="availableShippingMethods.length">
-                                                <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles checkout-chip-group--compact"
-                                                    role="radiogroup" aria-label="Delivery method">
-                                                    <label *ngFor="let method of availableShippingMethods"
-                                                        class="checkout-chip checkout-chip--tile checkout-chip--choice"
-                                                        [class.checkout-chip--selected]="shippingMethod === method"
-                                                        [for]="'shipping-' + method">
-                                                        <input type="radio" class="checkout-chip__input" name="shippingMethod"
-                                                            [id]="'shipping-' + method" [value]="method"
-                                                            [ngModel]="shippingMethod"
-                                                            (ngModelChange)="onShippingMethodChange($event)"
-                                                            [ngModelOptions]="{standalone: true}">
-                                                        <span class="checkout-chip__text">
-                                                            <i class="fa" [ngClass]="method === OnlineShopShippingMethod.Shipping ? 'fa-truck' : 'fa-map-marker'" aria-hidden="true"></i>
-                                                            <span class="checkout-chip__label">{{ shippingMethodLabels[method] }}</span>
-                                                            <i class="fa fa-check checkout-chip__check" aria-hidden="true"></i>
-                                                        </span>
-                                                    </label>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -791,6 +813,14 @@
                     </div>
                 </div>
             </form>
+
+            <app-google-location-picker
+                *ngIf="mapPickerOpen"
+                [initialPoint]="mapPickerInitialPoint"
+                [addressQuery]="mapPickerAddressQuery"
+                (picked)="onMapLocationPicked(mapPickerGroup, $event)"
+                (cancelled)="closeMapPicker()">
+            </app-google-location-picker>
         </div>
     </div>
 </section>

@@ -1,0 +1,39 @@
+<div class="google-location-modal" (click)="onBackdropClick($event)" role="dialog" aria-modal="true" aria-label="Pick delivery location">
+  <div class="google-location-modal__dialog" (click)="$event.stopPropagation()">
+    <div class="google-location-modal__header">
+      <div class="google-location-modal__title">
+        <i class="fa fa-map-marker" aria-hidden="true"></i>
+        Pick delivery location
+      </div>
+      <button type="button" class="google-location-modal__close" (click)="close()" [disabled]="isApplying" aria-label="Close">
+        &times;
+      </button>
+    </div>
+
+    <div class="google-location-modal__toolbar">
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="useMyLocation()" [disabled]="isLoading || isApplying">
+        Use my location
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="close()" [disabled]="isApplying">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-sm btn-solid" (click)="saveLocation()" [disabled]="isLoading || isApplying || !selectedPoint">
+        {{ isApplying ? 'Saving…' : 'Save location' }}
+      </button>
+    </div>
+
+    <div class="google-location-modal__body">
+      <div #mapHost class="google-location-modal__map"></div>
+      <div class="google-location-modal__overlay" *ngIf="isLoading">Loading map…</div>
+      <div class="google-location-modal__overlay google-location-modal__overlay--error" *ngIf="!isLoading && loadError">
+        {{ loadError }}
+      </div>
+      <div class="google-location-modal__hint" *ngIf="!isLoading && !loadError">
+        {{ statusMessage }}
+        <span *ngIf="selectedPoint">
+          · {{ selectedPoint.latitude | number:'1.5-5' }}, {{ selectedPoint.longitude | number:'1.5-5' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

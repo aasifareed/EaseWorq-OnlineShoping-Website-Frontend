@@ -18,7 +18,7 @@ export const environment = {
   /** Optional fallback only — resolved from GetForStorefront when omitted. */
   storeId: null as string | null,
   /** Google Maps JavaScript API key (Places Autocomplete). */
-  googleMapsApiKey: 'AIzaSyDyeIndELQj_horM-429SavXuMHojQ62P0',
+  googleMapsApiKey: 'AIzaSyBrkUdsOFG3lK22UBRk_Zu1BBee8YyS8RY',
   googleClientId: '845543032039-b34k6kg6h54i25vdrjjb3vco49uln8a2.apps.googleusercontent.com',
   urls: {
     Account_IsTenantAvailable: 'Account/IsTenantAvailable',

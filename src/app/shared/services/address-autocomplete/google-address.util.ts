@@ -38,7 +38,8 @@ const PAKISTAN_POSTAL_FALLBACKS: Array<{ keys: string[]; code: string }> = [
   { keys: ['okara'], code: '56300' },
   { keys: ['larkana'], code: '77150' },
   { keys: ['mirpur'], code: '10250' },
-  { keys: ['gilgit'], code: '15100' }
+  { keys: ['gilgit'], code: '15100' },
+  { keys: ['lodhran', 'dunyapur', 'kehror', 'mailsi'], code: '59320' },
 ];
 
 function pickComponent(
@@ -75,9 +76,87 @@ function containsPart(address: string, part: string): boolean {
   return address.toLowerCase().includes(part.toLowerCase());
 }
 
+/** Google Open Location Codes like PJ7J+FH — not useful as a customer street address. */
+export function stripGooglePlusCodes(value: string): string {
+  return (value || '')
+    .replace(/\b[2-9CFGHJMPQRVWX]{4,8}\+[2-9CFGHJMPQRVWX]{2,3}\b/gi, '')
+    .replace(/\s*,\s*,/g, ',')
+    .replace(/^\s*,\s*|\s*,\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+/** Google placeholder roads (common for rural pins) — never show these to customers. */
+export function looksLikeUnnamedRoadLabel(value: string): boolean {
+  const lower = (value || '').trim().toLowerCase();
+  if (!lower) {
+    return false;
+  }
+  return (
+    /^unnamed(\s+road|\s+street|\s+rd\.?|\s+st\.?)?$/i.test(lower)
+    || /^unknown(\s+road|\s+street)?$/i.test(lower)
+  );
+}
+
+/**
+ * Strip Plus Codes and Google "Unnamed Road" placeholders, then tidy commas/spaces.
+ */
+export function sanitizeGoogleStreetAddress(value: string): string {
+  let cleaned = stripGooglePlusCodes(value || '');
+
+  // Remove "Unnamed Road" / "Unnamed Street" anywhere in the line.
+  cleaned = cleaned
+    .replace(/\bunnamed(\s+road|\s+street|\s+rd\.?|\s+st\.?)?\b/gi, '')
+    .replace(/\bunknown(\s+road|\s+street)?\b/gi, '')
+    .replace(/\s*,\s*,/g, ',')
+    .replace(/^\s*,\s*|\s*,\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  // Drop a leading/trailing orphan comma leftover after removals.
+  cleaned = cleaned.replace(/^,+|,+$/g, '').trim();
+
+  return cleaned;
+}
+
+/**
+ * Google often tags Pakistani chaks / mauzas / bastis as `locality`, but those are villages
+ * or colony labels — not the Town / City customers should enter (e.g. Lodhran, Multan).
+ */
+export function looksLikeVillageOrChakLabel(value: string): boolean {
+  const raw = (value || '').trim();
+  if (!raw) {
+    return false;
+  }
+
+  const normalized = raw.replace(/\s+/g, ' ');
+  const lower = normalized.toLowerCase();
+
+  if (/\b(chak|mauza|moza|basti|mohalla|mohallah|colony|block)\b/.test(lower)) {
+    return true;
+  }
+
+  // "364 WB", "364/WB", "364-WB"
+  if (/^\d{1,4}\s*[\/\-]?\s*[a-z]{1,4}$/i.test(normalized)) {
+    return true;
+  }
+
+  // Compact codes like "344WB" / "364WB"
+  if (/^\d{2,4}[a-z]{1,4}$/i.test(normalized.replace(/\s+/g, ''))) {
+    return true;
+  }
+
+  // "No 364 WB"
+  if (/^(no\.?\s*)?\d{1,4}\s*[\/\-]?\s*[a-z]{1,4}$/i.test(normalized)) {
+    return true;
+  }
+
+  return false;
+}
+
 function appendTownStateToAddress(address: string, town: string, state: string): string {
   const parts = [address.trim()];
-  if (town && !containsPart(address, town)) {
+  if (town && !containsPart(address, town) && !looksLikeVillageOrChakLabel(town)) {
     parts.push(town.trim());
   }
   if (state && !containsPart(address, state)) {
@@ -134,10 +213,12 @@ export function extractPostalCode(place: google.maps.places.PlaceResult): string
 function buildStreetAddress(
   place: google.maps.places.PlaceResult,
   components: google.maps.GeocoderAddressComponent[],
-  predictionDescription?: string
+  predictionDescription?: string,
+  villageOrColony?: string
 ): string {
   const streetNumber = pickComponent(components, 'street_number');
-  const route = pickComponent(components, 'route');
+  const routeRaw = pickComponent(components, 'route');
+  const route = looksLikeUnnamedRoadLabel(routeRaw) ? '' : routeRaw;
   const premise = pickComponent(components, 'premise');
   const subpremise = pickComponent(components, 'subpremise');
   const establishment = pickComponent(components, 'establishment');
@@ -152,25 +233,93 @@ function buildStreetAddress(
     establishment,
     streetNumber,
     route,
+    villageOrColony && looksLikeVillageOrChakLabel(villageOrColony) ? villageOrColony : '',
     neighborhood,
     sublocality2,
     sublocality1,
-    sublocality
+    sublocality && looksLikeVillageOrChakLabel(sublocality) ? sublocality : '',
   ]);
 
-  if (!address && place.formatted_address) {
-    address = place.formatted_address.split(',')[0]?.trim() || '';
-  }
-
+  // Prefer prediction text for rural Pakistan picks (often richer than components).
   const fromPrediction = predictionDescription
-    ? addressFromPredictionDescription(predictionDescription)
+    ? sanitizeGoogleStreetAddress(addressFromPredictionDescription(predictionDescription))
     : '';
 
   if (fromPrediction && (!address || fromPrediction.length > address.length)) {
     address = fromPrediction;
   }
 
-  return address;
+  if (!address && place.formatted_address) {
+    const firstPart = sanitizeGoogleStreetAddress(
+      place.formatted_address.split(',')[0]?.trim() || ''
+    );
+    // If first part was only "Unnamed Road", try the next meaningful part.
+    if (firstPart) {
+      address = firstPart;
+    } else {
+      const parts = (place.formatted_address || '')
+        .split(',')
+        .map((p) => sanitizeGoogleStreetAddress(p))
+        .filter((p) => !!p && !looksLikeUnnamedRoadLabel(p));
+      address = parts[0] || '';
+    }
+  }
+
+  if (villageOrColony && looksLikeVillageOrChakLabel(villageOrColony) && !containsPart(address, villageOrColony)) {
+    address = uniqueParts([villageOrColony, address]);
+  }
+
+  return sanitizeGoogleStreetAddress(address);
+}
+
+/**
+ * Pick Town/City for checkout: prefer real city/district over Google `locality` when that
+ * locality is actually a chak / mauza / basti label.
+ */
+function resolveTownAndVillage(
+  components: google.maps.GeocoderAddressComponent[]
+): { town: string; villageOrColony: string; district: string; state: string } {
+  const locality = pickComponent(components, 'locality');
+  const postalTown = pickComponent(components, 'postal_town');
+  const adminLevel3 = pickComponent(components, 'administrative_area_level_3');
+  const district = pickComponent(components, 'administrative_area_level_2');
+  const state = pickComponent(components, 'administrative_area_level_1');
+  const sublocality = pickComponent(components, 'sublocality');
+  const sublocality1 = pickComponent(components, 'sublocality_level_1');
+
+  const candidates = [locality, postalTown, adminLevel3, sublocality, sublocality1]
+    .map((v) => (v || '').trim())
+    .filter(Boolean);
+
+  let villageOrColony = '';
+  let town = '';
+
+  for (const candidate of candidates) {
+    if (looksLikeVillageOrChakLabel(candidate)) {
+      if (!villageOrColony) {
+        villageOrColony = candidate;
+      }
+      continue;
+    }
+    if (!town) {
+      town = candidate;
+    }
+  }
+
+  if (!town) {
+    // District is the reliable "city" for rural Punjab when locality was only a chak.
+    town = district;
+  }
+
+  // If Google still gave a chak-like district (rare), keep it out of Town.
+  if (town && looksLikeVillageOrChakLabel(town)) {
+    if (!villageOrColony) {
+      villageOrColony = town;
+    }
+    town = '';
+  }
+
+  return { town, villageOrColony, district, state };
 }
 
 export function parseGooglePlaceAddress(
@@ -180,27 +329,18 @@ export function parseGooglePlaceAddress(
   predictionDescription?: string
 ): ParsedGoogleAddress {
   const components = place.address_components || [];
-
-  const locality = pickComponent(components, 'locality');
-  const postalTown = pickComponent(components, 'postal_town');
-  const adminLevel3 = pickComponent(components, 'administrative_area_level_3');
-  const district = pickComponent(components, 'administrative_area_level_2');
-  const state = pickComponent(components, 'administrative_area_level_1');
-
-  const town =
-    locality
-    || postalTown
-    || adminLevel3
-    || pickComponent(components, 'sublocality')
-    || pickComponent(components, 'sublocality_level_1')
-    || district;
+  const { town, villageOrColony, district, state } = resolveTownAndVillage(components);
 
   const currentAddress = currentValues?.address?.trim() || '';
   const currentTown = currentValues?.town?.trim() || '';
   const currentState = currentValues?.state?.trim() || '';
   const currentPostal = currentValues?.postalcode?.trim() || '';
 
-  const resolvedTown = town || currentTown || district;
+  // Never keep a previous chak label in Town once we can resolve a better city.
+  const currentTownUsable =
+    currentTown && !looksLikeVillageOrChakLabel(currentTown) ? currentTown : '';
+
+  const resolvedTown = town || currentTownUsable || district;
   const resolvedState = state || currentState;
   const postalcode =
     extractPostalCode(place)
@@ -211,13 +351,14 @@ export function parseGooglePlaceAddress(
     const fromPrediction = labelFromPredictionDescription(predictionDescription);
     return {
       address: currentAddress,
-      town: currentTown,
+      town: currentTownUsable || resolvedTown,
       state: fromPrediction || resolvedState,
       postalcode: extractPostalCode(place) || currentPostal
     };
   }
 
   if (mode === 'town') {
+    // Town autocomplete must still reject chak localities as the city value.
     return {
       address: currentAddress,
       town: resolvedTown,
@@ -226,12 +367,17 @@ export function parseGooglePlaceAddress(
     };
   }
 
-  const streetAddress = buildStreetAddress(place, components, predictionDescription);
+  const streetAddress = buildStreetAddress(
+    place,
+    components,
+    predictionDescription,
+    villageOrColony
+  );
   const baseAddress = streetAddress || currentAddress;
   const fullAddress = appendTownStateToAddress(baseAddress, resolvedTown, resolvedState);
 
   return {
-    address: fullAddress,
+    address: sanitizeGoogleStreetAddress(fullAddress),
     town: resolvedTown,
     state: resolvedState,
     postalcode

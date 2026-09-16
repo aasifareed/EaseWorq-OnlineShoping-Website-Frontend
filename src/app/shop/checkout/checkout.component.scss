@@ -852,6 +852,25 @@ $checkout-card-border: rgba(255, 255, 255, 0.16);
   }
 }
 
+.checkout-delivery-zone-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.55rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(21, 101, 192, 0.35);
+  background: rgba(21, 101, 192, 0.08);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-primary, #1e293b);
+
+  i {
+    margin-top: 0.15rem;
+    color: #1565c0;
+  }
+}
+
 .checkout-courier-more {
   display: inline-flex;
   align-items: center;
@@ -2182,3 +2201,45 @@ body:not(.dark) {
     background: #fafafa;
   }
 }
+
+.checkout-map-pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.45rem;
+}
+
+.checkout-map-pick-btn {
+  border-color: rgba(240, 180, 41, 0.55) !important;
+  color: #f0b429 !important;
+}
+
+.checkout-map-pick-hint {
+  opacity: 0.8;
+  font-size: 0.78rem;
+}
+
+.checkout-address-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.checkout-address-card__action--map {
+  color: #f0b429 !important;
+}
+
+.checkout-address-card__line--coords {
+  margin-top: 0.35rem;
+  opacity: 0.85;
+  font-size: 0.82rem;
+
+  i {
+    margin-right: 0.3rem;
+    color: #f0b429;
+  }
+}
+
+

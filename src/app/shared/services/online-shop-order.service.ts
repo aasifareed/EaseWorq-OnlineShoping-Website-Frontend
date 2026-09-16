@@ -66,7 +66,7 @@ export const ONLINE_SHOP_PAYMENT_METHOD_LABELS: Record<OnlineShopPaymentMethod, 
 
 export const ONLINE_SHOP_SHIPPING_METHOD_LABELS: Record<OnlineShopShippingMethod, string> = {
 
-  [OnlineShopShippingMethod.LocalPickup]: 'Local Pickup',
+  [OnlineShopShippingMethod.LocalPickup]: 'Local Delivery',
 
   [OnlineShopShippingMethod.Shipping]: 'Shipping'
 
@@ -402,6 +402,10 @@ export interface CheckoutFormValues {
 
   billingLongitude?: number | null;
 
+  shippingLatitude?: number | null;
+
+  shippingLongitude?: number | null;
+
 }
 
 
@@ -672,10 +676,13 @@ export class OnlineShopOrderService {
     billing.longitude = form.billingLongitude ?? null;
 
     const shipping = form.shipToDifferentAddress && form.shipping
-
       ? this.mapAddressFormToDto(form.shipping)
-
       : billing;
+
+    if (form.shipToDifferentAddress && form.shipping) {
+      shipping.latitude = form.shippingLatitude ?? form.billingLatitude ?? null;
+      shipping.longitude = form.shippingLongitude ?? form.billingLongitude ?? null;
+    }
 
 
 
