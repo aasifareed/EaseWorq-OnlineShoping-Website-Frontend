@@ -552,6 +552,11 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
       this.refreshLocalPickupAvailability();
     }
 
+    // Map pin can change city/postal (and delivery zone). Drop stale courier quotes
+    // and requote so Order Summary / courier list match the new location.
+    this.resetCourierSelection();
+    this.pricingRequested$.next();
+
     this.closeMapPicker();
     this.toastr.success(
       addressUpdated
@@ -632,10 +637,8 @@ export class CheckoutComponent implements OnInit, OnDestroy, AfterViewInit {
     deliveryDayNames?: string[];
   }): void {
     if (!result.hasWorkingArea || !result.isInside) {
+      // Outside / no zone: Local Delivery is already hidden — no need for a banner saying so.
       this.clearDeliveryZoneHint();
-      if (result.hasWorkingArea && !result.isInside) {
-        this.deliveryZoneHint = 'This address is outside our local delivery zones. Nationwide shipping is still available.';
-      }
       return;
     }
 
