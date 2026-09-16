@@ -544,8 +544,10 @@
                                 </div>
 
                                 <div class="checkout-delivery-section" *ngIf="products.length">
+                                    <!-- Show whenever any method is available. Outside local zones,
+                                         Local Delivery is filtered out but Shipping must still appear. -->
                                     <div class="checkout-chip-section checkout-shipping-row"
-                                        *ngIf="availableShippingMethods.length > 1">
+                                        *ngIf="availableShippingMethods.length">
                                         <div class="checkout-chip-group checkout-chip-group--spread checkout-chip-group--tiles"
                                             role="radiogroup" aria-label="Delivery method">
                                             <label *ngFor="let method of availableShippingMethods"
