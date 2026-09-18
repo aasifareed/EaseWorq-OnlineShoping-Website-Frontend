@@ -283,6 +283,19 @@ footer.footer-brand-dark.footer-pro,
     }
   }
 
+  .footer-legal-name {
+    margin: 0.35rem 0 0;
+    font-size: 0.78rem !important;
+    font-weight: 500;
+    line-height: 1.4 !important;
+    color: #b8b8b8 !important;
+
+    strong {
+      color: #e8e8e8 !important;
+      font-weight: 700;
+    }
+  }
+
   @media (min-width: 992px) {
     .footer-main,
     section.footer-main {
